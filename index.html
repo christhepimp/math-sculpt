@@ -2,194 +2,278 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>MathClay Engine</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>MathClay</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #08080c;
+      background: #07070a;
       color: #e8e8ec;
       overflow: hidden;
       height: 100vh;
+      touch-action: none;
     }
     #canvas-container { position: absolute; inset: 0; }
-    #ui {
+
+    /* Side toggle for math terminal */
+    #term-toggle {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 340px;
-      background: rgba(10, 10, 16, 0.95);
-      border: 1px solid #2a2a38;
-      border-radius: 14px;
-      padding: 14px;
-      backdrop-filter: blur(16px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-      max-height: calc(100vh - 20px);
-      overflow-y: auto;
-      z-index: 10;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      z-index: 30;
+      width: 36px;
+      height: 72px;
+      background: #0ea5e9;
+      border: none;
+      border-radius: 10px 0 0 10px;
+      color: #fff;
+      font-size: 1.1rem;
+      cursor: pointer;
+      box-shadow: -4px 0 16px rgba(0,0,0,0.4);
     }
-    h1 { font-size: 1.2rem; font-weight: 650; letter-spacing: -0.03em; margin-bottom: 2px; }
-    .tagline { font-size: 0.7rem; color: #777; margin-bottom: 12px; }
+    #term-toggle:hover { background: #0284c7; }
+
+    /* Overlay toggle */
+    #overlay-toggle {
+      position: absolute;
+      left: 12px;
+      top: 12px;
+      z-index: 25;
+      background: rgba(14, 165, 233, 0.9);
+      border: none;
+      color: #fff;
+      padding: 10px 14px;
+      border-radius: 10px;
+      font-size: 0.78rem;
+      font-weight: 500;
+      cursor: pointer;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
+    }
+    #overlay-toggle.active { background: #f472b6; }
+
+    #stats {
+      position: absolute;
+      left: 12px;
+      top: 56px;
+      z-index: 25;
+      font-family: monospace;
+      font-size: 0.7rem;
+      color: #7dd3fc;
+      background: rgba(0,0,0,0.45);
+      padding: 4px 8px;
+      border-radius: 6px;
+    }
+
+    /* Math terminal — slides up from bottom */
+    #terminal {
+      position: absolute;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 40;
+      max-height: 55vh;
+      background: rgba(12, 12, 18, 0.97);
+      border-top: 1px solid #2a2a3a;
+      border-radius: 16px 16px 0 0;
+      transform: translateY(100%);
+      transition: transform 0.28s ease;
+      display: flex;
+      flex-direction: column;
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+    }
+    #terminal.open { transform: translateY(0); }
+
+    #term-handle {
+      flex-shrink: 0;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: grab;
+      color: #555;
+      font-size: 0.75rem;
+      letter-spacing: 0.15em;
+      user-select: none;
+    }
+    #term-handle::before {
+      content: '';
+      width: 40px;
+      height: 4px;
+      background: #444;
+      border-radius: 2px;
+      margin-right: 10px;
+    }
+
+    #term-body {
+      flex: 1;
+      overflow-y: auto;
+      padding: 0 16px 20px;
+    }
+
+    h2 {
+      font-size: 0.95rem;
+      font-weight: 600;
+      margin-bottom: 10px;
+      color: #e2e8f0;
+    }
     label {
       display: block;
       font-size: 0.65rem;
-      color: #999;
-      margin-bottom: 3px;
+      color: #888;
       text-transform: uppercase;
       letter-spacing: 0.05em;
+      margin-bottom: 4px;
+      margin-top: 12px;
     }
-    .row { display: flex; gap: 6px; margin-top: 8px; }
-    button {
+    .value {
+      float: right;
+      color: #7dd3fc;
+      font-family: monospace;
+      font-size: 0.75rem;
+      text-transform: none;
+      letter-spacing: 0;
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: #38bdf8;
+    }
+    input[type="text"] {
+      width: 100%;
+      background: #1a1a24;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #7dd3fc;
+      font-family: monospace;
+      font-size: 0.85rem;
+      padding: 10px 12px;
+      outline: none;
+    }
+    input[type="text"]:focus { border-color: #38bdf8; }
+
+    .row { display: flex; gap: 8px; margin-top: 10px; }
+    button.act {
       flex: 1;
-      background: #1a1a26;
-      border: 1px solid #333344;
+      background: #1e293b;
+      border: 1px solid #334155;
       color: #e2e8f0;
-      padding: 7px 8px;
-      border-radius: 7px;
-      font-size: 0.72rem;
+      padding: 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
       cursor: pointer;
-      transition: all 0.15s;
     }
-    button:hover { background: #2a2a3a; }
-    button.primary { background: #0ea5e9; border-color: #0284c7; color: #fff; font-weight: 500; }
-    button.primary:hover { background: #0284c7; }
-    button.active { background: #0ea5e9; border-color: #0284c7; color: #fff; }
-    .slider-group { margin-top: 10px; }
-    input[type="range"] { width: 100%; margin-top: 2px; accent-color: #38bdf8; }
-    .value { float: right; color: #7dd3fc; font-family: monospace; font-size: 0.72rem; }
-    .stat { font-family: monospace; font-size: 0.7rem; color: #7dd3fc; margin-bottom: 8px; }
-    .section { margin-top: 12px; padding-top: 10px; border-top: 1px solid #222230; }
-    .dirs, .shapes {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 4px;
-      margin-top: 5px;
-    }
-    .shapes { grid-template-columns: 1fr 1fr; }
-    .dirs button, .shapes button { font-size: 0.65rem; padding: 6px 3px; }
-    .info { font-size: 0.65rem; color: #666; margin-top: 10px; line-height: 1.4; }
-    code { color: #a5b4fc; font-size: 0.65rem; }
-    .sub-label {
-      font-size: 0.7rem;
-      color: #f9a8d4;
-      margin-bottom: 6px;
+    button.act:hover { background: #334155; }
+    button.act.primary {
+      background: #0ea5e9;
+      border-color: #0284c7;
+      color: #fff;
       font-weight: 500;
+    }
+    button.act.primary:hover { background: #0284c7; }
+    button.act.danger {
+      background: #3f1d2e;
+      border-color: #9d174d;
+      color: #f9a8d4;
+    }
+
+    .hint {
+      font-size: 0.65rem;
+      color: #555;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .section {
+      border-top: 1px solid #222230;
+      margin-top: 14px;
+      padding-top: 4px;
+    }
+    code { color: #a5b4fc; font-size: 0.7rem; }
+
+    /* Particle number overlay labels (HTML layer) */
+    #number-overlay {
+      position: absolute;
+      inset: 0;
+      pointer-events: none;
+      z-index: 15;
+      display: none;
+      overflow: hidden;
+    }
+    #number-overlay.show { display: block; }
+    .pnum {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-family: monospace;
+      font-size: 9px;
+      color: rgba(255, 255, 255, 0.75);
+      background: rgba(14, 165, 233, 0.35);
+      border: 1px solid rgba(125, 211, 252, 0.4);
+      border-radius: 4px;
+      padding: 1px 3px;
+      white-space: nowrap;
+      pointer-events: none;
+    }
+    .pnum.selected {
+      background: rgba(244, 114, 182, 0.55);
+      border-color: #f9a8d4;
+      color: #fff;
+      font-weight: 600;
     }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
+  <div id="number-overlay"></div>
 
-  <div id="ui">
-    <h1>MathClay</h1>
-    <p class="tagline">Simple math · you control every particle & sub-particle</p>
+  <button id="overlay-toggle">Show particle #s</button>
+  <div id="stats">particles: —</div>
+  <button id="term-toggle" title="Math terminal">☰</button>
 
-    <div class="stat" id="stats">particles: —</div>
+  <div id="terminal">
+    <div id="term-handle">MATH</div>
+    <div id="term-body">
+      <h2>MathClay terminal</h2>
+      <p class="hint">Move = angles + distance only. No direction buttons.</p>
 
-    <!-- Main clay controls -->
-    <label>Brush radius <span class="value" id="radius-val">0.35</span></label>
-    <input type="range" id="radius" min="0.05" max="1.2" value="0.35" step="0.05" />
-
-    <div class="slider-group">
-      <label>Distance <span class="value" id="dist-val">0.10</span></label>
-      <input type="range" id="distance" min="0.01" max="0.5" value="0.10" step="0.01" />
-    </div>
-
-    <div class="slider-group">
-      <label>Angle (degrees) <span class="value" id="angle-val">0</span></label>
-      <input type="range" id="angle" min="0" max="360" value="0" step="5" />
-    </div>
-
-    <div class="section">
-      <label>Direction</label>
-      <div class="dirs">
-        <button data-d="0,1,0">Up</button>
-        <button data-d="0,-1,0">Down</button>
-        <button data-d="1,0,0">Right</button>
-        <button data-d="-1,0,0">Left</button>
-        <button data-d="0,0,1">Fwd</button>
-        <button data-d="0,0,-1">Back</button>
-      </div>
-      <div class="row" style="margin-top:5px">
-        <button id="dir-out" class="active">Out</button>
-        <button id="dir-in">In</button>
-        <button id="dir-view">View</button>
-      </div>
-    </div>
-
-    <div class="section">
-      <label>Particle tip shape</label>
-      <div class="shapes" id="shape-btns">
-        <button data-shape="point" class="active">Soft Point</button>
-        <button data-shape="sphere">Sphere</button>
-        <button data-shape="cube">Cube</button>
-        <button data-shape="diamond">Diamond</button>
-      </div>
-    </div>
-
-    <!-- Sub-particle controls -->
-    <div class="section">
-      <div class="sub-label">Sub-particles (born when you pull length)</div>
-
-      <label>Spawn sub-particles <span class="value" id="sub-count-val">3</span></label>
-      <input type="range" id="subCount" min="0" max="8" value="3" step="1" />
-
-      <div class="slider-group">
-        <label>Sub distance <span class="value" id="sub-dist-val">0.06</span></label>
-        <input type="range" id="subDistance" min="0.01" max="0.3" value="0.06" step="0.01" />
+      <div class="section">
+        <label>Select particles</label>
+        <input type="text" id="selectInput" placeholder="e.g. 0, 5, 12-20  or click the clay" />
+        <p class="hint">Type IDs (comma or ranges) · or click the block to select nearby particles</p>
+        <div class="row">
+          <button class="act" id="btnSelect">Select</button>
+          <button class="act danger" id="btnClearSel">Clear selection</button>
+        </div>
+        <p class="hint" id="selInfo">selected: 0</p>
       </div>
 
-      <div class="slider-group">
-        <label>Sub angle (degrees) <span class="value" id="sub-angle-val">0</span></label>
-        <input type="range" id="subAngle" min="0" max="360" value="0" step="5" />
+      <div class="section">
+        <label>Azimuth angle ° <span class="value" id="az-val">0</span></label>
+        <input type="range" id="azimuth" min="0" max="360" value="0" step="1" />
+
+        <label>Elevation angle ° <span class="value" id="el-val">0</span></label>
+        <input type="range" id="elevation" min="-90" max="90" value="0" step="1" />
+
+        <label>Distance (0–1000) <span class="value" id="dist-val">50</span></label>
+        <input type="range" id="distance" min="0" max="1000" value="50" step="1" />
+
+        <p class="hint">
+          Math: <code>pos += directionFrom(azimuth, elevation) × (distance / 500)</code>
+        </p>
+
+        <div class="row">
+          <button class="act primary" id="btnApply">Apply math to selection</button>
+        </div>
       </div>
 
-      <label style="margin-top:8px">Sub direction</label>
-      <div class="dirs" id="sub-dirs">
-        <button data-sd="0,1,0">Up</button>
-        <button data-sd="0,-1,0">Down</button>
-        <button data-sd="1,0,0">Right</button>
-        <button data-sd="-1,0,0">Left</button>
-        <button data-sd="0,0,1">Fwd</button>
-        <button data-sd="0,0,-1">Back</button>
-      </div>
-      <div class="row" style="margin-top:5px">
-        <button id="sub-dir-same" class="active">Same as main</button>
-        <button id="sub-dir-fixed">Fixed</button>
-      </div>
+      <div class="section">
+        <label>Brush size (for click-select) <span class="value" id="brush-val">0.30</span></label>
+        <input type="range" id="brush" min="0.05" max="1.0" value="0.30" step="0.05" />
 
-      <label style="margin-top:8px">Sub tip shape</label>
-      <div class="shapes" id="sub-shape-btns">
-        <button data-subshape="same" class="active">Same</button>
-        <button data-subshape="point">Point</button>
-        <button data-subshape="sphere">Sphere</button>
-        <button data-subshape="cube">Cube</button>
+        <div class="row" style="margin-top:12px">
+          <button class="act" id="btnReset">Reset solid block</button>
+        </div>
       </div>
     </div>
-
-    <div class="section">
-      <label>Density <span class="value" id="dens-val">18</span></label>
-      <input type="range" id="density" min="8" max="32" value="18" step="2" />
-    </div>
-
-    <div class="section">
-      <label>Color</label>
-      <div class="row">
-        <input type="color" id="paintColor" value="#c4a484" style="flex:1;height:32px;border:none;border-radius:6px;background:#1a1a26;cursor:pointer" />
-        <button id="paintMode">Paint</button>
-      </div>
-    </div>
-
-    <div class="row" style="margin-top:12px">
-      <button class="primary" id="reset">Reset Clay</button>
-    </div>
-
-    <p class="info">
-      Main particles: <code>pos + dir × distance</code> (with angle)<br>
-      When you pull length, sub-particles are born.<br>
-      You control their direction, shape, distance & angle too.
-    </p>
   </div>
 
   <script type="importmap">
@@ -206,17 +290,17 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // ═══════════════════════════════════════════════════════════
-    // MathClay Engine
-    // Main + sub-particles: you control direction, shape, distance, angle
-    // Core math stays simple: pos += dir × distance
+    // MathClay — angles + distance only
+    // Select by number or click · particle # overlay
     // ═══════════════════════════════════════════════════════════
 
     const container = document.getElementById('canvas-container');
+    const overlayEl = document.getElementById('number-overlay');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x08080c);
+    scene.background = new THREE.Color(0x07070a);
 
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 100);
-    camera.position.set(3.2, 2.6, 3.8);
+    camera.position.set(3.0, 2.4, 3.6);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -230,270 +314,198 @@
     controls.dampingFactor = 0.08;
     controls.enablePan = false;
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
-    const key = new THREE.DirectionalLight(0xfff5e6, 1.15);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const key = new THREE.DirectionalLight(0xfff5e6, 1.1);
     key.position.set(4, 7, 3);
     scene.add(key);
-    scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.4).translateX(-3).translateY(2).translateZ(-4));
+    scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.35).translateX(-3).translateY(2).translateZ(-4));
 
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(20, 20),
-      new THREE.MeshStandardMaterial({ color: 0x101014, roughness: 0.95, metalness: 0.05 })
+      new THREE.MeshStandardMaterial({ color: 0x0c0c12, roughness: 0.95, metalness: 0.05 })
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.4;
+    ground.position.y = -1.35;
     scene.add(ground);
 
-    // ── Particle store ─────────────────────────────────────────
-    // Dynamic array so we can birth sub-particles
-    let particles = []; // {x,y,z, r,g,b, shape}
-    let tipShape = 'point';
+    // ── Solid particle block ───────────────────────────────────
+    let particles = []; // {id, x,y,z, r,g,b}
+    let selected = new Set();
     let pointsObj = null;
-    let instancedObj = null;
     let pointsGeo = null;
-    const dummy = new THREE.Object3D();
-    const clayCenter = new THREE.Vector3(0, 0, 0);
-    let claySize = 2.0;
+    let showNumbers = false;
+    let brushRadius = 0.30;
+    const claySize = 2.0;
 
-    // Main controls
-    let brushRadius = 0.35;
-    let pushDistance = 0.10;
-    let angleDeg = 0;
-    let directionMode = 'out';
-    let fixedDir = new THREE.Vector3(0, 1, 0);
+    // Math params — angles + distance only
+    let azimuth = 0;    // degrees 0-360
+    let elevation = 0;  // degrees -90..90
+    let distance = 50;  // 0-1000
 
-    // Sub-particle controls (you control all of these)
-    let subCount = 3;
-    let subDistance = 0.06;
-    let subAngleDeg = 0;
-    let subDirMode = 'same'; // 'same' | 'fixed'
-    let subFixedDir = new THREE.Vector3(0, 1, 0);
-    let subShape = 'same';
-
-    let isPainting = false;
-    let paintColor = new THREE.Color('#c4a484');
-    let isSculpting = false;
-
-    function rotateY(dir, deg) {
-      const rad = deg * Math.PI / 180;
-      const c = Math.cos(rad), s = Math.sin(rad);
-      return new THREE.Vector3(
-        dir.x * c - dir.z * s,
-        dir.y,
-        dir.x * s + dir.z * c
-      );
-    }
-
-    function createClay(density = 18) {
+    function createSolidBlock(density = 16) {
       particles = [];
+      selected.clear();
       const n = density;
       const half = claySize * 0.5;
       const step = claySize / (n - 1 || 1);
-
+      let id = 0;
       for (let iz = 0; iz < n; iz++) {
         for (let iy = 0; iy < n; iy++) {
           for (let ix = 0; ix < n; ix++) {
             particles.push({
+              id: id++,
               x: -half + ix * step,
               y: -half + iy * step,
               z: -half + iz * step,
-              r: 0.72 + Math.random() * 0.08,
-              g: 0.58 + Math.random() * 0.06,
-              b: 0.42 + Math.random() * 0.05,
-              shape: tipShape
+              r: 0.74 + Math.random() * 0.06,
+              g: 0.58 + Math.random() * 0.05,
+              b: 0.42 + Math.random() * 0.04
             });
           }
         }
       }
-      buildVisuals();
-      updateStats();
-    }
-
-    function updateStats() {
+      rebuildPoints();
+      updateSelInfo();
       document.getElementById('stats').textContent =
         `particles: ${particles.length.toLocaleString()}`;
+      if (showNumbers) rebuildNumberOverlay();
     }
 
-    function clearVisuals() {
+    function rebuildPoints() {
       if (pointsObj) {
         scene.remove(pointsObj);
         pointsGeo?.dispose();
         pointsObj.material?.dispose();
-        pointsObj = null;
       }
-      if (instancedObj) {
-        scene.remove(instancedObj);
-        instancedObj.geometry?.dispose();
-        instancedObj.material?.dispose();
-        instancedObj = null;
-      }
-    }
-
-    function buildVisuals() {
-      clearVisuals();
       const count = particles.length;
-      if (count === 0) return;
-
-      // For simplicity and performance with dynamic birth:
-      // always use Points for now when particle count changes often.
-      // Solid shapes still available at lower counts.
-      const useSolid = tipShape !== 'point' && count < 12000;
-
-      if (!useSolid) {
-        const pos = new Float32Array(count * 3);
-        const col = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-          const p = particles[i];
-          pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+      const pos = new Float32Array(count * 3);
+      const col = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        const p = particles[i];
+        pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+        if (selected.has(p.id)) {
+          col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75; // selected = pink
+        } else {
           col[i*3] = p.r; col[i*3+1] = p.g; col[i*3+2] = p.b;
         }
-        pointsGeo = new THREE.BufferGeometry();
-        pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-        pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-        const mat = new THREE.PointsMaterial({
-          size: 0.055,
-          vertexColors: true,
-          sizeAttenuation: true,
-          transparent: true,
-          opacity: 0.92
-        });
-        pointsObj = new THREE.Points(pointsGeo, mat);
-        scene.add(pointsObj);
-      } else {
-        let geo;
-        const s = 0.042;
-        if (tipShape === 'sphere') geo = new THREE.SphereGeometry(s * 0.7, 5, 4);
-        else if (tipShape === 'cube') geo = new THREE.BoxGeometry(s, s, s);
-        else geo = new THREE.OctahedronGeometry(s * 0.7, 0);
-
-        const mat = new THREE.MeshStandardMaterial({ roughness: 0.65, metalness: 0.08 });
-        instancedObj = new THREE.InstancedMesh(geo, mat, count);
-        instancedObj.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-        const colorArr = new Float32Array(count * 3);
-        for (let i = 0; i < count; i++) {
-          const p = particles[i];
-          dummy.position.set(p.x, p.y, p.z);
-          dummy.updateMatrix();
-          instancedObj.setMatrixAt(i, dummy.matrix);
-          colorArr[i*3] = p.r; colorArr[i*3+1] = p.g; colorArr[i*3+2] = p.b;
-        }
-        instancedObj.instanceColor = new THREE.InstancedBufferAttribute(colorArr, 3);
-        instancedObj.instanceMatrix.needsUpdate = true;
-        scene.add(instancedObj);
       }
+      pointsGeo = new THREE.BufferGeometry();
+      pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+      pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+      const mat = new THREE.PointsMaterial({
+        size: 0.07,
+        vertexColors: true,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.95
+      });
+      pointsObj = new THREE.Points(pointsGeo, mat);
+      scene.add(pointsObj);
     }
 
-    function syncVisuals() {
-      // Rebuild is simplest and correct when particles are added
-      buildVisuals();
-    }
-
-    createClay(18);
-
-    // ── Core sculpt + sub-particle birth ───────────────────────
-    function getMainDirection(px, py, pz) {
-      let dir;
-      if (directionMode === 'out') {
-        dir = new THREE.Vector3(px - clayCenter.x, py - clayCenter.y, pz - clayCenter.z);
-      } else if (directionMode === 'in') {
-        dir = new THREE.Vector3(clayCenter.x - px, clayCenter.y - py, clayCenter.z - pz);
-      } else if (directionMode === 'view') {
-        dir = new THREE.Vector3();
-        camera.getWorldDirection(dir);
-        dir.negate();
-      } else {
-        dir = fixedDir.clone();
-      }
-      if (dir.lengthSq() < 1e-8) dir.set(0, 1, 0);
-      dir.normalize();
-      return rotateY(dir, angleDeg);
-    }
-
-    function getSubDirection(mainDir) {
-      if (subDirMode === 'same') {
-        return rotateY(mainDir.clone(), subAngleDeg);
-      }
-      return rotateY(subFixedDir.clone().normalize(), subAngleDeg);
-    }
-
-    function applyBrush(worldPoint) {
-      const r2 = brushRadius * brushRadius;
-      const newParticles = [];
-
+    function syncPositionsAndColors() {
+      if (!pointsGeo) return;
+      const pos = pointsGeo.attributes.position.array;
+      const col = pointsGeo.attributes.color.array;
       for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
-        const dx = p.x - worldPoint.x;
-        const dy = p.y - worldPoint.y;
-        const dz = p.z - worldPoint.z;
-        const dist2 = dx*dx + dy*dy + dz*dz;
-        if (dist2 > r2) continue;
-
-        const dist = Math.sqrt(dist2);
-        const falloff = 1 - (dist / brushRadius);
-        const strength = falloff * falloff;
-
-        if (isPainting) {
-          p.r = paintColor.r;
-          p.g = paintColor.g;
-          p.b = paintColor.b;
+        pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+        if (selected.has(p.id)) {
+          col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75;
         } else {
-          // Main particle: simple math
-          const mainDir = getMainDirection(p.x, p.y, p.z);
-          const d = pushDistance * strength;
-
-          const oldX = p.x, oldY = p.y, oldZ = p.z;
-          p.x += mainDir.x * d;
-          p.y += mainDir.y * d;
-          p.z += mainDir.z * d;
-
-          // Birth sub-particles along the pull length
-          // You control their direction, distance, angle, shape
-          if (subCount > 0 && d > 0.001) {
-            const subDir = getSubDirection(mainDir);
-            const resolvedShape = subShape === 'same' ? tipShape : subShape;
-
-            for (let s = 1; s <= subCount; s++) {
-              const t = s / (subCount + 1);
-              // Place along the main pull, then offset by sub direction × sub distance
-              const sx = oldX + (p.x - oldX) * t + subDir.x * subDistance * strength;
-              const sy = oldY + (p.y - oldY) * t + subDir.y * subDistance * strength;
-              const sz = oldZ + (p.z - oldZ) * t + subDir.z * subDistance * strength;
-
-              newParticles.push({
-                x: sx, y: sy, z: sz,
-                r: p.r, g: p.g, b: p.b,
-                shape: resolvedShape
-              });
-            }
-          }
+          col[i*3] = p.r; col[i*3+1] = p.g; col[i*3+2] = p.b;
         }
       }
-
-      if (newParticles.length > 0) {
-        // Cap total particles for browser safety
-        const room = Math.max(0, 25000 - particles.length);
-        particles.push(...newParticles.slice(0, room));
-        updateStats();
-      }
-
-      syncVisuals();
+      pointsGeo.attributes.position.needsUpdate = true;
+      pointsGeo.attributes.color.needsUpdate = true;
     }
 
+    // Direction from angles only (no fixed Up/Left buttons)
+    function directionFromAngles(azDeg, elDeg) {
+      const az = azDeg * Math.PI / 180;
+      const el = elDeg * Math.PI / 180;
+      // spherical → cartesian
+      const x = Math.cos(el) * Math.sin(az);
+      const y = Math.sin(el);
+      const z = Math.cos(el) * Math.cos(az);
+      return { x, y, z };
+    }
+
+    // Apply: pos += dir(angles) × (distance/500)
+    // distance UI is 0–1000; scale keeps motion usable in scene units
+    function applyMathToSelection() {
+      if (selected.size === 0) {
+        updateSelInfo('nothing selected');
+        return;
+      }
+      const dir = directionFromAngles(azimuth, elevation);
+      const scale = distance / 500; // 0–1000 → 0–2 world units
+
+      for (const p of particles) {
+        if (!selected.has(p.id)) continue;
+        p.x += dir.x * scale;
+        p.y += dir.y * scale;
+        p.z += dir.z * scale;
+      }
+      syncPositionsAndColors();
+      if (showNumbers) rebuildNumberOverlay();
+    }
+
+    // ── Selection by typed numbers ─────────────────────────────
+    function parseSelection(text) {
+      const ids = new Set();
+      const parts = text.split(/[,\s]+/).filter(Boolean);
+      for (const part of parts) {
+        if (part.includes('-')) {
+          const [a, b] = part.split('-').map(s => parseInt(s.trim(), 10));
+          if (!Number.isNaN(a) && !Number.isNaN(b)) {
+            const lo = Math.min(a, b), hi = Math.max(a, b);
+            for (let i = lo; i <= hi; i++) ids.add(i);
+          }
+        } else {
+          const n = parseInt(part, 10);
+          if (!Number.isNaN(n)) ids.add(n);
+        }
+      }
+      return ids;
+    }
+
+    function selectFromInput() {
+      const text = document.getElementById('selectInput').value;
+      const ids = parseSelection(text);
+      selected = new Set([...ids].filter(id => id >= 0 && id < particles.length));
+      syncPositionsAndColors();
+      updateSelInfo();
+      if (showNumbers) rebuildNumberOverlay();
+    }
+
+    function clearSelection() {
+      selected.clear();
+      document.getElementById('selectInput').value = '';
+      syncPositionsAndColors();
+      updateSelInfo();
+      if (showNumbers) rebuildNumberOverlay();
+    }
+
+    function updateSelInfo(extra) {
+      const el = document.getElementById('selInfo');
+      el.textContent = extra || `selected: ${selected.size}`;
+    }
+
+    // ── Click to select group near tap ─────────────────────────
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    function getBrushPoint(clientX, clientY) {
+    function pickNearRay(clientX, clientY) {
       mouse.x = (clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-
       const origin = raycaster.ray.origin;
       const dir = raycaster.ray.direction;
-      let bestDist = Infinity;
-      let best = null;
 
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
+      let bestDist = Infinity;
+      let bestP = null;
+      for (const p of particles) {
         const ox = p.x - origin.x, oy = p.y - origin.y, oz = p.z - origin.z;
         const t = ox*dir.x + oy*dir.y + oz*dir.z;
         if (t < 0) continue;
@@ -501,166 +513,148 @@
         const cy = origin.y + dir.y * t;
         const cz = origin.z + dir.z * t;
         const d2 = (p.x-cx)**2 + (p.y-cy)**2 + (p.z-cz)**2;
-        if (d2 < bestDist && d2 < brushRadius * brushRadius * 4) {
+        if (d2 < bestDist) {
           bestDist = d2;
-          best = new THREE.Vector3(p.x, p.y, p.z);
+          bestP = p;
         }
       }
-      return best;
+      if (!bestP || bestDist > brushRadius * brushRadius * 9) return null;
+      return bestP;
     }
 
-    function onPointerDown(e) {
+    function selectGroupAt(clientX, clientY) {
+      const center = pickNearRay(clientX, clientY);
+      if (!center) return;
+      const r2 = brushRadius * brushRadius;
+      for (const p of particles) {
+        const dx = p.x - center.x, dy = p.y - center.y, dz = p.z - center.z;
+        if (dx*dx + dy*dy + dz*dz <= r2) selected.add(p.id);
+      }
+      // Reflect in text field
+      const sorted = [...selected].sort((a,b) => a-b);
+      document.getElementById('selectInput').value = sorted.join(', ');
+      syncPositionsAndColors();
+      updateSelInfo();
+      if (showNumbers) rebuildNumberOverlay();
+    }
+
+    // ── Number overlay ─────────────────────────────────────────
+    function rebuildNumberOverlay() {
+      overlayEl.innerHTML = '';
+      if (!showNumbers) return;
+
+      // Limit labels for performance — show all if few, else subsample
+      const maxLabels = 800;
+      const step = particles.length > maxLabels
+        ? Math.ceil(particles.length / maxLabels)
+        : 1;
+
+      for (let i = 0; i < particles.length; i += step) {
+        const p = particles[i];
+        const v = new THREE.Vector3(p.x, p.y, p.z);
+        v.project(camera);
+        if (v.z > 1) continue; // behind camera
+        const x = (v.x * 0.5 + 0.5) * window.innerWidth;
+        const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+        if (x < -20 || x > window.innerWidth + 20 || y < -20 || y > window.innerHeight + 20) continue;
+
+        const span = document.createElement('div');
+        span.className = 'pnum' + (selected.has(p.id) ? ' selected' : '');
+        span.textContent = p.id;
+        span.style.left = x + 'px';
+        span.style.top = y + 'px';
+        overlayEl.appendChild(span);
+      }
+    }
+
+    // ── Input: click = select (when not orbiting) ──────────────
+    let pointerDown = false;
+    let downX = 0, downY = 0;
+    let moved = false;
+
+    renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
-      controls.enabled = false;
-      isSculpting = true;
-      const pt = getBrushPoint(e.clientX, e.clientY);
-      if (pt) applyBrush(pt);
-    }
-    function onPointerMove(e) {
-      if (!isSculpting) return;
-      const pt = getBrushPoint(e.clientX, e.clientY);
-      if (pt) applyBrush(pt);
-    }
-    function onPointerUp() {
-      isSculpting = false;
-      controls.enabled = true;
-    }
+      pointerDown = true;
+      moved = false;
+      downX = e.clientX;
+      downY = e.clientY;
+    });
+    window.addEventListener('pointermove', e => {
+      if (!pointerDown) return;
+      if (Math.abs(e.clientX - downX) > 6 || Math.abs(e.clientY - downY) > 6) moved = true;
+    });
+    window.addEventListener('pointerup', e => {
+      if (!pointerDown) return;
+      pointerDown = false;
+      // Tap without drag → select particles at that spot
+      if (!moved && e.button === 0) {
+        // Don't select if terminal is open and click was on terminal
+        const term = document.getElementById('terminal');
+        if (term.classList.contains('open')) {
+          const rect = term.getBoundingClientRect();
+          if (e.clientY >= rect.top) return;
+        }
+        selectGroupAt(e.clientX, e.clientY);
+      }
+    });
 
-    renderer.domElement.addEventListener('pointerdown', onPointerDown);
-    window.addEventListener('pointermove', onPointerMove);
-    window.addEventListener('pointerup', onPointerUp);
+    // ── Terminal open / close ──────────────────────────────────
+    const terminal = document.getElementById('terminal');
+    const termToggle = document.getElementById('term-toggle');
+    termToggle.addEventListener('click', () => {
+      terminal.classList.toggle('open');
+      termToggle.textContent = terminal.classList.contains('open') ? '✕' : '☰';
+    });
 
-    // ── UI ─────────────────────────────────────────────────────
-    document.getElementById('radius').addEventListener('input', e => {
-      brushRadius = +e.target.value;
-      document.getElementById('radius-val').textContent = brushRadius.toFixed(2);
+    // Simple drag handle to close
+    document.getElementById('term-handle').addEventListener('click', () => {
+      // optional: could drag — for now click handle also toggles
+    });
+
+    // Overlay toggle
+    const overlayBtn = document.getElementById('overlay-toggle');
+    overlayBtn.addEventListener('click', () => {
+      showNumbers = !showNumbers;
+      overlayBtn.classList.toggle('active', showNumbers);
+      overlayBtn.textContent = showNumbers ? 'Hide particle #s' : 'Show particle #s';
+      overlayEl.classList.toggle('show', showNumbers);
+      if (showNumbers) rebuildNumberOverlay();
+      else overlayEl.innerHTML = '';
+    });
+
+    // Terminal controls
+    document.getElementById('azimuth').addEventListener('input', e => {
+      azimuth = +e.target.value;
+      document.getElementById('az-val').textContent = azimuth;
+    });
+    document.getElementById('elevation').addEventListener('input', e => {
+      elevation = +e.target.value;
+      document.getElementById('el-val').textContent = elevation;
     });
     document.getElementById('distance').addEventListener('input', e => {
-      pushDistance = +e.target.value;
-      document.getElementById('dist-val').textContent = pushDistance.toFixed(2);
+      distance = +e.target.value;
+      document.getElementById('dist-val').textContent = distance;
     });
-    document.getElementById('angle').addEventListener('input', e => {
-      angleDeg = +e.target.value;
-      document.getElementById('angle-val').textContent = angleDeg;
-    });
-
-    document.querySelectorAll('.dirs button').forEach(btn => {
-      if (!btn.dataset.d) return;
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('dir-out').classList.remove('active');
-        document.getElementById('dir-in').classList.remove('active');
-        document.getElementById('dir-view').classList.remove('active');
-        directionMode = 'fixed';
-        const [x,y,z] = btn.dataset.d.split(',').map(Number);
-        fixedDir.set(x, y, z);
-      });
+    document.getElementById('brush').addEventListener('input', e => {
+      brushRadius = +e.target.value;
+      document.getElementById('brush-val').textContent = brushRadius.toFixed(2);
     });
 
-    document.getElementById('dir-out').addEventListener('click', () => {
-      directionMode = 'out';
-      document.getElementById('dir-out').classList.add('active');
-      document.getElementById('dir-in').classList.remove('active');
-      document.getElementById('dir-view').classList.remove('active');
-      document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
-    });
-    document.getElementById('dir-in').addEventListener('click', () => {
-      directionMode = 'in';
-      document.getElementById('dir-in').classList.add('active');
-      document.getElementById('dir-out').classList.remove('active');
-      document.getElementById('dir-view').classList.remove('active');
-      document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
-    });
-    document.getElementById('dir-view').addEventListener('click', () => {
-      directionMode = 'view';
-      document.getElementById('dir-view').classList.add('active');
-      document.getElementById('dir-out').classList.remove('active');
-      document.getElementById('dir-in').classList.remove('active');
-      document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
+    document.getElementById('btnSelect').addEventListener('click', selectFromInput);
+    document.getElementById('btnClearSel').addEventListener('click', clearSelection);
+    document.getElementById('btnApply').addEventListener('click', applyMathToSelection);
+    document.getElementById('btnReset').addEventListener('click', () => createSolidBlock(16));
+
+    document.getElementById('selectInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') selectFromInput();
     });
 
-    document.querySelectorAll('#shape-btns button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#shape-btns button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        tipShape = btn.dataset.shape;
-        // update existing particle tip preference
-        particles.forEach(p => { if (p.shape === 'same' || !p.shape) p.shape = tipShape; });
-        buildVisuals();
-      });
-    });
-
-    // Sub-particle controls
-    document.getElementById('subCount').addEventListener('input', e => {
-      subCount = +e.target.value;
-      document.getElementById('sub-count-val').textContent = subCount;
-    });
-    document.getElementById('subDistance').addEventListener('input', e => {
-      subDistance = +e.target.value;
-      document.getElementById('sub-dist-val').textContent = subDistance.toFixed(2);
-    });
-    document.getElementById('subAngle').addEventListener('input', e => {
-      subAngleDeg = +e.target.value;
-      document.getElementById('sub-angle-val').textContent = subAngleDeg;
-    });
-
-    document.querySelectorAll('#sub-dirs button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#sub-dirs button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        document.getElementById('sub-dir-same').classList.remove('active');
-        document.getElementById('sub-dir-fixed').classList.add('active');
-        subDirMode = 'fixed';
-        const [x,y,z] = btn.dataset.sd.split(',').map(Number);
-        subFixedDir.set(x, y, z);
-      });
-    });
-    document.getElementById('sub-dir-same').addEventListener('click', () => {
-      subDirMode = 'same';
-      document.getElementById('sub-dir-same').classList.add('active');
-      document.getElementById('sub-dir-fixed').classList.remove('active');
-      document.querySelectorAll('#sub-dirs button').forEach(b => b.classList.remove('active'));
-    });
-    document.getElementById('sub-dir-fixed').addEventListener('click', () => {
-      subDirMode = 'fixed';
-      document.getElementById('sub-dir-fixed').classList.add('active');
-      document.getElementById('sub-dir-same').classList.remove('active');
-    });
-
-    document.querySelectorAll('#sub-shape-btns button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        document.querySelectorAll('#sub-shape-btns button').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-        subShape = btn.dataset.subshape;
-      });
-    });
-
-    document.getElementById('density').addEventListener('input', e => {
-      document.getElementById('dens-val').textContent = e.target.value;
-    });
-    document.getElementById('density').addEventListener('change', e => {
-      createClay(+e.target.value);
-    });
-
-    document.getElementById('paintColor').addEventListener('input', e => {
-      paintColor.set(e.target.value);
-    });
-    const paintBtn = document.getElementById('paintMode');
-    paintBtn.addEventListener('click', () => {
-      isPainting = !isPainting;
-      paintBtn.classList.toggle('active', isPainting);
-      paintBtn.textContent = isPainting ? 'Painting…' : 'Paint';
-    });
-
-    document.getElementById('reset').addEventListener('click', () => {
-      createClay(+document.getElementById('density').value);
-    });
-
+    // ── Loop ───────────────────────────────────────────────────
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
+      if (showNumbers) rebuildNumberOverlay();
     }
     animate();
 
@@ -668,7 +662,10 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
+      if (showNumbers) rebuildNumberOverlay();
     });
+
+    createSolidBlock(16);
   </script>
 </body>
 </html>
