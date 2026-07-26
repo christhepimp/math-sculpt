@@ -30,11 +30,9 @@
       color: #fff;
       font-size: 0.7rem;
       font-weight: 600;
-      letter-spacing: 0.04em;
       cursor: pointer;
       box-shadow: -4px 0 16px rgba(0,0,0,0.4);
       writing-mode: vertical-rl;
-      text-orientation: mixed;
     }
     #term-toggle:hover { background: #0284c7; }
 
@@ -60,11 +58,12 @@
       top: 56px;
       z-index: 25;
       font-family: monospace;
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: #7dd3fc;
-      background: rgba(0,0,0,0.45);
-      padding: 4px 8px;
+      background: rgba(0,0,0,0.5);
+      padding: 6px 10px;
       border-radius: 6px;
+      line-height: 1.45;
     }
 
     #hint-view {
@@ -77,7 +76,6 @@
       background: rgba(0,0,0,0.4);
       padding: 6px 10px;
       border-radius: 8px;
-      line-height: 1.4;
       pointer-events: none;
     }
 
@@ -120,15 +118,13 @@
       border-radius: 8px;
       font-size: 1.1rem;
       cursor: pointer;
-      line-height: 1;
     }
-    #term-close:hover { background: #3f3f50; }
 
     #term-body {
       flex: 1;
       overflow-y: auto;
       padding: 8px 14px 18px;
-      font-family: 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+      font-family: ui-monospace, monospace;
       -webkit-overflow-scrolling: touch;
     }
 
@@ -170,7 +166,7 @@
       resize: vertical;
     }
     textarea:focus, input[type="text"]:focus { border-color: #38bdf8; }
-    textarea { min-height: 52px; line-height: 1.35; }
+    textarea { min-height: 52px; }
 
     .row { display: flex; gap: 8px; margin-top: 10px; }
     button.go {
@@ -185,7 +181,6 @@
       cursor: pointer;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
-    button.go:hover { background: #0284c7; }
     button.dim {
       flex: 1;
       background: #1a1a26;
@@ -197,7 +192,6 @@
       cursor: pointer;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
-    button.dim:hover { background: #2a2a3a; }
 
     #log {
       margin-top: 12px;
@@ -209,7 +203,6 @@
       color: #94a3b8;
       min-height: 36px;
       white-space: pre-wrap;
-      word-break: break-word;
     }
     #log.err { color: #f87171; }
     #log.ok { color: #4ade80; }
@@ -227,12 +220,12 @@
       position: absolute;
       transform: translate(-50%, -50%);
       font-family: monospace;
-      font-size: 9px;
-      color: rgba(255,255,255,0.8);
-      background: rgba(14,165,233,0.32);
-      border: 1px solid rgba(125,211,252,0.35);
+      font-size: 8px;
+      color: rgba(255,255,255,0.75);
+      background: rgba(14,165,233,0.28);
+      border: 1px solid rgba(125,211,252,0.3);
       border-radius: 3px;
-      padding: 1px 3px;
+      padding: 0 2px;
       white-space: nowrap;
     }
     .pnum.sel {
@@ -247,8 +240,8 @@
   <div id="canvas-container"></div>
   <div id="number-overlay"></div>
 
-  <button id="overlay-btn">particle #s</button>
-  <div id="stats">particles: —</div>
+  <button id="overlay-btn">unit #s</button>
+  <div id="stats">units: —</div>
   <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan</div>
   <button id="term-toggle">MATH</button>
 
@@ -260,11 +253,12 @@
     <div id="term-body">
       <h2>Type the math</h2>
       <p class="help">
-        Type particle numbers, angles, and distance — then Run.<br>
-        Movement uses angles + distance only.
+        The square is one solid piece of clay.<br>
+        It is divided into numbered <strong>units</strong> — each unit is a fixed % of the whole square.<br>
+        Select units by number · type angles + distance · Run.
       </p>
 
-      <label>select particles (numbers)</label>
+      <label>select units (numbers)</label>
       <textarea id="sel" placeholder="0, 1, 5, 10-25"></textarea>
 
       <label>azimuth angle (degrees 0–360)</label>
@@ -281,14 +275,14 @@
         <button class="dim" id="clear">Clear select</button>
       </div>
       <div class="row">
-        <button class="dim" id="reset">Reset solid block</button>
+        <button class="dim" id="reset">Reset solid square</button>
       </div>
 
-      <div id="log">ready · type numbers, angles, distance · run</div>
+      <div id="log">ready</div>
 
       <p class="help" style="margin-top:12px">
-        <code>pos += dir(azimuth, elevation) × (distance / 500)</code><br><br>
-        Tap the clay to add nearby IDs into select.
+        <code>pos += dir(azimuth, elevation) × (distance / 500)</code><br>
+        Tap the square to add nearby unit numbers into select.
       </p>
     </div>
   </div>
@@ -305,6 +299,13 @@
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ═══════════════════════════════════════════════════════════
+    // MathClay
+    // One solid square of clay.
+    // Divided into addressable UNITS — each unit is a % of the whole.
+    // Not loose particles. Units fill the square with no gaps.
+    // ═══════════════════════════════════════════════════════════
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -331,9 +332,6 @@
     controls.enableRotate = true;
     controls.minDistance = 0.8;
     controls.maxDistance = 20;
-    controls.rotateSpeed = 0.9;
-    controls.zoomSpeed = 1.1;
-    controls.panSpeed = 0.8;
     controls.touches = {
       ONE: THREE.TOUCH.ROTATE,
       TWO: THREE.TOUCH.DOLLY_PAN
@@ -353,83 +351,92 @@
     ground.position.y = -1.35;
     scene.add(ground);
 
-    let particles = [];
+    // Units of the solid square (not particles)
+    let units = []; // {id, x,y,z, r,g,b, percent}
     let selected = new Set();
     let pointsObj = null;
     let pointsGeo = null;
     let showNumbers = false;
     const claySize = 2.0;
-    const clickBrush = 0.35;
+    const clickBrush = 0.25;
 
-    // Few particles — each just touching its neighbors (size ≈ spacing)
-    // 8 per side = 512 particles total
-    const DEFAULT_COUNT = 8;
-    let pointSize = 0.25;
+    // ~5000 units: 17^3 = 4913 → each unit ≈ 0.0204% of the square
+    const SIDE = 17;
+    let cellSize = claySize / SIDE;
 
     function log(msg, kind) {
       logEl.textContent = msg;
       logEl.className = kind === 'err' ? 'err' : kind === 'ok' ? 'ok' : '';
     }
 
-    function createSolidBlock(countPerSide = DEFAULT_COUNT) {
-      particles = [];
+    function createSolidSquare() {
+      units = [];
       selected.clear();
-      const n = countPerSide;
+      const n = SIDE;
+      cellSize = claySize / n;
+      // Fill the cube volume: n×n×n cells, each is 100/n³ percent of the whole
+      const total = n * n * n;
+      const percentEach = 100 / total;
       const half = claySize * 0.5;
-      const step = claySize / (n - 1 || 1);
-
-      // Particle diameter = spacing → they sit next to each other, touching
-      pointSize = step;
+      // Centers of each cell (cells touch face-to-face, fill the square)
+      const origin = -half + cellSize * 0.5;
 
       let id = 0;
-      for (let iz = 0; iz < n; iz++)
-        for (let iy = 0; iy < n; iy++)
-          for (let ix = 0; ix < n; ix++)
-            particles.push({
+      for (let iz = 0; iz < n; iz++) {
+        for (let iy = 0; iy < n; iy++) {
+          for (let ix = 0; ix < n; ix++) {
+            units.push({
               id: id++,
-              x: -half + ix * step,
-              y: -half + iy * step,
-              z: -half + iz * step,
-              r: 0.76 + Math.random() * 0.04,
-              g: 0.60 + Math.random() * 0.03,
-              b: 0.44 + Math.random() * 0.03
+              x: origin + ix * cellSize,
+              y: origin + iy * cellSize,
+              z: origin + iz * cellSize,
+              r: 0.76 + Math.random() * 0.03,
+              g: 0.60 + Math.random() * 0.025,
+              b: 0.44 + Math.random() * 0.025,
+              percent: percentEach
             });
+          }
+        }
+      }
 
-      rebuildPoints();
-      document.getElementById('stats').textContent =
-        `particles: ${particles.length.toLocaleString()} · ids 0–${particles.length - 1}`;
+      rebuildVisual();
+      const pct = percentEach.toFixed(4);
+      document.getElementById('stats').innerHTML =
+        `units: ${total.toLocaleString()} · each = ${pct}% of square<br>ids 0–${total - 1}`;
       document.getElementById('sel').value = '';
-      log('block ready · particles touching neighbors');
+      log(`solid square · ${total} units · each ${pct}% of the whole`);
       if (showNumbers) rebuildNumberOverlay();
     }
 
-    function rebuildPoints() {
+    function rebuildVisual() {
       if (pointsObj) {
         scene.remove(pointsObj);
         pointsGeo?.dispose();
         pointsObj.material?.dispose();
       }
-      const count = particles.length;
+      const count = units.length;
       const pos = new Float32Array(count * 3);
       const col = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
-        const p = particles[i];
-        pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
-        if (selected.has(p.id)) {
+        const u = units[i];
+        pos[i*3] = u.x; pos[i*3+1] = u.y; pos[i*3+2] = u.z;
+        if (selected.has(u.id)) {
           col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75;
         } else {
-          col[i*3] = p.r; col[i*3+1] = p.g; col[i*3+2] = p.b;
+          col[i*3] = u.r; col[i*3+1] = u.g; col[i*3+2] = u.b;
         }
       }
       pointsGeo = new THREE.BufferGeometry();
       pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
+
+      // Cell visual size = cell spacing so units fill the square (touching)
+      const size = cellSize * 1.12;
       pointsObj = new THREE.Points(pointsGeo, new THREE.PointsMaterial({
-        size: pointSize,
+        size,
         vertexColors: true,
         sizeAttenuation: true,
         transparent: false,
-        opacity: 1,
         depthWrite: true
       }));
       scene.add(pointsObj);
@@ -439,13 +446,13 @@
       if (!pointsGeo) return;
       const pos = pointsGeo.attributes.position.array;
       const col = pointsGeo.attributes.color.array;
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
-        if (selected.has(p.id)) {
+      for (let i = 0; i < units.length; i++) {
+        const u = units[i];
+        pos[i*3] = u.x; pos[i*3+1] = u.y; pos[i*3+2] = u.z;
+        if (selected.has(u.id)) {
           col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75;
         } else {
-          col[i*3] = p.r; col[i*3+1] = p.g; col[i*3+2] = p.b;
+          col[i*3] = u.r; col[i*3+1] = u.g; col[i*3+2] = u.b;
         }
       }
       pointsGeo.attributes.position.needsUpdate = true;
@@ -492,8 +499,8 @@
     function runMath() {
       try {
         const ids = parseIds(document.getElementById('sel').value);
-        const valid = [...ids].filter(id => id >= 0 && id < particles.length);
-        if (valid.length === 0) throw new Error('no valid particle numbers in select');
+        const valid = [...ids].filter(id => id >= 0 && id < units.length);
+        if (valid.length === 0) throw new Error('no valid unit numbers in select');
 
         const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
@@ -503,15 +510,16 @@
         const dir = dirFromAngles(az, el);
         const scale = dist / 500;
 
-        for (const p of particles) {
-          if (!selected.has(p.id)) continue;
-          p.x += dir.x * scale;
-          p.y += dir.y * scale;
-          p.z += dir.z * scale;
+        for (const u of units) {
+          if (!selected.has(u.id)) continue;
+          u.x += dir.x * scale;
+          u.y += dir.y * scale;
+          u.z += dir.z * scale;
         }
 
         syncVisual();
-        log(`ok · moved ${valid.length} · az=${az} el=${el} dist=${dist}`, 'ok');
+        const pct = (valid.length * (100 / units.length)).toFixed(2);
+        log(`ok · moved ${valid.length} units (${pct}% of square) · az=${az} el=${el} dist=${dist}`, 'ok');
       } catch (e) {
         log(e.message, 'err');
       }
@@ -535,21 +543,21 @@
       const d = raycaster.ray.direction;
 
       let best = null, bestD = Infinity;
-      for (const p of particles) {
-        const ox = p.x - o.x, oy = p.y - o.y, oz = p.z - o.z;
+      for (const u of units) {
+        const ox = u.x - o.x, oy = u.y - o.y, oz = u.z - o.z;
         const t = ox*d.x + oy*d.y + oz*d.z;
         if (t < 0) continue;
         const cx = o.x + d.x * t, cy = o.y + d.y * t, cz = o.z + d.z * t;
-        const d2 = (p.x-cx)**2 + (p.y-cy)**2 + (p.z-cz)**2;
-        if (d2 < bestD) { bestD = d2; best = p; }
+        const d2 = (u.x-cx)**2 + (u.y-cy)**2 + (u.z-cz)**2;
+        if (d2 < bestD) { bestD = d2; best = u; }
       }
       if (!best || bestD > clickBrush * clickBrush * 9) return [];
 
       const r2 = clickBrush * clickBrush;
       const found = [];
-      for (const p of particles) {
-        const dx = p.x - best.x, dy = p.y - best.y, dz = p.z - best.z;
-        if (dx*dx + dy*dy + dz*dz <= r2) found.push(p.id);
+      for (const u of units) {
+        const dx = u.x - best.x, dy = u.y - best.y, dz = u.z - best.z;
+        if (dx*dx + dy*dy + dz*dz <= r2) found.push(u.id);
       }
       return found.sort((a,b) => a-b);
     }
@@ -579,25 +587,27 @@
       found.forEach(id => existing.add(id));
       const sorted = [...existing].sort((a,b) => a-b);
       box.value = sorted.join(', ');
-      selected = new Set(sorted.filter(id => id >= 0 && id < particles.length));
+      selected = new Set(sorted.filter(id => id >= 0 && id < units.length));
       syncVisual();
-      log(`added to select: ${found.slice(0,12).join(', ')}${found.length>12?'…':''} · total ${selected.size}`);
+      log(`select +${found.length} units · total ${selected.size}`);
     });
 
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
       if (!showNumbers) return;
-      for (let i = 0; i < particles.length; i++) {
-        const p = particles[i];
-        const v = new THREE.Vector3(p.x, p.y, p.z);
+      const maxLabels = 500;
+      const step = units.length > maxLabels ? Math.ceil(units.length / maxLabels) : 1;
+      for (let i = 0; i < units.length; i += step) {
+        const u = units[i];
+        const v = new THREE.Vector3(u.x, u.y, u.z);
         v.project(camera);
         if (v.z > 1) continue;
         const x = (v.x * 0.5 + 0.5) * window.innerWidth;
         const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
         if (x < -30 || x > window.innerWidth + 30 || y < -30 || y > window.innerHeight + 30) continue;
         const span = document.createElement('div');
-        span.className = 'pnum' + (selected.has(p.id) ? ' sel' : '');
-        span.textContent = p.id;
+        span.className = 'pnum' + (selected.has(u.id) ? ' sel' : '');
+        span.textContent = u.id;
         span.style.left = x + 'px';
         span.style.top = y + 'px';
         overlayEl.appendChild(span);
@@ -626,7 +636,7 @@
       showNumbers = !showNumbers;
       const btn = document.getElementById('overlay-btn');
       btn.classList.toggle('on', showNumbers);
-      btn.textContent = showNumbers ? 'hide #s' : 'particle #s';
+      btn.textContent = showNumbers ? 'hide #s' : 'unit #s';
       overlayEl.classList.toggle('show', showNumbers);
       if (showNumbers) rebuildNumberOverlay();
       else overlayEl.innerHTML = '';
@@ -634,7 +644,7 @@
 
     document.getElementById('run').addEventListener('click', runMath);
     document.getElementById('clear').addEventListener('click', clearSelect);
-    document.getElementById('reset').addEventListener('click', () => createSolidBlock(DEFAULT_COUNT));
+    document.getElementById('reset').addEventListener('click', createSolidSquare);
 
     ['az', 'el', 'dist'].forEach(id => {
       document.getElementById(id).addEventListener('keydown', e => {
@@ -660,7 +670,7 @@
       if (showNumbers) rebuildNumberOverlay();
     });
 
-    createSolidBlock(DEFAULT_COUNT);
+    createSolidSquare();
   </script>
 </body>
 </html>
