@@ -105,7 +105,6 @@
     }
     .pnum.sel { background: rgba(244,114,182,0.9); border-color: #f9a8d4; font-weight: 600; }
 
-    /* Mapper: probe (small) + readout (large) */
     #mapper-probe {
       position: absolute; z-index: 18;
       width: 140px; height: 140px;
@@ -137,18 +136,16 @@
       transform: translate(-50%, -50%);
       font-family: monospace;
       font-size: 11px;
-      color: #fff;
-      background: rgba(14,165,233,0.85);
-      border: 1px solid rgba(125,211,252,0.55);
+      color: #0a0a0a;
       border-radius: 3px;
       padding: 1px 4px;
       white-space: nowrap;
       line-height: 1.25;
+      border: 1px solid rgba(0,0,0,0.25);
     }
     #mapper-readout .rid.sel {
-      background: rgba(244,114,182,0.9);
-      border-color: #f9a8d4;
-      font-weight: 600;
+      outline: 2px solid #f9a8d4;
+      font-weight: 700;
     }
     #mapper-readout .readout-label {
       position: absolute;
@@ -166,7 +163,7 @@
   <div id="number-overlay"></div>
   <div id="mapper-probe"></div>
   <div id="mapper-readout">
-    <div class="readout-label">readout</div>
+    <div class="readout-label">readout · green = layer</div>
   </div>
   <button id="overlay-btn">unit #s</button>
   <button id="mapper-btn">Mapper</button>
@@ -205,11 +202,9 @@
       </div>
       <div id="log">ready</div>
       <p class="help" style="margin-top:12px">
-        <strong>Unit lengths</strong> (the measure for distance):<br>
-        <code>1</code> = move one unit · <code>2</code> = two units · <code>0.5</code> = half a unit<br>
+        <strong>Unit lengths</strong>: <code>1</code> = one unit · <code>2</code> = two · <code>0.5</code> = half<br>
         <code>pos += dir(azimuth, elevation) × (distance × unit length)</code><br>
-        Tap the square to add nearby unit numbers into select.<br>
-        <strong>Mapper</strong>: drag the probe circle over the cube. The large readout shows the same IDs in the same left→right, top→bottom order.
+        <strong>Mapper</strong>: drag the probe over the cube. The large readout shows those IDs in the same left→right, top→bottom order. When multiple layers are visible, numbers are color-coded bright green (outer) → darker green (deeper).
       </p>
     </div>
   </div>
@@ -226,7 +221,8 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // MathClay · solid fractions · unit-length distance · Mapper probe + spatial readout
+    // MathClay · solid fractions · unit-length distance
+    // Mapper: probe + readout; big-circle numbers color-coded by depth layer (green shades only there)
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -285,7 +281,6 @@
     const FRACTION = 1 / TOTAL;
     let cell = claySize / SIDE;
 
-    // Mapper: fixed medium probe + large readout
     const PROBE_SIZE = 140;
     const READOUT_SIZE = 280;
     let mapperActive = false;
@@ -293,6 +288,16 @@
     let probeY = window.innerHeight / 2;
     let probeDragging = false;
     let probeOffX = 0, probeOffY = 0;
+
+    // Distinct greens: bright (outer) → dark (inner). Noticeably different shades.
+    const LAYER_GREENS = [
+      '#39ff14', // layer 0 outer — neon bright green
+      '#22c55e', // layer 1
+      '#15803d', // layer 2
+      '#166534', // layer 3
+      '#14532d', // layer 4
+      '#0a3d1f'  // layer 5+ deepest
+    ];
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -514,32 +519,27 @@
       log(`select +${found.length} · total ${selected.size}`);
     });
 
-    // ---------- Mapper: probe + spatial readout ----------
     function placeProbe() {
       probeEl.style.left = (probeX - PROBE_SIZE / 2) + 'px';
       probeEl.style.top = (probeY - PROBE_SIZE / 2) + 'px';
     }
 
-    // Park the large readout in a corner that doesn't cover the probe
     function placeReadout() {
       const margin = 16;
       const w = window.innerWidth;
-      const h = window.innerHeight;
-      // Prefer top-right; if probe is there, use top-left
       let rx, ry;
       if (probeX > w * 0.55) {
         rx = margin + READOUT_SIZE / 2;
       } else {
         rx = w - margin - READOUT_SIZE / 2;
       }
-      ry = margin + READOUT_SIZE / 2 + 40; // below top buttons
+      ry = margin + READOUT_SIZE / 2 + 40;
       readoutEl.style.left = (rx - READOUT_SIZE / 2) + 'px';
       readoutEl.style.top = (ry - READOUT_SIZE / 2) + 'px';
       return { rx, ry };
     }
 
     function updateMapperReadout() {
-      // clear previous ID labels inside readout (keep the title)
       const old = readoutEl.querySelectorAll('.rid');
       old.forEach(n => n.remove());
       if (!mapperActive) return;
@@ -548,8 +548,9 @@
       const px = probeX;
       const py = probeY;
       const pr2 = pr * pr;
+      const cam = camera.position;
 
-      // Collect units under the probe, with their screen positions
+      // Collect units under probe + distance from camera (depth)
       const inside = [];
       for (let i = 0; i < units.length; i++) {
         const u = units[i];
@@ -561,12 +562,13 @@
         const dx = sx - px;
         const dy = sy - py;
         if (dx * dx + dy * dy > pr2) continue;
-        inside.push({ id: u.id, selected: selected.has(u.id), sx, sy });
+        const dist = Math.hypot(u.x - cam.x, u.y - cam.y, u.z - cam.z);
+        inside.push({ id: u.id, selected: selected.has(u.id), sx, sy, dist });
       }
 
       if (inside.length === 0) return;
 
-      // Sort left→right, then top→bottom (same order the eye reads the probe area)
+      // Sort left→right, top→bottom
       inside.sort((a, b) => {
         const rowA = Math.floor(a.sy / 8);
         const rowB = Math.floor(b.sy / 8);
@@ -574,32 +576,44 @@
         return a.sx - b.sx;
       });
 
+      // Bin by depth into layers (outer = closest to camera = bright green)
+      let minD = Infinity, maxD = -Infinity;
+      for (const it of inside) {
+        if (it.dist < minD) minD = it.dist;
+        if (it.dist > maxD) maxD = it.dist;
+      }
+      const range = Math.max(maxD - minD, cell * 0.5);
+      // Each layer is roughly one unit-cell of depth
+      const layerThickness = Math.max(cell * 0.85, range / (LAYER_GREENS.length - 1));
+
       const { rx, ry } = placeReadout();
       const maxShow = Math.min(inside.length, 80);
-      const rr = READOUT_SIZE / 2 - 18; // keep labels inside the big circle
+      const rr = READOUT_SIZE / 2 - 18;
+      const rLeft = parseFloat(readoutEl.style.left) || 0;
+      const rTop = parseFloat(readoutEl.style.top) || 0;
 
-      // Map relative positions from probe → readout, preserving spatial order
-      // Use normalized offset from probe center, scaled into readout circle
       for (let i = 0; i < maxShow; i++) {
         const item = inside[i];
-        // relative position inside probe (-1..1)
         const nx = (item.sx - px) / pr;
         const ny = (item.sy - py) / pr;
-        // place in readout at same relative location
         const lx = rx + nx * rr;
         const ly = ry + ny * rr;
+
+        // Layer index: 0 = outer (closest), higher = deeper
+        const layerIdx = Math.min(
+          LAYER_GREENS.length - 1,
+          Math.floor((item.dist - minD) / layerThickness)
+        );
+        const green = LAYER_GREENS[layerIdx];
 
         const span = document.createElement('div');
         span.className = 'rid' + (item.selected ? ' sel' : '');
         span.textContent = item.id;
-        span.style.left = lx + 'px';
-        span.style.top = ly + 'px';
-        // coordinates are absolute to the page; readout is also absolute,
-        // so convert to readout-local coords
-        const rLeft = parseFloat(readoutEl.style.left) || 0;
-        const rTop = parseFloat(readoutEl.style.top) || 0;
         span.style.left = (lx - rLeft) + 'px';
         span.style.top = (ly - rTop) + 'px';
+        span.style.background = green;
+        // Darker layers need lighter text for contrast
+        span.style.color = layerIdx >= 3 ? '#e8ffe8' : '#0a0a0a';
         readoutEl.appendChild(span);
       }
     }
@@ -618,7 +632,7 @@
       overlayEl.innerHTML = '';
       overlayEl.classList.remove('show');
       updateMapperReadout();
-      log('Mapper on · drag the probe over the cube · large circle shows the same IDs in the same order');
+      log('Mapper on · probe = where · big circle = IDs in same order · green shades = depth layers');
     }
 
     function closeMapper() {
@@ -637,7 +651,6 @@
       else openMapper();
     });
 
-    // Drag the probe
     probeEl.addEventListener('pointerdown', e => {
       e.preventDefault();
       e.stopPropagation();
