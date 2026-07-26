@@ -109,12 +109,20 @@
       margin-top: 6px;
     }
     .dirs button { font-size: 0.7rem; padding: 7px 4px; }
+    .shapes {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 5px;
+      margin-top: 6px;
+    }
+    .shapes button { font-size: 0.7rem; padding: 7px 4px; }
     .hint {
       font-size: 0.65rem;
       color: #555;
-      margin-top: 10px;
+      margin-top: 8px;
       line-height: 1.4;
     }
+    code { color: #a5b4fc; font-size: 0.68rem; }
   </style>
 </head>
 <body>
@@ -122,11 +130,10 @@
 
   <div id="ui">
     <h1>MathClay</h1>
-    <p class="tagline">Mathematical digital clay · no meshes</p>
+    <p class="tagline">Simple math moves the clay · only the tips have shapes</p>
 
     <div class="stat" id="stats">particles: —</div>
 
-    <!-- Brush -->
     <label>Brush radius <span class="value" id="radius-val">0.35</span></label>
     <input type="range" id="radius" min="0.05" max="1.5" value="0.35" step="0.05" />
 
@@ -138,7 +145,7 @@
     <div class="section">
       <label>Direction</label>
       <div class="dirs">
-        <button data-d="0,1,0" class="active">Up</button>
+        <button data-d="0,1,0">Up</button>
         <button data-d="0,-1,0">Down</button>
         <button data-d="1,0,0">Right</button>
         <button data-d="-1,0,0">Left</button>
@@ -146,15 +153,25 @@
         <button data-d="0,0,-1">Back</button>
       </div>
       <div class="row" style="margin-top:6px">
-        <button id="dir-out" class="active">Out (from center)</button>
-        <button id="dir-in">In (to center)</button>
+        <button id="dir-out" class="active">Out</button>
+        <button id="dir-in">In</button>
       </div>
     </div>
 
     <div class="section">
-      <label>Particle density <span class="value" id="dens-val">24</span></label>
-      <input type="range" id="density" min="8" max="48" value="24" step="2" />
-      <p class="hint">Higher = more particles = more detail (slower)</p>
+      <label>Particle tip shape</label>
+      <div class="shapes" id="shape-btns">
+        <button data-shape="point" class="active">Soft Point</button>
+        <button data-shape="sphere">Sphere</button>
+        <button data-shape="cube">Cube</button>
+        <button data-shape="diamond">Diamond</button>
+      </div>
+      <p class="hint">Only the visual tip changes. Sculpt math stays the same.</p>
+    </div>
+
+    <div class="section">
+      <label>Particle density <span class="value" id="dens-val">20</span></label>
+      <input type="range" id="density" min="8" max="36" value="20" step="2" />
     </div>
 
     <div class="section">
@@ -170,11 +187,9 @@
     </div>
 
     <p class="info">
-      <strong>How to sculpt</strong><br>
-      Click + drag on the clay.<br>
-      Selected particles move by:<br>
-      <code style="color:#a5b4fc">position + direction × distance</code><br><br>
-      That is the entire sculpt operation.
+      <strong>All sculpting is your simple math:</strong><br>
+      <code>position + direction × distance</code><br><br>
+      The tip shape is only how each particle looks.
     </p>
   </div>
 
@@ -193,8 +208,8 @@
 
     // ═══════════════════════════════════════════════════════════
     // MathClay Engine
-    // Pure particle clay. No meshes. No topology.
-    // Sculpt = select particles + direction × distance
+    // Sculpting = only simple math: pos += dir × distance
+    // Particle tips = selectable visual shapes only
     // ═══════════════════════════════════════════════════════════
 
     const container = document.getElementById('canvas-container');
@@ -216,14 +231,12 @@
     controls.dampingFactor = 0.08;
     controls.enablePan = false;
 
-    // Soft lighting
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const key = new THREE.DirectionalLight(0xfff5e6, 1.1);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xfff5e6, 1.15);
     key.position.set(4, 7, 3);
     scene.add(key);
-    scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.35).translateX(-3).translateY(2).translateZ(-4));
+    scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.4).translateX(-3).translateY(2).translateZ(-4));
 
-    // Ground
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(20, 20),
       new THREE.MeshStandardMaterial({ color: 0x101014, roughness: 0.95, metalness: 0.05 })
@@ -232,21 +245,115 @@
     ground.position.y = -1.4;
     scene.add(ground);
 
-    // ── Particle Clay ──────────────────────────────────────────
-    // Each particle: id, x, y, z, r, g, b
-    // Packed densely → forms solid clay
-
-    let positions;   // Float32Array xyz
-    let colors;      // Float32Array rgb
+    // ── Particle data (the real clay) ──────────────────────────
+    let positions;  // Float32Array
+    let colors;     // Float32Array
     let particleCount = 0;
-    let points;      // THREE.Points for rendering
-    let geometry;
+    let tipShape = 'point'; // point | sphere | cube | diamond
 
     const clayCenter = new THREE.Vector3(0, 0, 0);
     let claySize = 2.0;
 
-    function createClay(density = 24) {
-      // density = particles per axis → total ≈ density³
+    // Visual objects
+    let pointsObj = null;      // THREE.Points (soft tips)
+    let instancedObj = null;   // THREE.InstancedMesh (solid tips)
+    let pointsGeo = null;
+
+    const dummy = new THREE.Object3D();
+    const tempColor = new THREE.Color();
+
+    function clearVisuals() {
+      if (pointsObj) {
+        scene.remove(pointsObj);
+        pointsGeo?.dispose();
+        pointsObj.material?.dispose();
+        pointsObj = null;
+      }
+      if (instancedObj) {
+        scene.remove(instancedObj);
+        instancedObj.geometry?.dispose();
+        instancedObj.material?.dispose();
+        instancedObj = null;
+      }
+    }
+
+    function buildVisuals() {
+      clearVisuals();
+
+      if (tipShape === 'point') {
+        pointsGeo = new THREE.BufferGeometry();
+        pointsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        pointsGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+        const mat = new THREE.PointsMaterial({
+          size: 0.06,
+          vertexColors: true,
+          sizeAttenuation: true,
+          transparent: true,
+          opacity: 0.92,
+          depthWrite: true
+        });
+        pointsObj = new THREE.Points(pointsGeo, mat);
+        scene.add(pointsObj);
+      } else {
+        let geo;
+        const s = 0.045;
+        if (tipShape === 'sphere') {
+          geo = new THREE.SphereGeometry(s * 0.7, 6, 5);
+        } else if (tipShape === 'cube') {
+          geo = new THREE.BoxGeometry(s, s, s);
+        } else { // diamond
+          geo = new THREE.OctahedronGeometry(s * 0.75, 0);
+        }
+
+        const mat = new THREE.MeshStandardMaterial({
+          roughness: 0.65,
+          metalness: 0.08,
+          vertexColors: false // we use instanceColor
+        });
+
+        instancedObj = new THREE.InstancedMesh(geo, mat, particleCount);
+        instancedObj.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+        // Per-instance colors
+        const colorArr = new Float32Array(particleCount * 3);
+        colorArr.set(colors);
+        instancedObj.instanceColor = new THREE.InstancedBufferAttribute(colorArr, 3);
+
+        updateInstanceMatrices();
+        scene.add(instancedObj);
+      }
+    }
+
+    function updateInstanceMatrices() {
+      if (!instancedObj) return;
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        dummy.position.set(positions[i3], positions[i3+1], positions[i3+2]);
+        dummy.updateMatrix();
+        instancedObj.setMatrixAt(i, dummy.matrix);
+      }
+      instancedObj.instanceMatrix.needsUpdate = true;
+    }
+
+    function updateInstanceColors() {
+      if (!instancedObj || !instancedObj.instanceColor) return;
+      const arr = instancedObj.instanceColor.array;
+      arr.set(colors);
+      instancedObj.instanceColor.needsUpdate = true;
+    }
+
+    function syncVisuals() {
+      if (tipShape === 'point' && pointsObj) {
+        pointsGeo.attributes.position.needsUpdate = true;
+        pointsGeo.attributes.color.needsUpdate = true;
+      } else if (instancedObj) {
+        updateInstanceMatrices();
+        updateInstanceColors();
+      }
+    }
+
+    function createClay(density = 20) {
       const n = density;
       particleCount = n * n * n;
 
@@ -265,98 +372,64 @@
             positions[i3 + 1] = -half + iy * step;
             positions[i3 + 2] = -half + iz * step;
 
-            // Default warm clay color with slight variation
-            colors[i3]     = 0.72 + (Math.random() * 0.08);
-            colors[i3 + 1] = 0.58 + (Math.random() * 0.06);
-            colors[i3 + 2] = 0.42 + (Math.random() * 0.05);
+            colors[i3]     = 0.72 + Math.random() * 0.08;
+            colors[i3 + 1] = 0.58 + Math.random() * 0.06;
+            colors[i3 + 2] = 0.42 + Math.random() * 0.05;
             idx++;
           }
         }
       }
 
-      if (points) {
-        scene.remove(points);
-        geometry.dispose();
-        points.material.dispose();
-      }
-
-      geometry = new THREE.BufferGeometry();
-      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
-      const material = new THREE.PointsMaterial({
-        size: 0.055,
-        vertexColors: true,
-        sizeAttenuation: true,
-        transparent: true,
-        opacity: 0.95,
-        depthWrite: true
-      });
-
-      points = new THREE.Points(geometry, material);
-      scene.add(points);
-
+      buildVisuals();
       document.getElementById('stats').textContent =
         `particles: ${particleCount.toLocaleString()}`;
     }
 
-    createClay(24);
+    createClay(20);
 
-    // ── Core sculpt operation ──────────────────────────────────
+    // ── Core sculpt — ONLY simple math ─────────────────────────
     // New Position = Current Position + Direction × Distance
-    // Only particles inside the brush radius are moved.
 
     let brushRadius = 0.35;
     let pushDistance = 0.08;
-    let directionMode = 'out'; // 'out' | 'in' | 'fixed'
+    let directionMode = 'out';
     let fixedDir = new THREE.Vector3(0, 1, 0);
     let isPainting = false;
     let paintColor = new THREE.Color('#c4a484');
+    let isSculpting = false;
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-    let isSculpting = false;
 
-    // Find particles near a 3D point and move / paint them
     function applyBrush(worldPoint) {
       const r2 = brushRadius * brushRadius;
-      const posAttr = geometry.attributes.position;
-      const colAttr = geometry.attributes.color;
-      const arr = posAttr.array;
-      const carr = colAttr.array;
-
       let moved = 0;
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
-        const px = arr[i3];
-        const py = arr[i3 + 1];
-        const pz = arr[i3 + 2];
+        const px = positions[i3];
+        const py = positions[i3 + 1];
+        const pz = positions[i3 + 2];
 
         const dx = px - worldPoint.x;
         const dy = py - worldPoint.y;
         const dz = pz - worldPoint.z;
         const dist2 = dx*dx + dy*dy + dz*dz;
-
         if (dist2 > r2) continue;
 
-        // Falloff: stronger at center of brush
         const dist = Math.sqrt(dist2);
         const falloff = 1 - (dist / brushRadius);
-        const strength = falloff * falloff; // smooth
+        const strength = falloff * falloff;
 
         if (isPainting) {
-          // Color is also just numbers on the particle
-          carr[i3]     = paintColor.r;
-          carr[i3 + 1] = paintColor.g;
-          carr[i3 + 2] = paintColor.b;
+          colors[i3]     = paintColor.r;
+          colors[i3 + 1] = paintColor.g;
+          colors[i3 + 2] = paintColor.b;
         } else {
-          // ── The only sculpt math ──
-          // NewPos = CurrentPos + Direction × Distance
+          // ── THE ONLY SCULPT MATH ──
           let dirX, dirY, dirZ;
 
           if (directionMode === 'out') {
-            // Away from clay center
             dirX = px - clayCenter.x;
             dirY = py - clayCenter.y;
             dirZ = pz - clayCenter.z;
@@ -375,53 +448,36 @@
           }
 
           const d = pushDistance * strength;
-          arr[i3]     += dirX * d;
-          arr[i3 + 1] += dirY * d;
-          arr[i3 + 2] += dirZ * d;
+          positions[i3]     += dirX * d;
+          positions[i3 + 1] += dirY * d;
+          positions[i3 + 2] += dirZ * d;
         }
         moved++;
       }
 
-      if (moved > 0) {
-        posAttr.needsUpdate = true;
-        colAttr.needsUpdate = true;
-      }
+      if (moved > 0) syncVisuals();
     }
 
-    // Project mouse onto a virtual plane / find nearby particles
     function getBrushPoint(clientX, clientY) {
       mouse.x = (clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(clientY / window.innerHeight) * 2 + 1;
-
       raycaster.setFromCamera(mouse, camera);
-
-      // Simple approach: find the closest particle to the ray
-      // and use its position as the brush center
-      const arr = geometry.attributes.position.array;
-      let bestDist = Infinity;
-      let best = null;
 
       const origin = raycaster.ray.origin;
       const dir = raycaster.ray.direction;
+      let bestDist = Infinity;
+      let best = null;
 
       for (let i = 0; i < particleCount; i++) {
         const i3 = i * 3;
-        const px = arr[i3], py = arr[i3+1], pz = arr[i3+2];
-
-        // Distance from point to ray
-        const ox = px - origin.x;
-        const oy = py - origin.y;
-        const oz = pz - origin.z;
+        const px = positions[i3], py = positions[i3+1], pz = positions[i3+2];
+        const ox = px - origin.x, oy = py - origin.y, oz = pz - origin.z;
         const t = ox*dir.x + oy*dir.y + oz*dir.z;
         if (t < 0) continue;
-        const closestX = origin.x + dir.x * t;
-        const closestY = origin.y + dir.y * t;
-        const closestZ = origin.z + dir.z * t;
-        const ddx = px - closestX;
-        const ddy = py - closestY;
-        const ddz = pz - closestZ;
-        const d2 = ddx*ddx + ddy*ddy + ddz*ddz;
-
+        const cx = origin.x + dir.x * t;
+        const cy = origin.y + dir.y * t;
+        const cz = origin.z + dir.z * t;
+        const d2 = (px-cx)**2 + (py-cy)**2 + (pz-cz)**2;
         if (d2 < bestDist && d2 < brushRadius * brushRadius * 4) {
           bestDist = d2;
           best = new THREE.Vector3(px, py, pz);
@@ -430,41 +486,28 @@
       return best;
     }
 
-    // ── Input ──────────────────────────────────────────────────
-    let lastBrushPoint = null;
-
     function onPointerDown(e) {
       if (e.button !== 0) return;
-      // Disable orbit while sculpting
       controls.enabled = false;
       isSculpting = true;
       const pt = getBrushPoint(e.clientX, e.clientY);
-      if (pt) {
-        applyBrush(pt);
-        lastBrushPoint = pt;
-      }
+      if (pt) applyBrush(pt);
     }
-
     function onPointerMove(e) {
       if (!isSculpting) return;
       const pt = getBrushPoint(e.clientX, e.clientY);
-      if (pt) {
-        applyBrush(pt);
-        lastBrushPoint = pt;
-      }
+      if (pt) applyBrush(pt);
     }
-
     function onPointerUp() {
       isSculpting = false;
       controls.enabled = true;
-      lastBrushPoint = null;
     }
 
     renderer.domElement.addEventListener('pointerdown', onPointerDown);
     window.addEventListener('pointermove', onPointerMove);
     window.addEventListener('pointerup', onPointerUp);
 
-    // ── UI wiring ──────────────────────────────────────────────
+    // ── UI ─────────────────────────────────────────────────────
     document.getElementById('radius').addEventListener('input', e => {
       brushRadius = +e.target.value;
       document.getElementById('radius-val').textContent = brushRadius.toFixed(2);
@@ -499,6 +542,16 @@
       document.querySelectorAll('.dirs button').forEach(b => b.classList.remove('active'));
     });
 
+    // Tip shape selector
+    document.querySelectorAll('#shape-btns button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#shape-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        tipShape = btn.dataset.shape;
+        buildVisuals();
+      });
+    });
+
     document.getElementById('density').addEventListener('input', e => {
       document.getElementById('dens-val').textContent = e.target.value;
     });
@@ -521,7 +574,6 @@
       createClay(+document.getElementById('density').value);
     });
 
-    // ── Loop ───────────────────────────────────────────────────
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
