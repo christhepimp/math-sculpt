@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Math Sculpt — Addressable Mathematical Clay</title>
+  <title>MathClay Engine</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0a0a0e;
+      background: #08080c;
       color: #e8e8ec;
       overflow: hidden;
       height: 100vh;
@@ -16,58 +16,51 @@
     #canvas-container { position: absolute; inset: 0; }
     #ui {
       position: absolute;
-      top: 10px;
-      left: 10px;
-      width: 410px;
-      background: rgba(12, 12, 18, 0.96);
+      top: 12px;
+      left: 12px;
+      width: 320px;
+      background: rgba(10, 10, 16, 0.94);
       border: 1px solid #2a2a38;
-      border-radius: 12px;
-      padding: 15px;
-      backdrop-filter: blur(14px);
-      box-shadow: 0 12px 40px rgba(0,0,0,0.55);
-      max-height: calc(100vh - 20px);
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(16px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.5);
+      max-height: calc(100vh - 24px);
       overflow-y: auto;
       z-index: 10;
     }
-    h1 { font-size: 1.12rem; font-weight: 600; margin-bottom: 2px; }
-    .subtitle { font-size: 0.73rem; color: #777; margin-bottom: 11px; }
+    h1 {
+      font-size: 1.25rem;
+      font-weight: 650;
+      letter-spacing: -0.03em;
+      margin-bottom: 2px;
+    }
+    .tagline {
+      font-size: 0.72rem;
+      color: #777;
+      margin-bottom: 14px;
+    }
     label {
       display: block;
       font-size: 0.68rem;
       color: #999;
       margin-bottom: 4px;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
+      letter-spacing: 0.06em;
     }
-    textarea {
-      width: 100%;
-      background: #14141c;
-      border: 1px solid #2e2e3a;
-      border-radius: 7px;
-      color: #7dd3fc;
-      font-family: 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
-      font-size: 0.76rem;
-      padding: 8px;
-      resize: vertical;
-      outline: none;
-      line-height: 1.35;
-    }
-    textarea:focus { border-color: #38bdf8; }
-    #formula { height: 72px; }
-    #colorFormula { height: 58px; color: #f9a8d4; }
-    .row { display: flex; gap: 7px; margin-top: 9px; }
+    .row { display: flex; gap: 8px; margin-top: 10px; }
     button {
       flex: 1;
       background: #1a1a26;
       border: 1px solid #333344;
       color: #e2e8f0;
-      padding: 8px 8px;
-      border-radius: 7px;
-      font-size: 0.73rem;
+      padding: 9px 10px;
+      border-radius: 8px;
+      font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.15s;
     }
-    button:hover { background: #2a2a3a; border-color: #444; }
+    button:hover { background: #2a2a3a; }
     button.primary {
       background: #0ea5e9;
       border-color: #0284c7;
@@ -75,52 +68,52 @@
       font-weight: 500;
     }
     button.primary:hover { background: #0284c7; }
-    .presets {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
-      margin-top: 5px;
-    }
-    .presets button { font-size: 0.66rem; padding: 5px 4px; }
-    .slider-group { margin-top: 10px; }
-    input[type="range"] { width: 100%; margin-top: 2px; accent-color: #38bdf8; }
-    .value { float: right; color: #7dd3fc; font-family: monospace; font-size: 0.73rem; }
-    .hint {
-      font-size: 0.63rem;
-      color: #555;
-      margin-top: 10px;
-      line-height: 1.45;
-    }
-    code {
-      background: #1a1a22;
-      padding: 1px 3px;
-      border-radius: 3px;
-      font-size: 0.6rem;
-      color: #a5b4fc;
-    }
-    .mode { display: flex; gap: 5px; margin-bottom: 8px; }
-    .mode button { flex: 1; font-size: 0.68rem; padding: 5px; }
-    .mode button.active {
+    button.active {
       background: #0ea5e9;
       border-color: #0284c7;
       color: #fff;
     }
-    .section {
+    .slider-group { margin-top: 12px; }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 3px;
+      accent-color: #38bdf8;
+    }
+    .value {
+      float: right;
+      color: #7dd3fc;
+      font-family: monospace;
+      font-size: 0.75rem;
+    }
+    .info {
+      font-size: 0.7rem;
+      color: #666;
       margin-top: 12px;
-      padding-top: 10px;
+      line-height: 1.45;
+    }
+    .stat {
+      font-family: monospace;
+      font-size: 0.72rem;
+      color: #7dd3fc;
+      margin-bottom: 10px;
+    }
+    .section {
+      margin-top: 14px;
+      padding-top: 12px;
       border-top: 1px solid #222230;
     }
-    .warn {
-      font-size: 0.61rem;
-      color: #a78bfa;
+    .dirs {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 5px;
       margin-top: 6px;
-      line-height: 1.35;
     }
-    .grain-info {
-      font-size: 0.68rem;
-      color: #7dd3fc;
-      margin: 6px 0 4px;
-      font-family: monospace;
+    .dirs button { font-size: 0.7rem; padding: 7px 4px; }
+    .hint {
+      font-size: 0.65rem;
+      color: #555;
+      margin-top: 10px;
+      line-height: 1.4;
     }
   </style>
 </head>
@@ -128,91 +121,60 @@
   <div id="canvas-container"></div>
 
   <div id="ui">
-    <h1>Math Sculpt</h1>
-    <p class="subtitle">Addressable mathematical clay — every grain is a number</p>
+    <h1>MathClay</h1>
+    <p class="tagline">Mathematical digital clay · no meshes</p>
 
-    <div class="mode">
-      <button id="mode-y">Y only</button>
-      <button id="mode-vec" class="active">Any direction [x,y,z]</button>
+    <div class="stat" id="stats">particles: —</div>
+
+    <!-- Brush -->
+    <label>Brush radius <span class="value" id="radius-val">0.35</span></label>
+    <input type="range" id="radius" min="0.05" max="1.5" value="0.35" step="0.05" />
+
+    <div class="slider-group">
+      <label>Push distance <span class="value" id="dist-val">0.08</span></label>
+      <input type="range" id="distance" min="0.01" max="0.4" value="0.08" step="0.01" />
     </div>
-
-    <div class="grain-info" id="grainInfo">grains: —</div>
-
-    <label>Geometry formula <span class="value" id="status">ready</span></label>
-    <textarea id="formula" spellcheck="false">[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]</textarea>
 
     <div class="section">
-      <label>Color formula → [r, g, b] (0–1)</label>
-      <textarea id="colorFormula" spellcheck="false">[0.75 + 0.25*Math.sin(x*4), 0.55 + 0.2*Math.cos(z*3), 0.4]</textarea>
+      <label>Direction</label>
+      <div class="dirs">
+        <button data-d="0,1,0" class="active">Up</button>
+        <button data-d="0,-1,0">Down</button>
+        <button data-d="1,0,0">Right</button>
+        <button data-d="-1,0,0">Left</button>
+        <button data-d="0,0,1">Forward</button>
+        <button data-d="0,0,-1">Back</button>
+      </div>
+      <div class="row" style="margin-top:6px">
+        <button id="dir-out" class="active">Out (from center)</button>
+        <button id="dir-in">In (to center)</button>
+      </div>
     </div>
 
-    <div class="row">
-      <button class="primary" id="apply">Evaluate Math</button>
-      <button id="reset">Reset Clay</button>
+    <div class="section">
+      <label>Particle density <span class="value" id="dens-val">24</span></label>
+      <input type="range" id="density" min="8" max="48" value="24" step="2" />
+      <p class="hint">Higher = more particles = more detail (slower)</p>
     </div>
 
-    <label style="margin-top:11px">Geometry presets</label>
-    <div class="presets" id="presets-y" style="display:none">
-      <button data-f="Math.sin(x*4)*0.22">sine</button>
-      <button data-f="Math.sin(x*3)*Math.cos(z*3)*0.28">ripple</button>
-      <button data-f="(Math.sin(x*5)+Math.sin(z*5))*0.14">grid</button>
-      <button data-f="Math.sin(Math.sqrt(x*x+z*z)*6)*0.22">radial</button>
-      <button data-f="Math.pow(Math.abs(x),1.6)*Math.sign(x)*0.22">crease</button>
-      <button data-f="Math.abs(x)*0.35-0.18">V groove</button>
-      <button data-f="(Math.random()-0.5)*0.3">noise</button>
-      <button data-f="Math.sin(x*10)*Math.sin(z*10)*0.12">fine</button>
-    </div>
-    <div class="presets" id="presets-vec">
-      <button data-f="[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]">ripple</button>
-      <button data-f="[x*1.1, y + Math.sin(Math.sqrt(x*x+z*z)*5)*0.25, z*1.1]">radial</button>
-      <button data-f="[x + Math.sin(z*4)*0.15, y, z + Math.sin(x*4)*0.15]">wave</button>
-      <button data-f="[x, y*0.7 + Math.sin(x*2)*0.2, z]">squash</button>
-      <button data-f="[x*Math.cos(0.4)-z*Math.sin(0.4), y, x*Math.sin(0.4)+z*Math.cos(0.4)]">rotate</button>
-      <button data-f="[x, y+(Math.random()-0.5)*0.25, z]">noise</button>
-      <button data-f="[x + (i/n - 0.5)*0.8, y, z]">index push</button>
-      <button data-f="[x, y + Math.sin(i/n * Math.PI*8)*0.3, z]">grain wave</button>
+    <div class="section">
+      <label>Color</label>
+      <div class="row">
+        <input type="color" id="paintColor" value="#c4a484" style="flex:1;height:34px;border:none;border-radius:6px;background:#1a1a26;cursor:pointer" />
+        <button id="paintMode">Paint</button>
+      </div>
     </div>
 
-    <label style="margin-top:11px">Color presets</label>
-    <div class="presets" id="color-presets">
-      <button data-c="[0.75+0.25*Math.sin(x*4), 0.55+0.2*Math.cos(z*3), 0.4]">warm clay</button>
-      <button data-c="[0.2+0.3*Math.abs(x), 0.4+0.4*Math.abs(y), 0.7+0.3*Math.abs(z)]">xyz rgb</button>
-      <button data-c="[0.5+0.5*Math.sin(x*6), 0.3+0.4*Math.sin(z*6), 0.6]">stripes</button>
-      <button data-c="[0.15, 0.6+0.3*Math.sin(Math.sqrt(x*x+z*z)*5), 0.4]">radial</button>
-      <button data-c="[0.9, 0.3+0.4*Math.abs(Math.sin(x*8)), 0.15]">lava</button>
-      <button data-c="[i/n, 0.3, 1 - i/n]">by grain #</button>
-      <button data-c="[0.5+0.5*Math.sin(x*3)*Math.cos(z*3), 0.4, 0.7]">ripple</button>
-      <button data-c="[0.65, 0.55, 0.45]">flat</button>
+    <div class="row" style="margin-top:14px">
+      <button class="primary" id="reset">Reset Clay</button>
     </div>
 
-    <div class="slider-group">
-      <label>Grains (subdivision) <span class="value" id="sub-val">48</span></label>
-      <input type="range" id="subdiv" min="8" max="128" value="48" step="8" />
-    </div>
-
-    <div class="slider-group">
-      <label>Strength <span class="value" id="str-val">1.00</span></label>
-      <input type="range" id="strength" min="0" max="3" value="1" step="0.05" />
-    </div>
-
-    <div class="slider-group">
-      <label>Box size <span class="value" id="size-val">2.00</span></label>
-      <input type="range" id="size" min="0.5" max="4" value="2" step="0.1" />
-    </div>
-
-    <p class="warn">
-      Each vertex is a numbered grain (i = 0 … n-1). You can push any grain in any direction with math.
-      Writing the formula that turns the box into a precise human (or any complex object) is the hard part — the math framework allows it in theory, but the formula itself becomes extremely complex.
-    </p>
-
-    <p class="hint">
-      <strong>Addressable clay</strong><br>
-      <code>x y z</code> = original position of the grain<br>
-      <code>i</code> = grain index (0 to n-1)<br>
-      <code>n</code> = total number of grains<br>
-      <code>t</code> = time · <code>Math</code> = full Math object<br><br>
-      Return <code>[nx, ny, nz]</code> to move that grain anywhere in 3D space.<br>
-      Color: return <code>[r, g, b]</code> in 0–1.
+    <p class="info">
+      <strong>How to sculpt</strong><br>
+      Click + drag on the clay.<br>
+      Selected particles move by:<br>
+      <code style="color:#a5b4fc">position + direction × distance</code><br><br>
+      That is the entire sculpt operation.
     </p>
   </div>
 
@@ -229,254 +191,337 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
+    // ═══════════════════════════════════════════════════════════
+    // MathClay Engine
+    // Pure particle clay. No meshes. No topology.
+    // Sculpt = select particles + direction × distance
+    // ═══════════════════════════════════════════════════════════
+
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0a0a0e);
+    scene.background = new THREE.Color(0x08080c);
 
-    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.05, 100);
-    camera.position.set(3.8, 3.0, 4.5);
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 100);
+    camera.position.set(3.2, 2.6, 3.8);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.shadowMap.enabled = true;
-    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
     renderer.toneMapping = THREE.ACESFilmicToneMapping;
-    renderer.toneMappingExposure = 1.15;
+    renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.07;
+    controls.dampingFactor = 0.08;
+    controls.enablePan = false;
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
-    const key = new THREE.DirectionalLight(0xfff5e6, 1.4);
-    key.position.set(5, 9, 4);
-    key.castShadow = true;
-    key.shadow.mapSize.set(2048, 2048);
-    key.shadow.bias = -0.0002;
+    // Soft lighting
+    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+    const key = new THREE.DirectionalLight(0xfff5e6, 1.1);
+    key.position.set(4, 7, 3);
     scene.add(key);
-    scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.45).translateX(-4).translateY(3).translateZ(-5));
-    scene.add(new THREE.DirectionalLight(0xffccaa, 0.25).translateZ(-6));
+    scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.35).translateX(-3).translateY(2).translateZ(-4));
 
+    // Ground
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(30, 30),
-      new THREE.MeshStandardMaterial({ color: 0x111116, roughness: 0.92, metalness: 0.08 })
+      new THREE.PlaneGeometry(20, 20),
+      new THREE.MeshStandardMaterial({ color: 0x101014, roughness: 0.95, metalness: 0.05 })
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.3;
-    ground.receiveShadow = true;
+    ground.position.y = -1.4;
     scene.add(ground);
 
-    let mesh, geometry;
-    let originalPositions = null;
-    let mode = 'vec';
-    let grainCount = 0;
+    // ── Particle Clay ──────────────────────────────────────────
+    // Each particle: id, x, y, z, r, g, b
+    // Packed densely → forms solid clay
 
-    function createClay(subdiv = 48, size = 2) {
-      if (mesh) {
-        scene.remove(mesh);
-        geometry.dispose();
-        mesh.material.dispose();
-      }
+    let positions;   // Float32Array xyz
+    let colors;      // Float32Array rgb
+    let particleCount = 0;
+    let points;      // THREE.Points for rendering
+    let geometry;
 
-      geometry = new THREE.BoxGeometry(size, size, size, subdiv, subdiv, subdiv);
-      originalPositions = new Float32Array(geometry.attributes.position.array);
-      grainCount = geometry.attributes.position.count;
+    const clayCenter = new THREE.Vector3(0, 0, 0);
+    let claySize = 2.0;
 
-      document.getElementById('grainInfo').textContent =
-        `grains: ${grainCount.toLocaleString()}  (i = 0 … ${grainCount - 1})`;
+    function createClay(density = 24) {
+      // density = particles per axis → total ≈ density³
+      const n = density;
+      particleCount = n * n * n;
 
-      const colors = new Float32Array(grainCount * 3);
-      for (let i = 0; i < grainCount; i++) {
-        colors[i*3] = 0.75;
-        colors[i*3+1] = 0.55;
-        colors[i*3+2] = 0.4;
-      }
-      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+      positions = new Float32Array(particleCount * 3);
+      colors    = new Float32Array(particleCount * 3);
 
-      const material = new THREE.MeshStandardMaterial({
-        vertexColors: true,
-        roughness: 0.72,
-        metalness: 0.08,
-        flatShading: false,
-        side: THREE.DoubleSide
-      });
+      const half = claySize * 0.5;
+      const step = claySize / (n - 1 || 1);
+      let idx = 0;
 
-      mesh = new THREE.Mesh(geometry, material);
-      mesh.castShadow = true;
-      mesh.receiveShadow = true;
-      scene.add(mesh);
-    }
-    createClay();
+      for (let iz = 0; iz < n; iz++) {
+        for (let iy = 0; iy < n; iy++) {
+          for (let ix = 0; ix < n; ix++) {
+            const i3 = idx * 3;
+            positions[i3]     = -half + ix * step;
+            positions[i3 + 1] = -half + iy * step;
+            positions[i3 + 2] = -half + iz * step;
 
-    const formulaEl = document.getElementById('formula');
-    const colorEl   = document.getElementById('colorFormula');
-    const statusEl  = document.getElementById('status');
-
-    function evaluateMath() {
-      const geoCode = formulaEl.value.trim();
-      const colCode = colorEl.value.trim();
-      if (!geoCode) return;
-
-      const strength = parseFloat(document.getElementById('strength').value);
-      const t = performance.now() * 0.001;
-      const n = grainCount;
-
-      let geoFn, colFn;
-      try {
-        // i = grain index, n = total grains
-        geoFn = new Function('x', 'y', 'z', 'i', 'n', 't', 'Math',
-          `"use strict"; return (${geoCode});`);
-        colFn = colCode
-          ? new Function('x', 'y', 'z', 'i', 'n', 't', 'Math',
-              `"use strict"; return (${colCode});`)
-          : null;
-      } catch (e) {
-        statusEl.textContent = 'syntax error';
-        statusEl.style.color = '#f87171';
-        return;
-      }
-
-      const pos = geometry.attributes.position;
-      const col = geometry.attributes.color;
-      const arr = pos.array;
-      const carr = col.array;
-
-      try {
-        for (let vi = 0; vi < n; vi++) {
-          const i3 = vi * 3;
-          const ox = originalPositions[i3];
-          const oy = originalPositions[i3 + 1];
-          const oz = originalPositions[i3 + 2];
-
-          const result = geoFn(ox, oy, oz, vi, n, t, Math);
-
-          if (mode === 'y') {
-            if (typeof result !== 'number' || Number.isNaN(result))
-              throw new Error('Y mode needs a number');
-            arr[i3]     = ox;
-            arr[i3 + 1] = oy + result * strength;
-            arr[i3 + 2] = oz;
-          } else {
-            let nx, ny, nz;
-            if (Array.isArray(result) && result.length >= 3) [nx, ny, nz] = result;
-            else if (result && typeof result === 'object') {
-              nx = result.x; ny = result.y; nz = result.z;
-            } else throw new Error('return [x,y,z]');
-            if ([nx,ny,nz].some(v => typeof v !== 'number' || Number.isNaN(v)))
-              throw new Error('bad vector');
-            arr[i3]     = ox + (nx - ox) * strength;
-            arr[i3 + 1] = oy + (ny - oy) * strength;
-            arr[i3 + 2] = oz + (nz - oz) * strength;
-          }
-
-          if (colFn) {
-            const c = colFn(ox, oy, oz, vi, n, t, Math);
-            let r, g, b;
-            if (Array.isArray(c) && c.length >= 3) [r, g, b] = c;
-            else if (c && typeof c === 'object') {
-              r = c.r ?? c.x; g = c.g ?? c.y; b = c.b ?? c.z;
-            } else throw new Error('color → [r,g,b]');
-            carr[i3]     = Math.min(1, Math.max(0, +r));
-            carr[i3 + 1] = Math.min(1, Math.max(0, +g));
-            carr[i3 + 2] = Math.min(1, Math.max(0, +b));
+            // Default warm clay color with slight variation
+            colors[i3]     = 0.72 + (Math.random() * 0.08);
+            colors[i3 + 1] = 0.58 + (Math.random() * 0.06);
+            colors[i3 + 2] = 0.42 + (Math.random() * 0.05);
+            idx++;
           }
         }
+      }
 
-        pos.needsUpdate = true;
-        col.needsUpdate = true;
-        geometry.computeVertexNormals();
-        statusEl.textContent = 'evaluated';
-        statusEl.style.color = '#4ade80';
-      } catch (e) {
-        statusEl.textContent = e.message.slice(0, 38);
-        statusEl.style.color = '#f87171';
+      if (points) {
+        scene.remove(points);
+        geometry.dispose();
+        points.material.dispose();
+      }
+
+      geometry = new THREE.BufferGeometry();
+      geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+      const material = new THREE.PointsMaterial({
+        size: 0.055,
+        vertexColors: true,
+        sizeAttenuation: true,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: true
+      });
+
+      points = new THREE.Points(geometry, material);
+      scene.add(points);
+
+      document.getElementById('stats').textContent =
+        `particles: ${particleCount.toLocaleString()}`;
+    }
+
+    createClay(24);
+
+    // ── Core sculpt operation ──────────────────────────────────
+    // New Position = Current Position + Direction × Distance
+    // Only particles inside the brush radius are moved.
+
+    let brushRadius = 0.35;
+    let pushDistance = 0.08;
+    let directionMode = 'out'; // 'out' | 'in' | 'fixed'
+    let fixedDir = new THREE.Vector3(0, 1, 0);
+    let isPainting = false;
+    let paintColor = new THREE.Color('#c4a484');
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
+    let isSculpting = false;
+
+    // Find particles near a 3D point and move / paint them
+    function applyBrush(worldPoint) {
+      const r2 = brushRadius * brushRadius;
+      const posAttr = geometry.attributes.position;
+      const colAttr = geometry.attributes.color;
+      const arr = posAttr.array;
+      const carr = colAttr.array;
+
+      let moved = 0;
+
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        const px = arr[i3];
+        const py = arr[i3 + 1];
+        const pz = arr[i3 + 2];
+
+        const dx = px - worldPoint.x;
+        const dy = py - worldPoint.y;
+        const dz = pz - worldPoint.z;
+        const dist2 = dx*dx + dy*dy + dz*dz;
+
+        if (dist2 > r2) continue;
+
+        // Falloff: stronger at center of brush
+        const dist = Math.sqrt(dist2);
+        const falloff = 1 - (dist / brushRadius);
+        const strength = falloff * falloff; // smooth
+
+        if (isPainting) {
+          // Color is also just numbers on the particle
+          carr[i3]     = paintColor.r;
+          carr[i3 + 1] = paintColor.g;
+          carr[i3 + 2] = paintColor.b;
+        } else {
+          // ── The only sculpt math ──
+          // NewPos = CurrentPos + Direction × Distance
+          let dirX, dirY, dirZ;
+
+          if (directionMode === 'out') {
+            // Away from clay center
+            dirX = px - clayCenter.x;
+            dirY = py - clayCenter.y;
+            dirZ = pz - clayCenter.z;
+            const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ) || 1;
+            dirX /= len; dirY /= len; dirZ /= len;
+          } else if (directionMode === 'in') {
+            dirX = clayCenter.x - px;
+            dirY = clayCenter.y - py;
+            dirZ = clayCenter.z - pz;
+            const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ) || 1;
+            dirX /= len; dirY /= len; dirZ /= len;
+          } else {
+            dirX = fixedDir.x;
+            dirY = fixedDir.y;
+            dirZ = fixedDir.z;
+          }
+
+          const d = pushDistance * strength;
+          arr[i3]     += dirX * d;
+          arr[i3 + 1] += dirY * d;
+          arr[i3 + 2] += dirZ * d;
+        }
+        moved++;
+      }
+
+      if (moved > 0) {
+        posAttr.needsUpdate = true;
+        colAttr.needsUpdate = true;
       }
     }
 
-    function resetToBox() {
-      geometry.attributes.position.array.set(originalPositions);
-      geometry.attributes.position.needsUpdate = true;
-      geometry.computeVertexNormals();
-      statusEl.textContent = 'reset';
-      statusEl.style.color = '#94a3b8';
-      evaluateMath();
+    // Project mouse onto a virtual plane / find nearby particles
+    function getBrushPoint(clientX, clientY) {
+      mouse.x = (clientX / window.innerWidth) * 2 - 1;
+      mouse.y = -(clientY / window.innerHeight) * 2 + 1;
+
+      raycaster.setFromCamera(mouse, camera);
+
+      // Simple approach: find the closest particle to the ray
+      // and use its position as the brush center
+      const arr = geometry.attributes.position.array;
+      let bestDist = Infinity;
+      let best = null;
+
+      const origin = raycaster.ray.origin;
+      const dir = raycaster.ray.direction;
+
+      for (let i = 0; i < particleCount; i++) {
+        const i3 = i * 3;
+        const px = arr[i3], py = arr[i3+1], pz = arr[i3+2];
+
+        // Distance from point to ray
+        const ox = px - origin.x;
+        const oy = py - origin.y;
+        const oz = pz - origin.z;
+        const t = ox*dir.x + oy*dir.y + oz*dir.z;
+        if (t < 0) continue;
+        const closestX = origin.x + dir.x * t;
+        const closestY = origin.y + dir.y * t;
+        const closestZ = origin.z + dir.z * t;
+        const ddx = px - closestX;
+        const ddy = py - closestY;
+        const ddz = pz - closestZ;
+        const d2 = ddx*ddx + ddy*ddy + ddz*ddz;
+
+        if (d2 < bestDist && d2 < brushRadius * brushRadius * 4) {
+          bestDist = d2;
+          best = new THREE.Vector3(px, py, pz);
+        }
+      }
+      return best;
     }
 
-    const modeY = document.getElementById('mode-y');
-    const modeVec = document.getElementById('mode-vec');
-    const presetsY = document.getElementById('presets-y');
-    const presetsVec = document.getElementById('presets-vec');
+    // ── Input ──────────────────────────────────────────────────
+    let lastBrushPoint = null;
 
-    modeY.addEventListener('click', () => {
-      mode = 'y';
-      modeY.classList.add('active');
-      modeVec.classList.remove('active');
-      presetsY.style.display = '';
-      presetsVec.style.display = 'none';
-      formulaEl.value = 'Math.sin(x * 3) * Math.cos(z * 3) * 0.25';
-      evaluateMath();
+    function onPointerDown(e) {
+      if (e.button !== 0) return;
+      // Disable orbit while sculpting
+      controls.enabled = false;
+      isSculpting = true;
+      const pt = getBrushPoint(e.clientX, e.clientY);
+      if (pt) {
+        applyBrush(pt);
+        lastBrushPoint = pt;
+      }
+    }
+
+    function onPointerMove(e) {
+      if (!isSculpting) return;
+      const pt = getBrushPoint(e.clientX, e.clientY);
+      if (pt) {
+        applyBrush(pt);
+        lastBrushPoint = pt;
+      }
+    }
+
+    function onPointerUp() {
+      isSculpting = false;
+      controls.enabled = true;
+      lastBrushPoint = null;
+    }
+
+    renderer.domElement.addEventListener('pointerdown', onPointerDown);
+    window.addEventListener('pointermove', onPointerMove);
+    window.addEventListener('pointerup', onPointerUp);
+
+    // ── UI wiring ──────────────────────────────────────────────
+    document.getElementById('radius').addEventListener('input', e => {
+      brushRadius = +e.target.value;
+      document.getElementById('radius-val').textContent = brushRadius.toFixed(2);
     });
-    modeVec.addEventListener('click', () => {
-      mode = 'vec';
-      modeVec.classList.add('active');
-      modeY.classList.remove('active');
-      presetsY.style.display = 'none';
-      presetsVec.style.display = '';
-      formulaEl.value = '[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]';
-      evaluateMath();
+    document.getElementById('distance').addEventListener('input', e => {
+      pushDistance = +e.target.value;
+      document.getElementById('dist-val').textContent = pushDistance.toFixed(2);
     });
 
-    document.getElementById('apply').addEventListener('click', evaluateMath);
-    document.getElementById('reset').addEventListener('click', resetToBox);
-
-    document.querySelectorAll('#presets-y button, #presets-vec button').forEach(btn => {
+    document.querySelectorAll('.dirs button').forEach(btn => {
       btn.addEventListener('click', () => {
-        formulaEl.value = btn.dataset.f;
-        evaluateMath();
+        document.querySelectorAll('.dirs button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('dir-out').classList.remove('active');
+        document.getElementById('dir-in').classList.remove('active');
+        directionMode = 'fixed';
+        const [x,y,z] = btn.dataset.d.split(',').map(Number);
+        fixedDir.set(x, y, z);
       });
     });
-    document.querySelectorAll('#color-presets button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        colorEl.value = btn.dataset.c;
-        evaluateMath();
-      });
+
+    document.getElementById('dir-out').addEventListener('click', () => {
+      directionMode = 'out';
+      document.getElementById('dir-out').classList.add('active');
+      document.getElementById('dir-in').classList.remove('active');
+      document.querySelectorAll('.dirs button').forEach(b => b.classList.remove('active'));
+    });
+    document.getElementById('dir-in').addEventListener('click', () => {
+      directionMode = 'in';
+      document.getElementById('dir-in').classList.add('active');
+      document.getElementById('dir-out').classList.remove('active');
+      document.querySelectorAll('.dirs button').forEach(b => b.classList.remove('active'));
     });
 
-    const subdivSlider = document.getElementById('subdiv');
-    const sizeSlider = document.getElementById('size');
-    const strengthSlider = document.getElementById('strength');
-
-    subdivSlider.addEventListener('input', () => {
-      document.getElementById('sub-val').textContent = subdivSlider.value;
+    document.getElementById('density').addEventListener('input', e => {
+      document.getElementById('dens-val').textContent = e.target.value;
     });
-    subdivSlider.addEventListener('change', () => {
-      createClay(+subdivSlider.value, +sizeSlider.value);
-      evaluateMath();
-    });
-    sizeSlider.addEventListener('input', () => {
-      document.getElementById('size-val').textContent = (+sizeSlider.value).toFixed(2);
-    });
-    sizeSlider.addEventListener('change', () => {
-      createClay(+subdivSlider.value, +sizeSlider.value);
-      evaluateMath();
-    });
-    strengthSlider.addEventListener('input', () => {
-      document.getElementById('str-val').textContent = (+strengthSlider.value).toFixed(2);
-      evaluateMath();
+    document.getElementById('density').addEventListener('change', e => {
+      createClay(+e.target.value);
     });
 
-    let debounce;
-    formulaEl.addEventListener('input', () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(evaluateMath, 250);
-    });
-    colorEl.addEventListener('input', () => {
-      clearTimeout(debounce);
-      debounce = setTimeout(evaluateMath, 250);
+    document.getElementById('paintColor').addEventListener('input', e => {
+      paintColor.set(e.target.value);
     });
 
+    const paintBtn = document.getElementById('paintMode');
+    paintBtn.addEventListener('click', () => {
+      isPainting = !isPainting;
+      paintBtn.classList.toggle('active', isPainting);
+      paintBtn.textContent = isPainting ? 'Painting…' : 'Paint';
+    });
+
+    document.getElementById('reset').addEventListener('click', () => {
+      createClay(+document.getElementById('density').value);
+    });
+
+    // ── Loop ───────────────────────────────────────────────────
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
@@ -489,8 +534,6 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
-
-    evaluateMath();
   </script>
 </body>
 </html>
