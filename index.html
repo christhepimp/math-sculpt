@@ -122,7 +122,8 @@
         One solid square of clay.<br>
         Divided into <strong>5832 units</strong> (at least 5000).<br>
         Each unit is fraction <code>1/5832</code> of the whole square.<br>
-        Select by number · type angles + distance · Run.
+        Select any units · any azimuth + elevation + distance · Run.<br>
+        Pure math moves create any 3D form.
       </p>
       <label>select units (numbers)</label>
       <textarea id="sel" placeholder="0, 1, 5, 100-200"></textarea>
@@ -159,7 +160,7 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // Solid square · ≥5000 units · each unit = 1/TOTAL fraction of the whole
+    // Solid square of fractions · InstancedMesh cubes · pure math control of every unit
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -204,13 +205,12 @@
 
     let units = [];
     let selected = new Set();
-    let pointsObj = null;
-    let pointsGeo = null;
+    let mesh = null;
+    let dummy = new THREE.Object3D();
     let showNumbers = false;
     const claySize = 2.0;
     const clickBrush = 0.22;
 
-    // 18³ = 5832 ≥ 5000
     const SIDE = 18;
     const TOTAL = SIDE * SIDE * SIDE;
     const FRACTION = 1 / TOTAL;
@@ -251,48 +251,59 @@
     }
 
     function rebuildVisual() {
-      if (pointsObj) {
-        scene.remove(pointsObj);
-        pointsGeo?.dispose();
-        pointsObj.material?.dispose();
+      if (mesh) {
+        scene.remove(mesh);
+        mesh.geometry?.dispose();
+        mesh.material?.dispose();
+        mesh = null;
       }
       const count = units.length;
-      const pos = new Float32Array(count * 3);
-      const col = new Float32Array(count * 3);
+      const boxSize = cell * 0.98;
+      const geo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+      const mat = new THREE.MeshStandardMaterial({
+        roughness: 0.55,
+        metalness: 0.08,
+        flatShading: true
+      });
+      mesh = new THREE.InstancedMesh(geo, mat, count);
+      mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
+
+      const colors = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
         const u = units[i];
-        pos[i*3] = u.x; pos[i*3+1] = u.y; pos[i*3+2] = u.z;
+        dummy.position.set(u.x, u.y, u.z);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+
         if (selected.has(u.id)) {
-          col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75;
+          colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
         } else {
-          col[i*3] = u.r; col[i*3+1] = u.g; col[i*3+2] = u.b;
+          colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
         }
       }
-      pointsGeo = new THREE.BufferGeometry();
-      pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
-      pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      const size = cell * 1.12;
-      pointsObj = new THREE.Points(pointsGeo, new THREE.PointsMaterial({
-        size, vertexColors: true, sizeAttenuation: true, transparent: false, depthWrite: true
-      }));
-      scene.add(pointsObj);
+      mesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+      mesh.instanceMatrix.needsUpdate = true;
+      scene.add(mesh);
     }
 
     function syncVisual() {
-      if (!pointsGeo) return;
-      const pos = pointsGeo.attributes.position.array;
-      const col = pointsGeo.attributes.color.array;
-      for (let i = 0; i < units.length; i++) {
+      if (!mesh) return;
+      const count = units.length;
+      const colors = mesh.instanceColor.array;
+      for (let i = 0; i < count; i++) {
         const u = units[i];
-        pos[i*3] = u.x; pos[i*3+1] = u.y; pos[i*3+2] = u.z;
+        dummy.position.set(u.x, u.y, u.z);
+        dummy.updateMatrix();
+        mesh.setMatrixAt(i, dummy.matrix);
+
         if (selected.has(u.id)) {
-          col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75;
+          colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
         } else {
-          col[i*3] = u.r; col[i*3+1] = u.g; col[i*3+2] = u.b;
+          colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
         }
       }
-      pointsGeo.attributes.position.needsUpdate = true;
-      pointsGeo.attributes.color.needsUpdate = true;
+      mesh.instanceMatrix.needsUpdate = true;
+      mesh.instanceColor.needsUpdate = true;
       if (showNumbers) rebuildNumberOverlay();
     }
 
