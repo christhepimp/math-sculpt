@@ -3,12 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Math Sculpt — Pure Mathematical Clay</title>
+  <title>Math Sculpt — Pure Math Geometry + Color</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
       font-family: 'Segoe UI', system-ui, sans-serif;
-      background: #0f0f12;
+      background: #0a0a0e;
       color: #e8e8ec;
       overflow: hidden;
       height: 100vh;
@@ -16,70 +16,71 @@
     #canvas-container { position: absolute; inset: 0; }
     #ui {
       position: absolute;
-      top: 16px;
-      left: 16px;
-      width: 380px;
-      background: rgba(18, 18, 24, 0.94);
-      border: 1px solid #2a2a35;
+      top: 12px;
+      left: 12px;
+      width: 400px;
+      background: rgba(12, 12, 18, 0.95);
+      border: 1px solid #2a2a38;
       border-radius: 12px;
-      padding: 18px;
-      backdrop-filter: blur(12px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
-      max-height: calc(100vh - 32px);
+      padding: 16px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 12px 40px rgba(0,0,0,0.55);
+      max-height: calc(100vh - 24px);
       overflow-y: auto;
       z-index: 10;
     }
     h1 {
-      font-size: 1.2rem;
+      font-size: 1.15rem;
       font-weight: 600;
       margin-bottom: 2px;
       letter-spacing: -0.02em;
     }
     .subtitle {
-      font-size: 0.78rem;
-      color: #888;
-      margin-bottom: 14px;
+      font-size: 0.75rem;
+      color: #777;
+      margin-bottom: 12px;
     }
     label {
       display: block;
-      font-size: 0.72rem;
-      color: #aaa;
-      margin-bottom: 5px;
+      font-size: 0.7rem;
+      color: #999;
+      margin-bottom: 4px;
       text-transform: uppercase;
       letter-spacing: 0.05em;
     }
     textarea {
       width: 100%;
-      height: 110px;
-      background: #1a1a22;
-      border: 1px solid #333;
-      border-radius: 8px;
+      background: #14141c;
+      border: 1px solid #2e2e3a;
+      border-radius: 7px;
       color: #7dd3fc;
       font-family: 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
-      font-size: 0.8rem;
-      padding: 10px;
+      font-size: 0.78rem;
+      padding: 9px;
       resize: vertical;
       outline: none;
       line-height: 1.35;
     }
     textarea:focus { border-color: #38bdf8; }
+    #formula { height: 78px; }
+    #colorFormula { height: 68px; color: #f9a8d4; }
     .row {
       display: flex;
-      gap: 8px;
-      margin-top: 12px;
+      gap: 7px;
+      margin-top: 10px;
     }
     button {
       flex: 1;
-      background: #1e293b;
-      border: 1px solid #334155;
+      background: #1a1a26;
+      border: 1px solid #333344;
       color: #e2e8f0;
-      padding: 9px 10px;
-      border-radius: 8px;
-      font-size: 0.78rem;
+      padding: 8px 9px;
+      border-radius: 7px;
+      font-size: 0.75rem;
       cursor: pointer;
       transition: all 0.15s;
     }
-    button:hover { background: #334155; border-color: #475569; }
+    button:hover { background: #2a2a3a; border-color: #444; }
     button.primary {
       background: #0ea5e9;
       border-color: #0284c7;
@@ -90,49 +91,60 @@
     .presets {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 6px;
-      margin-top: 8px;
+      gap: 5px;
+      margin-top: 6px;
     }
-    .presets button { font-size: 0.7rem; padding: 7px 6px; }
-    .slider-group { margin-top: 13px; }
+    .presets button { font-size: 0.68rem; padding: 6px 5px; }
+    .slider-group { margin-top: 11px; }
     input[type="range"] {
       width: 100%;
-      margin-top: 3px;
+      margin-top: 2px;
       accent-color: #38bdf8;
     }
     .value {
       float: right;
       color: #7dd3fc;
       font-family: monospace;
-      font-size: 0.78rem;
+      font-size: 0.75rem;
     }
     .hint {
-      font-size: 0.68rem;
-      color: #666;
-      margin-top: 12px;
+      font-size: 0.65rem;
+      color: #555;
+      margin-top: 11px;
       line-height: 1.45;
     }
     code {
       background: #1a1a22;
       padding: 1px 4px;
       border-radius: 3px;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: #a5b4fc;
     }
     .mode {
       display: flex;
-      gap: 6px;
-      margin-bottom: 10px;
+      gap: 5px;
+      margin-bottom: 9px;
     }
     .mode button {
       flex: 1;
-      font-size: 0.72rem;
-      padding: 6px;
+      font-size: 0.7rem;
+      padding: 5px;
     }
     .mode button.active {
       background: #0ea5e9;
       border-color: #0284c7;
       color: #fff;
+    }
+    .section {
+      margin-top: 14px;
+      padding-top: 12px;
+      border-top: 1px solid #222230;
+    }
+    .warn {
+      font-size: 0.62rem;
+      color: #a78bfa;
+      margin-top: 6px;
+      line-height: 1.35;
     }
   </style>
 </head>
@@ -141,51 +153,67 @@
 
   <div id="ui">
     <h1>Math Sculpt</h1>
-    <p class="subtitle">Pure mathematics · starts as a square clay box</p>
+    <p class="subtitle">Geometry + color defined entirely by mathematics</p>
 
     <div class="mode">
       <button id="mode-y" class="active">Y Displacement</button>
       <button id="mode-vec">Full Vector [x,y,z]</button>
     </div>
 
-    <label>Mathematical mapping <span class="value" id="status">ready</span></label>
+    <label>Geometry formula <span class="value" id="status">ready</span></label>
     <textarea id="formula" spellcheck="false">Math.sin(x * 3) * Math.cos(z * 3) * 0.25</textarea>
+
+    <div class="section">
+      <label>Color formula (returns [r, g, b] 0–1)</label>
+      <textarea id="colorFormula" spellcheck="false">[0.75 + 0.25*Math.sin(x*4), 0.55 + 0.2*Math.cos(z*3), 0.4]</textarea>
+    </div>
 
     <div class="row">
       <button class="primary" id="apply">Evaluate Math</button>
-      <button id="reset">Reset to Box</button>
+      <button id="reset">Reset Box</button>
     </div>
 
-    <label style="margin-top:14px">Math presets</label>
+    <label style="margin-top:12px">Geometry presets</label>
     <div class="presets" id="presets-y">
-      <button data-f="Math.sin(x*4)*0.22">sine wave</button>
+      <button data-f="Math.sin(x*4)*0.22">sine</button>
       <button data-f="Math.sin(x*3)*Math.cos(z*3)*0.28">ripple</button>
       <button data-f="(Math.sin(x*5)+Math.sin(z*5))*0.14">grid</button>
       <button data-f="Math.sin(Math.sqrt(x*x+z*z)*6)*0.22">radial</button>
-      <button data-f="Math.pow(Math.abs(x),1.6)*Math.sign(x)*0.22">sharp crease</button>
+      <button data-f="Math.pow(Math.abs(x),1.6)*Math.sign(x)*0.22">crease</button>
       <button data-f="Math.abs(x)*0.35-0.18">V groove</button>
-      <button data-f="(Math.random()-0.5)*0.35">noise</button>
-      <button data-f="Math.sin(x*8)*Math.sin(z*8)*0.18">fine grid</button>
+      <button data-f="(Math.random()-0.5)*0.3">noise</button>
+      <button data-f="Math.sin(x*10)*Math.sin(z*10)*0.12">fine</button>
     </div>
-
     <div class="presets" id="presets-vec" style="display:none">
-      <button data-f="[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]">ripple vec</button>
-      <button data-f="[x*1.1, y + Math.sin(Math.sqrt(x*x+z*z)*5)*0.25, z*1.1]">radial expand</button>
-      <button data-f="[x + Math.sin(z*4)*0.15, y, z + Math.sin(x*4)*0.15]">twist-ish</button>
-      <button data-f="[x, y*0.7 + Math.sin(x*2)*0.2, z]">squash + wave</button>
-      <button data-f="[x*Math.cos(0.4) - z*Math.sin(0.4), y, x*Math.sin(0.4) + z*Math.cos(0.4)]">rotate Y</button>
-      <button data-f="[x, y + (Math.random()-0.5)*0.3, z]">noise Y</button>
-      <button data-f="[x*1.2, y*0.6, z*1.2]">flatten + widen</button>
-      <button data-f="[x + y*0.15, y, z + y*0.15]">shear</button>
+      <button data-f="[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]">ripple</button>
+      <button data-f="[x*1.1, y + Math.sin(Math.sqrt(x*x+z*z)*5)*0.25, z*1.1]">radial</button>
+      <button data-f="[x + Math.sin(z*4)*0.15, y, z + Math.sin(x*4)*0.15]">wave</button>
+      <button data-f="[x, y*0.7 + Math.sin(x*2)*0.2, z]">squash</button>
+      <button data-f="[x*Math.cos(0.4)-z*Math.sin(0.4), y, x*Math.sin(0.4)+z*Math.cos(0.4)]">rotate</button>
+      <button data-f="[x, y+(Math.random()-0.5)*0.25, z]">noise</button>
+      <button data-f="[x*1.25, y*0.55, z*1.25]">flatten</button>
+      <button data-f="[x + y*0.18, y, z + y*0.18]">shear</button>
+    </div>
+
+    <label style="margin-top:12px">Color presets</label>
+    <div class="presets" id="color-presets">
+      <button data-c="[0.75+0.25*Math.sin(x*4), 0.55+0.2*Math.cos(z*3), 0.4]">warm clay</button>
+      <button data-c="[0.2+0.3*Math.abs(x), 0.4+0.4*Math.abs(y), 0.7+0.3*Math.abs(z)]">xyz rgb</button>
+      <button data-c="[0.5+0.5*Math.sin(x*6), 0.3+0.4*Math.sin(z*6), 0.6]">stripes</button>
+      <button data-c="[0.15, 0.6+0.3*Math.sin(Math.sqrt(x*x+z*z)*5), 0.4]">radial green</button>
+      <button data-c="[0.9, 0.3+0.4*Math.abs(Math.sin(x*8)), 0.15]">lava</button>
+      <button data-c="[0.1, 0.15, 0.25+0.5*Math.pow(Math.abs(y),0.7)]">depth blue</button>
+      <button data-c="[0.5+0.5*Math.sin(x*3)*Math.cos(z*3), 0.4, 0.7]">ripple tint</button>
+      <button data-c="[0.6, 0.55, 0.5]">flat clay</button>
     </div>
 
     <div class="slider-group">
-      <label>Subdivision <span class="value" id="sub-val">32</span></label>
-      <input type="range" id="subdiv" min="4" max="64" value="32" step="4" />
+      <label>Subdivision (detail) <span class="value" id="sub-val">48</span></label>
+      <input type="range" id="subdiv" min="8" max="128" value="48" step="8" />
     </div>
 
     <div class="slider-group">
-      <label>Strength multiplier <span class="value" id="str-val">1.00</span></label>
+      <label>Strength <span class="value" id="str-val">1.00</span></label>
       <input type="range" id="strength" min="0" max="3" value="1" step="0.05" />
     </div>
 
@@ -194,13 +222,15 @@
       <input type="range" id="size" min="0.5" max="4" value="2" step="0.1" />
     </div>
 
+    <p class="warn">
+      Max subdivision 128 ≈ 100k+ triangles. Higher values approach dense procedural detail but will stress the browser. Unreal/Nanite-level density is not possible in pure client-side Three.js from a single box — this is the practical ceiling for real-time pure-math sculpting in the browser.
+    </p>
+
     <p class="hint">
-      <strong>Everything is math.</strong> No brushes. No mouse sculpting.<br><br>
-      <code>x y z</code> = original vertex of the square box<br>
-      <code>t</code> = time (seconds) · <code>Math</code> = full Math object<br><br>
-      <b>Y mode</b>: formula returns a number → added to Y<br>
-      <b>Vector mode</b>: formula returns <code>[nx, ny, nz]</code> → absolute new position<br><br>
-      Example vector: <code>[x, y + Math.sin(x*4)*0.2, z]</code>
+      <strong>Everything is math.</strong><br>
+      <code>x y z</code> = original box vertex · <code>t</code> = time · <code>Math</code> = full Math<br><br>
+      Geometry: number (Y) or <code>[nx,ny,nz]</code><br>
+      Color: must return <code>[r, g, b]</code> in 0–1 range
     </p>
   </div>
 
@@ -217,61 +247,78 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // ── Scene ────────────────────────────────────────────────────
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x0f0f12);
+    scene.background = new THREE.Color(0x0a0a0e);
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(3.6, 2.9, 4.3);
+    const camera = new THREE.PerspectiveCamera(45, window.innerWidth / window.innerHeight, 0.05, 100);
+    camera.position.set(3.8, 3.0, 4.5);
 
-    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
     renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
     container.appendChild(renderer.domElement);
 
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
-    controls.dampingFactor = 0.08;
+    controls.dampingFactor = 0.07;
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
-    const dir = new THREE.DirectionalLight(0xffffff, 1.15);
-    dir.position.set(4, 8, 5);
-    dir.castShadow = true;
-    dir.shadow.mapSize.set(1024, 1024);
-    scene.add(dir);
-    const fill = new THREE.DirectionalLight(0xa5b4fc, 0.35);
-    fill.position.set(-3, 2, -4);
+    // Richer lighting for more presence
+    scene.add(new THREE.AmbientLight(0xffffff, 0.35));
+    const key = new THREE.DirectionalLight(0xfff5e6, 1.4);
+    key.position.set(5, 9, 4);
+    key.castShadow = true;
+    key.shadow.mapSize.set(2048, 2048);
+    key.shadow.bias = -0.0002;
+    scene.add(key);
+    const fill = new THREE.DirectionalLight(0xa5b4fc, 0.45);
+    fill.position.set(-4, 3, -5);
     scene.add(fill);
+    const rim = new THREE.DirectionalLight(0xffccaa, 0.25);
+    rim.position.set(0, 2, -6);
+    scene.add(rim);
 
     const ground = new THREE.Mesh(
-      new THREE.PlaneGeometry(20, 20),
-      new THREE.MeshStandardMaterial({ color: 0x16161c, roughness: 0.95, metalness: 0.1 })
+      new THREE.PlaneGeometry(30, 30),
+      new THREE.MeshStandardMaterial({ color: 0x111116, roughness: 0.92, metalness: 0.08 })
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.25;
+    ground.position.y = -1.3;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ── Pure math clay ───────────────────────────────────────────
     let mesh, geometry;
     let originalPositions = null;
-    let mode = 'y'; // 'y' | 'vec'
+    let mode = 'y';
 
-    function createClay(subdiv = 32, size = 2) {
+    function createClay(subdiv = 48, size = 2) {
       if (mesh) {
         scene.remove(mesh);
         geometry.dispose();
         mesh.material.dispose();
       }
+
       geometry = new THREE.BoxGeometry(size, size, size, subdiv, subdiv, subdiv);
       originalPositions = new Float32Array(geometry.attributes.position.array);
 
+      // Vertex colors for pure-math color
+      const count = geometry.attributes.position.count;
+      const colors = new Float32Array(count * 3);
+      for (let i = 0; i < count; i++) {
+        colors[i*3] = 0.75;
+        colors[i*3+1] = 0.55;
+        colors[i*3+2] = 0.4;
+      }
+      geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
       const material = new THREE.MeshStandardMaterial({
-        color: 0xc4a484,
-        roughness: 0.82,
-        metalness: 0.04,
+        vertexColors: true,
+        roughness: 0.72,
+        metalness: 0.08,
         flatShading: false,
         side: THREE.DoubleSide
       });
@@ -283,21 +330,24 @@
     }
     createClay();
 
-    // ── Evaluate pure mathematical mapping ───────────────────────
     const formulaEl = document.getElementById('formula');
+    const colorEl   = document.getElementById('colorFormula');
     const statusEl  = document.getElementById('status');
 
     function evaluateMath() {
-      const code = formulaEl.value.trim();
-      if (!code) return;
+      const geoCode = formulaEl.value.trim();
+      const colCode = colorEl.value.trim();
+      if (!geoCode) return;
 
       const strength = parseFloat(document.getElementById('strength').value);
       const t = performance.now() * 0.001;
 
-      let fn;
+      let geoFn, colFn;
       try {
-        fn = new Function('x', 'y', 'z', 't', 'Math',
-          `"use strict"; return (${code});`);
+        geoFn = new Function('x', 'y', 'z', 't', 'Math', `"use strict"; return (${geoCode});`);
+        colFn = colCode
+          ? new Function('x', 'y', 'z', 't', 'Math', `"use strict"; return (${colCode});`)
+          : null;
       } catch (e) {
         statusEl.textContent = 'syntax error';
         statusEl.style.color = '#f87171';
@@ -305,7 +355,9 @@
       }
 
       const pos = geometry.attributes.position;
+      const col = geometry.attributes.color;
       const arr = pos.array;
+      const carr = col.array;
 
       try {
         for (let i = 0; i < arr.length; i += 3) {
@@ -313,42 +365,45 @@
           const oy = originalPositions[i + 1];
           const oz = originalPositions[i + 2];
 
-          const result = fn(ox, oy, oz, t, Math);
+          // ── Geometry (pure math) ──
+          const result = geoFn(ox, oy, oz, t, Math);
 
           if (mode === 'y') {
-            // Scalar → Y displacement (pure math addition)
-            if (typeof result !== 'number' || Number.isNaN(result)) {
-              throw new Error('must return a number');
-            }
+            if (typeof result !== 'number' || Number.isNaN(result)) throw new Error('geo must return number');
             arr[i]     = ox;
             arr[i + 1] = oy + result * strength;
             arr[i + 2] = oz;
           } else {
-            // Full vector mapping – the math completely defines the new point
             let nx, ny, nz;
-            if (Array.isArray(result) && result.length >= 3) {
-              [nx, ny, nz] = result;
-            } else if (result && typeof result === 'object') {
-              nx = result.x; ny = result.y; nz = result.z;
-            } else {
-              throw new Error('return [x,y,z] or {x,y,z}');
-            }
-            if ([nx, ny, nz].some(v => typeof v !== 'number' || Number.isNaN(v))) {
-              throw new Error('vector must be numbers');
-            }
-            // Strength blends between original and the pure mathematical result
+            if (Array.isArray(result) && result.length >= 3) [nx, ny, nz] = result;
+            else if (result && typeof result === 'object') { nx = result.x; ny = result.y; nz = result.z; }
+            else throw new Error('return [x,y,z]');
+            if ([nx,ny,nz].some(v => typeof v !== 'number' || Number.isNaN(v))) throw new Error('bad vector');
             arr[i]     = ox + (nx - ox) * strength;
             arr[i + 1] = oy + (ny - oy) * strength;
             arr[i + 2] = oz + (nz - oz) * strength;
           }
+
+          // ── Color (pure math) ──
+          if (colFn) {
+            const c = colFn(ox, oy, oz, t, Math);
+            let r, g, b;
+            if (Array.isArray(c) && c.length >= 3) [r, g, b] = c;
+            else if (c && typeof c === 'object') { r = c.r ?? c.x; g = c.g ?? c.y; b = c.b ?? c.z; }
+            else throw new Error('color must return [r,g,b]');
+            carr[i]     = Math.min(1, Math.max(0, r));
+            carr[i + 1] = Math.min(1, Math.max(0, g));
+            carr[i + 2] = Math.min(1, Math.max(0, b));
+          }
         }
 
         pos.needsUpdate = true;
+        col.needsUpdate = true;
         geometry.computeVertexNormals();
         statusEl.textContent = 'evaluated';
         statusEl.style.color = '#4ade80';
       } catch (e) {
-        statusEl.textContent = e.message.slice(0, 32);
+        statusEl.textContent = e.message.slice(0, 36);
         statusEl.style.color = '#f87171';
       }
     }
@@ -360,12 +415,13 @@
       geometry.computeVertexNormals();
       statusEl.textContent = 'box';
       statusEl.style.color = '#94a3b8';
+      evaluateMath(); // re-apply color
     }
 
-    // ── Mode switching ───────────────────────────────────────────
-    const modeY   = document.getElementById('mode-y');
+    // Mode
+    const modeY = document.getElementById('mode-y');
     const modeVec = document.getElementById('mode-vec');
-    const presetsY   = document.getElementById('presets-y');
+    const presetsY = document.getElementById('presets-y');
     const presetsVec = document.getElementById('presets-vec');
 
     modeY.addEventListener('click', () => {
@@ -377,7 +433,6 @@
       formulaEl.value = 'Math.sin(x * 3) * Math.cos(z * 3) * 0.25';
       evaluateMath();
     });
-
     modeVec.addEventListener('click', () => {
       mode = 'vec';
       modeVec.classList.add('active');
@@ -388,19 +443,25 @@
       evaluateMath();
     });
 
-    // ── UI ───────────────────────────────────────────────────────
     document.getElementById('apply').addEventListener('click', evaluateMath);
     document.getElementById('reset').addEventListener('click', resetToBox);
 
-    document.querySelectorAll('.presets button').forEach(btn => {
+    document.querySelectorAll('#presets-y button, #presets-vec button').forEach(btn => {
       btn.addEventListener('click', () => {
         formulaEl.value = btn.dataset.f;
         evaluateMath();
       });
     });
 
+    document.querySelectorAll('#color-presets button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        colorEl.value = btn.dataset.c;
+        evaluateMath();
+      });
+    });
+
     const subdivSlider = document.getElementById('subdiv');
-    const sizeSlider   = document.getElementById('size');
+    const sizeSlider = document.getElementById('size');
     const strengthSlider = document.getElementById('strength');
 
     subdivSlider.addEventListener('input', () => {
@@ -427,10 +488,13 @@
     let debounce;
     formulaEl.addEventListener('input', () => {
       clearTimeout(debounce);
-      debounce = setTimeout(evaluateMath, 280);
+      debounce = setTimeout(evaluateMath, 260);
+    });
+    colorEl.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(evaluateMath, 260);
     });
 
-    // ── Loop ─────────────────────────────────────────────────────
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
