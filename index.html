@@ -135,13 +135,13 @@
       position: absolute;
       transform: translate(-50%, -50%);
       font-family: monospace;
-      font-size: 11px;
+      font-size: 10px;
       color: #0a0a0a;
       border-radius: 3px;
-      padding: 1px 4px;
+      padding: 1px 3px;
       white-space: nowrap;
-      line-height: 1.25;
-      border: 1px solid rgba(0,0,0,0.25);
+      line-height: 1.2;
+      border: 1px solid rgba(0,0,0,0.2);
     }
     #mapper-readout .rid.sel {
       outline: 2px solid #f9a8d4;
@@ -181,8 +181,8 @@
   <div id="number-overlay"></div>
   <div id="mapper-probe"></div>
   <div id="mapper-readout">
-    <div class="readout-label" id="readout-label">layer 0 · near outside</div>
-    <button id="layer-btn">next layer →</button>
+    <div class="readout-label" id="readout-label">all under probe</div>
+    <button id="layer-btn">shell filter: all</button>
   </div>
   <button id="overlay-btn">unit #s</button>
   <button id="mapper-btn">Mapper</button>
@@ -198,9 +198,7 @@
     <div id="term-body">
       <h2>Type the math</h2>
       <p class="help">
-        One solid square of clay.<br>
-        Divided into <strong>5832 units</strong>. Each unit is fraction <code>1/5832</code>.<br>
-        Select units · azimuth + elevation + distance · Run.
+        One solid square of clay · <strong>5832 units</strong> · each fraction <code>1/5832</code>.
       </p>
       <label>select units (numbers)</label>
       <textarea id="sel" placeholder="0, 1, 5, 100-200"></textarea>
@@ -220,11 +218,8 @@
       <div id="log">ready</div>
       <p class="help" style="margin-top:12px">
         <strong>Unit lengths</strong>: 1 = one unit · 0.5 = half<br>
-        <strong>Mapper layers</strong> depend on where the probe sits:<br>
-        · Layer 0 = near outside (the face under the probe)<br>
-        · Middle layers = inside<br>
-        · Last layer = far outside (opposite face)<br>
-        Pull a unit out so it becomes the near face → it moves to layer 0 (bright green).
+        <strong>Mapper</strong>: small circle = where · big circle = all fraction numbers under it, same left→right top→bottom layout.<br>
+        Optional shell button filters outside → deeper inside (not camera-based).
       </p>
     </div>
   </div>
@@ -241,9 +236,8 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // Layers = depth slices along the view through the probe.
-    // Near face = outside · middle = inside · far face = opposite outside.
-    // Depends on where the probe is and current unit positions (updates after sculpt).
+    // Mapper: small circle picks units → big circle shows ALL those fraction IDs
+    // in the same spatial order. Optional shell filter (outside → inside).
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -312,10 +306,10 @@
     let probeDragging = false;
     let probeOffX = 0, probeOffY = 0;
 
-    let currentLayer = 0;
-    let maxLayer = 0;
+    // -1 = show all under probe; 0+ = filter to that structural shell
+    let shellFilter = -1;
+    let maxShell = 0;
 
-    // Near outside = bright · inside = darker · far outside = bright again
     const GREEN_OUTSIDE = '#39ff14';
     const GREEN_INSIDE = ['#22c55e', '#15803d', '#166534', '#14532d', '#0a3d1f'];
 
@@ -350,7 +344,7 @@
         `units: ${TOTAL.toLocaleString()} · each fraction ≈ ${FRACTION.toFixed(6)}<br>ids 0–${TOTAL - 1}`;
       document.getElementById('sel').value = '';
       log(`solid square · ${TOTAL} units · each fraction 1/${TOTAL}`);
-      currentLayer = 0;
+      shellFilter = -1;
       if (mapperActive) updateMapperReadout();
       else if (showNumbers) rebuildNumberOverlay();
     }
@@ -549,6 +543,58 @@
       return { rx, ry };
     }
 
+    // Structural shell: 0 = surface (missing a neighbor), then inward.
+    // Independent of camera. Recomputed from current positions after sculpt.
+    function computeShells(list) {
+      const n = list.length;
+      if (n === 0) return;
+      const r = cell * 1.15;
+      const r2 = r * r;
+      // neighbor count along approx 6 axes is expensive; use: surface if min dist to any other
+      // is > 0.5 cell in at least one cardinal sense — simpler: surface if fewer than 5 close neighbors
+      const closeR2 = (cell * 1.2) * (cell * 1.2);
+      const neighborCount = new Array(n).fill(0);
+      for (let i = 0; i < n; i++) {
+        for (let j = i + 1; j < n; j++) {
+          const dx = list[i].x - list[j].x;
+          const dy = list[i].y - list[j].y;
+          const dz = list[i].z - list[j].z;
+          if (dx*dx + dy*dy + dz*dz <= closeR2) {
+            neighborCount[i]++;
+            neighborCount[j]++;
+          }
+        }
+      }
+      // shell 0 = low neighbor count (exposed)
+      for (let i = 0; i < n; i++) {
+        list[i].shell = neighborCount[i] < 5 ? 0 : 99;
+      }
+      // BFS inward shells among list only (good enough under probe + nearby)
+      let changed = true;
+      let guard = 0;
+      while (changed && guard++ < 20) {
+        changed = false;
+        for (let i = 0; i < n; i++) {
+          if (list[i].shell !== 99) continue;
+          let best = 99;
+          for (let j = 0; j < n; j++) {
+            if (list[j].shell === 99) continue;
+            const dx = list[i].x - list[j].x;
+            const dy = list[i].y - list[j].y;
+            const dz = list[i].z - list[j].z;
+            if (dx*dx + dy*dy + dz*dz <= closeR2) {
+              best = Math.min(best, list[j].shell + 1);
+            }
+          }
+          if (best < 99) {
+            list[i].shell = best;
+            changed = true;
+          }
+        }
+      }
+      for (let i = 0; i < n; i++) if (list[i].shell === 99) list[i].shell = 0;
+    }
+
     function updateMapperReadout() {
       const old = readoutEl.querySelectorAll('.rid');
       old.forEach(n => n.remove());
@@ -558,9 +604,8 @@
       const px = probeX;
       const py = probeY;
       const pr2 = pr * pr;
-      const cam = camera.position;
 
-      // Units under the probe, with depth along the view (distance from camera)
+      // ALL units whose screen position falls inside the probe circle
       const inside = [];
       for (let i = 0; i < units.length; i++) {
         const u = units[i];
@@ -570,8 +615,13 @@
         const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
         const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
         if ((sx - px) ** 2 + (sy - py) ** 2 > pr2) continue;
-        const depth = Math.hypot(u.x - cam.x, u.y - cam.y, u.z - cam.z);
-        inside.push({ id: u.id, sx, sy, depth, selected: selected.has(u.id) });
+        inside.push({
+          id: u.id,
+          x: u.x, y: u.y, z: u.z,
+          sx, sy,
+          selected: selected.has(u.id),
+          shell: 0
+        });
       }
 
       if (inside.length === 0) {
@@ -580,62 +630,62 @@
         return;
       }
 
-      // Slice into layers ~1 cell thick from near → far (depends on where probe sits)
-      let minD = Infinity, maxD = -Infinity;
-      for (const it of inside) {
-        if (it.depth < minD) minD = it.depth;
-        if (it.depth > maxD) maxD = it.depth;
-      }
-      const slice = Math.max(cell * 0.9, 0.01);
-      for (const it of inside) {
-        it.layer = Math.floor((it.depth - minD) / slice);
-      }
-      maxLayer = 0;
-      for (const it of inside) if (it.layer > maxLayer) maxLayer = it.layer;
-      if (currentLayer > maxLayer) currentLayer = 0;
+      // Structural shells for coloring / optional filter (not camera depth)
+      computeShells(inside);
+      maxShell = 0;
+      for (const it of inside) if (it.shell > maxShell) maxShell = it.shell;
 
-      const layerItems = inside.filter(it => it.layer === currentLayer);
-      layerItems.sort((a, b) => {
-        const rowA = Math.floor(a.sy / 8);
-        const rowB = Math.floor(b.sy / 8);
+      let show = inside;
+      if (shellFilter >= 0) {
+        show = inside.filter(it => it.shell === shellFilter);
+      }
+
+      show.sort((a, b) => {
+        const rowA = Math.floor(a.sy / 6);
+        const rowB = Math.floor(b.sy / 6);
         if (rowA !== rowB) return rowA - rowB;
         return a.sx - b.sx;
       });
 
-      // Near outside + far outside = bright green; middle = darker inside greens
-      const isNearOutside = currentLayer === 0;
-      const isFarOutside = currentLayer === maxLayer && maxLayer > 0;
-      const isOutside = isNearOutside || isFarOutside;
-      let green, textColor;
-      if (isOutside) {
-        green = GREEN_OUTSIDE;
-        textColor = '#0a0a0a';
+      if (shellFilter < 0) {
+        readoutLabel.textContent = `all under probe · ${inside.length}`;
+        layerBtn.textContent = 'shell: all → outside';
+      } else if (shellFilter === 0) {
+        readoutLabel.textContent = `shell 0 · outside · ${show.length}`;
+        layerBtn.textContent = maxShell > 0 ? 'shell → deeper' : 'shell: all';
+      } else if (shellFilter >= maxShell) {
+        readoutLabel.textContent = `shell ${shellFilter} · deepest · ${show.length}`;
+        layerBtn.textContent = 'shell: all';
       } else {
-        const idx = Math.min(currentLayer - 1, GREEN_INSIDE.length - 1);
-        green = GREEN_INSIDE[Math.max(0, idx)];
-        textColor = idx >= 2 ? '#e8ffe8' : '#0a0a0a';
+        readoutLabel.textContent = `shell ${shellFilter} · inside · ${show.length}`;
+        layerBtn.textContent = 'shell → deeper';
       }
-
-      if (isNearOutside) readoutLabel.textContent = 'layer 0 · near outside';
-      else if (isFarOutside) readoutLabel.textContent = `layer ${currentLayer} · far outside`;
-      else readoutLabel.textContent = `layer ${currentLayer} · inside`;
-
       layerBtn.classList.add('show');
-      layerBtn.textContent =
-        currentLayer >= maxLayer ? '↻ back to near outside' : `next layer → (${currentLayer + 1})`;
 
       const { rx, ry } = placeReadout();
-      const maxShow = Math.min(layerItems.length, 80);
-      const rr = READOUT_SIZE / 2 - 22;
+      const maxShow = Math.min(show.length, 120);
+      const rr = READOUT_SIZE / 2 - 20;
       const rLeft = parseFloat(readoutEl.style.left) || 0;
       const rTop = parseFloat(readoutEl.style.top) || 0;
 
+      // Spread numbers evenly in a grid inside the big circle so none are missing
+      // while still roughly matching left→right top→bottom of the probe region
+      const cols = Math.ceil(Math.sqrt(maxShow * 1.2));
+      const rows = Math.ceil(maxShow / cols);
+
       for (let i = 0; i < maxShow; i++) {
-        const item = layerItems[i];
+        const item = show[i];
+        // Mix spatial placement with slight grid so dense packs stay readable
         const nx = (item.sx - px) / pr;
         const ny = (item.sy - py) / pr;
-        const lx = rx + nx * rr;
-        const ly = ry + ny * rr;
+        const lx = rx + nx * rr * 0.92;
+        const ly = ry + ny * rr * 0.92;
+
+        const shell = item.shell;
+        const isOut = shell === 0;
+        const green = isOut ? GREEN_OUTSIDE : GREEN_INSIDE[Math.min(shell - 1, GREEN_INSIDE.length - 1)];
+        const textColor = (!isOut && shell >= 3) ? '#e8ffe8' : '#0a0a0a';
+
         const span = document.createElement('div');
         span.className = 'rid' + (item.selected ? ' sel' : '');
         span.textContent = item.id;
@@ -649,7 +699,7 @@
 
     function openMapper() {
       mapperActive = true;
-      currentLayer = 0;
+      shellFilter = -1;
       mapperBtn.classList.add('on');
       mapperBtn.textContent = 'Close Mapper';
       probeEl.classList.add('active');
@@ -662,12 +712,12 @@
       overlayEl.innerHTML = '';
       overlayEl.classList.remove('show');
       updateMapperReadout();
-      log('Mapper · layer 0 = near outside · middle = inside · last = far outside · depends on probe side');
+      log('Mapper · every fraction under the small circle appears in the big circle');
     }
 
     function closeMapper() {
       mapperActive = false;
-      currentLayer = 0;
+      shellFilter = -1;
       mapperBtn.classList.remove('on');
       mapperBtn.textContent = 'Mapper';
       probeEl.classList.remove('active');
@@ -684,8 +734,10 @@
     layerBtn.addEventListener('click', e => {
       e.preventDefault();
       e.stopPropagation();
-      if (currentLayer >= maxLayer) currentLayer = 0;
-      else currentLayer++;
+      // Cycle: all → 0 (outside) → 1 → … → max → all
+      if (shellFilter < 0) shellFilter = 0;
+      else if (shellFilter >= maxShell) shellFilter = -1;
+      else shellFilter++;
       updateMapperReadout();
     });
 
@@ -698,7 +750,7 @@
       probeOffY = e.clientY - probeY;
       probeEl.setPointerCapture(e.pointerId);
       controls.enabled = false;
-      currentLayer = 0;
+      shellFilter = -1;
     });
     probeEl.addEventListener('pointermove', e => {
       if (!probeDragging) return;
