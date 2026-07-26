@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Math Sculpt — Precision Clay</title>
+  <title>Math Sculpt — Pure Mathematical Clay</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
@@ -13,61 +13,59 @@
       overflow: hidden;
       height: 100vh;
     }
-    #canvas-container {
-      position: absolute;
-      inset: 0;
-    }
+    #canvas-container { position: absolute; inset: 0; }
     #ui {
       position: absolute;
       top: 16px;
       left: 16px;
-      width: 340px;
-      background: rgba(18, 18, 24, 0.92);
+      width: 380px;
+      background: rgba(18, 18, 24, 0.94);
       border: 1px solid #2a2a35;
       border-radius: 12px;
       padding: 18px;
       backdrop-filter: blur(12px);
-      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.45);
       max-height: calc(100vh - 32px);
       overflow-y: auto;
       z-index: 10;
     }
     h1 {
-      font-size: 1.15rem;
+      font-size: 1.2rem;
       font-weight: 600;
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       letter-spacing: -0.02em;
     }
     .subtitle {
       font-size: 0.78rem;
       color: #888;
-      margin-bottom: 16px;
+      margin-bottom: 14px;
     }
     label {
       display: block;
-      font-size: 0.75rem;
+      font-size: 0.72rem;
       color: #aaa;
-      margin-bottom: 6px;
+      margin-bottom: 5px;
       text-transform: uppercase;
-      letter-spacing: 0.04em;
+      letter-spacing: 0.05em;
     }
     textarea {
       width: 100%;
-      height: 90px;
+      height: 110px;
       background: #1a1a22;
       border: 1px solid #333;
       border-radius: 8px;
       color: #7dd3fc;
-      font-family: 'Cascadia Code', 'Fira Code', monospace;
-      font-size: 0.82rem;
+      font-family: 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+      font-size: 0.8rem;
       padding: 10px;
       resize: vertical;
       outline: none;
+      line-height: 1.35;
     }
     textarea:focus { border-color: #38bdf8; }
     .row {
       display: flex;
-      gap: 10px;
+      gap: 8px;
       margin-top: 12px;
     }
     button {
@@ -75,61 +73,66 @@
       background: #1e293b;
       border: 1px solid #334155;
       color: #e2e8f0;
-      padding: 9px 12px;
+      padding: 9px 10px;
       border-radius: 8px;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
       cursor: pointer;
       transition: all 0.15s;
     }
-    button:hover {
-      background: #334155;
-      border-color: #475569;
-    }
+    button:hover { background: #334155; border-color: #475569; }
     button.primary {
       background: #0ea5e9;
       border-color: #0284c7;
       color: #fff;
       font-weight: 500;
     }
-    button.primary:hover {
-      background: #0284c7;
-    }
+    button.primary:hover { background: #0284c7; }
     .presets {
       display: grid;
       grid-template-columns: 1fr 1fr;
       gap: 6px;
-      margin-top: 10px;
+      margin-top: 8px;
     }
-    .presets button {
-      font-size: 0.72rem;
-      padding: 7px;
-    }
-    .slider-group {
-      margin-top: 14px;
-    }
+    .presets button { font-size: 0.7rem; padding: 7px 6px; }
+    .slider-group { margin-top: 13px; }
     input[type="range"] {
       width: 100%;
-      margin-top: 4px;
+      margin-top: 3px;
       accent-color: #38bdf8;
     }
     .value {
       float: right;
       color: #7dd3fc;
       font-family: monospace;
-      font-size: 0.8rem;
+      font-size: 0.78rem;
     }
     .hint {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: #666;
-      margin-top: 10px;
-      line-height: 1.4;
+      margin-top: 12px;
+      line-height: 1.45;
     }
     code {
       background: #1a1a22;
-      padding: 1px 5px;
-      border-radius: 4px;
-      font-size: 0.68rem;
+      padding: 1px 4px;
+      border-radius: 3px;
+      font-size: 0.65rem;
       color: #a5b4fc;
+    }
+    .mode {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    .mode button {
+      flex: 1;
+      font-size: 0.72rem;
+      padding: 6px;
+    }
+    .mode button.active {
+      background: #0ea5e9;
+      border-color: #0284c7;
+      color: #fff;
     }
   </style>
 </head>
@@ -138,26 +141,42 @@
 
   <div id="ui">
     <h1>Math Sculpt</h1>
-    <p class="subtitle">Start with a square clay box → sculpt with math</p>
+    <p class="subtitle">Pure mathematics · starts as a square clay box</p>
 
-    <label>Displacement formula <span class="value" id="status">ready</span></label>
+    <div class="mode">
+      <button id="mode-y" class="active">Y Displacement</button>
+      <button id="mode-vec">Full Vector [x,y,z]</button>
+    </div>
+
+    <label>Mathematical mapping <span class="value" id="status">ready</span></label>
     <textarea id="formula" spellcheck="false">Math.sin(x * 3) * Math.cos(z * 3) * 0.25</textarea>
 
     <div class="row">
-      <button class="primary" id="apply">Apply Formula</button>
-      <button id="reset">Reset Clay</button>
+      <button class="primary" id="apply">Evaluate Math</button>
+      <button id="reset">Reset to Box</button>
     </div>
 
-    <label style="margin-top:14px">Quick presets</label>
-    <div class="presets">
-      <button data-f="Math.sin(x*4)*0.2">Sine Wave</button>
-      <button data-f="Math.sin(x*3)*Math.cos(z*3)*0.3">Ripple</button>
-      <button data-f="(Math.sin(x*5)+Math.sin(z*5))*0.15">Grid</button>
-      <button data-f="Math.sqrt(x*x+z*z)*0.15">Cone</button>
-      <button data-f="Math.sin(Math.sqrt(x*x+z*z)*6)*0.2">Radial</button>
-      <button data-f="(Math.random()-0.5)*0.4">Noise</button>
-      <button data-f="Math.abs(x)*0.3 - 0.15">V Groove</button>
-      <button data-f="Math.pow(Math.abs(x),1.5)*Math.sign(x)*0.2">Sharp</button>
+    <label style="margin-top:14px">Math presets</label>
+    <div class="presets" id="presets-y">
+      <button data-f="Math.sin(x*4)*0.22">sine wave</button>
+      <button data-f="Math.sin(x*3)*Math.cos(z*3)*0.28">ripple</button>
+      <button data-f="(Math.sin(x*5)+Math.sin(z*5))*0.14">grid</button>
+      <button data-f="Math.sin(Math.sqrt(x*x+z*z)*6)*0.22">radial</button>
+      <button data-f="Math.pow(Math.abs(x),1.6)*Math.sign(x)*0.22">sharp crease</button>
+      <button data-f="Math.abs(x)*0.35-0.18">V groove</button>
+      <button data-f="(Math.random()-0.5)*0.35">noise</button>
+      <button data-f="Math.sin(x*8)*Math.sin(z*8)*0.18">fine grid</button>
+    </div>
+
+    <div class="presets" id="presets-vec" style="display:none">
+      <button data-f="[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]">ripple vec</button>
+      <button data-f="[x*1.1, y + Math.sin(Math.sqrt(x*x+z*z)*5)*0.25, z*1.1]">radial expand</button>
+      <button data-f="[x + Math.sin(z*4)*0.15, y, z + Math.sin(x*4)*0.15]">twist-ish</button>
+      <button data-f="[x, y*0.7 + Math.sin(x*2)*0.2, z]">squash + wave</button>
+      <button data-f="[x*Math.cos(0.4) - z*Math.sin(0.4), y, x*Math.sin(0.4) + z*Math.cos(0.4)]">rotate Y</button>
+      <button data-f="[x, y + (Math.random()-0.5)*0.3, z]">noise Y</button>
+      <button data-f="[x*1.2, y*0.6, z*1.2]">flatten + widen</button>
+      <button data-f="[x + y*0.15, y, z + y*0.15]">shear</button>
     </div>
 
     <div class="slider-group">
@@ -166,7 +185,7 @@
     </div>
 
     <div class="slider-group">
-      <label>Strength <span class="value" id="str-val">1.00</span></label>
+      <label>Strength multiplier <span class="value" id="str-val">1.00</span></label>
       <input type="range" id="strength" min="0" max="3" value="1" step="0.05" />
     </div>
 
@@ -176,9 +195,12 @@
     </div>
 
     <p class="hint">
-      Available variables: <code>x</code> <code>y</code> <code>z</code> (vertex position)<br>
-      Also: <code>Math</code>, <code>t</code> (time in seconds)<br>
-      Formula returns the <strong>Y displacement</strong>.
+      <strong>Everything is math.</strong> No brushes. No mouse sculpting.<br><br>
+      <code>x y z</code> = original vertex of the square box<br>
+      <code>t</code> = time (seconds) · <code>Math</code> = full Math object<br><br>
+      <b>Y mode</b>: formula returns a number → added to Y<br>
+      <b>Vector mode</b>: formula returns <code>[nx, ny, nz]</code> → absolute new position<br><br>
+      Example vector: <code>[x, y + Math.sin(x*4)*0.2, z]</code>
     </p>
   </div>
 
@@ -195,13 +217,13 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // ── Scene setup ──────────────────────────────────────────────
+    // ── Scene ────────────────────────────────────────────────────
     const container = document.getElementById('canvas-container');
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x0f0f12);
 
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
-    camera.position.set(3.5, 2.8, 4.2);
+    camera.position.set(3.6, 2.9, 4.3);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -212,35 +234,30 @@
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.target.set(0, 0, 0);
 
-    // Lights
-    const amb = new THREE.AmbientLight(0xffffff, 0.45);
-    scene.add(amb);
-
-    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.45));
+    const dir = new THREE.DirectionalLight(0xffffff, 1.15);
     dir.position.set(4, 8, 5);
     dir.castShadow = true;
     dir.shadow.mapSize.set(1024, 1024);
     scene.add(dir);
-
     const fill = new THREE.DirectionalLight(0xa5b4fc, 0.35);
     fill.position.set(-3, 2, -4);
     scene.add(fill);
 
-    // Ground plane (subtle)
     const ground = new THREE.Mesh(
       new THREE.PlaneGeometry(20, 20),
       new THREE.MeshStandardMaterial({ color: 0x16161c, roughness: 0.95, metalness: 0.1 })
     );
     ground.rotation.x = -Math.PI / 2;
-    ground.position.y = -1.2;
+    ground.position.y = -1.25;
     ground.receiveShadow = true;
     scene.add(ground);
 
-    // ── Clay box ─────────────────────────────────────────────────
+    // ── Pure math clay ───────────────────────────────────────────
     let mesh, geometry;
     let originalPositions = null;
+    let mode = 'y'; // 'y' | 'vec'
 
     function createClay(subdiv = 32, size = 2) {
       if (mesh) {
@@ -248,14 +265,13 @@
         geometry.dispose();
         mesh.material.dispose();
       }
-
       geometry = new THREE.BoxGeometry(size, size, size, subdiv, subdiv, subdiv);
       originalPositions = new Float32Array(geometry.attributes.position.array);
 
       const material = new THREE.MeshStandardMaterial({
-        color: 0xc4a484,          // warm clay
-        roughness: 0.85,
-        metalness: 0.05,
+        color: 0xc4a484,
+        roughness: 0.82,
+        metalness: 0.04,
         flatShading: false,
         side: THREE.DoubleSide
       });
@@ -263,17 +279,15 @@
       mesh = new THREE.Mesh(geometry, material);
       mesh.castShadow = true;
       mesh.receiveShadow = true;
-      mesh.position.y = 0;
       scene.add(mesh);
     }
-
     createClay();
 
-    // ── Math sculpting ───────────────────────────────────────────
+    // ── Evaluate pure mathematical mapping ───────────────────────
     const formulaEl = document.getElementById('formula');
-    const statusEl = document.getElementById('status');
+    const statusEl  = document.getElementById('status');
 
-    function applyFormula() {
+    function evaluateMath() {
       const code = formulaEl.value.trim();
       if (!code) return;
 
@@ -282,9 +296,8 @@
 
       let fn;
       try {
-        // Create a safe-ish function from the formula
         fn = new Function('x', 'y', 'z', 't', 'Math',
-          `\"use strict\"; return (${code});`);
+          `"use strict"; return (${code});`);
       } catch (e) {
         statusEl.textContent = 'syntax error';
         statusEl.style.color = '#f87171';
@@ -300,51 +313,94 @@
           const oy = originalPositions[i + 1];
           const oz = originalPositions[i + 2];
 
-          const dx = fn(ox, oy, oz, t, Math);
-          if (typeof dx !== 'number' || Number.isNaN(dx)) {
-            throw new Error('formula must return a number');
-          }
+          const result = fn(ox, oy, oz, t, Math);
 
-          // Displace along the original normal-ish direction (mostly Y for top, but keep general)
-          // For a box we displace primarily in Y for classic "sculpt" feel,
-          // but we also allow full vector if user wants later.
-          arr[i]     = ox;
-          arr[i + 1] = oy + dx * strength;
-          arr[i + 2] = oz;
+          if (mode === 'y') {
+            // Scalar → Y displacement (pure math addition)
+            if (typeof result !== 'number' || Number.isNaN(result)) {
+              throw new Error('must return a number');
+            }
+            arr[i]     = ox;
+            arr[i + 1] = oy + result * strength;
+            arr[i + 2] = oz;
+          } else {
+            // Full vector mapping – the math completely defines the new point
+            let nx, ny, nz;
+            if (Array.isArray(result) && result.length >= 3) {
+              [nx, ny, nz] = result;
+            } else if (result && typeof result === 'object') {
+              nx = result.x; ny = result.y; nz = result.z;
+            } else {
+              throw new Error('return [x,y,z] or {x,y,z}');
+            }
+            if ([nx, ny, nz].some(v => typeof v !== 'number' || Number.isNaN(v))) {
+              throw new Error('vector must be numbers');
+            }
+            // Strength blends between original and the pure mathematical result
+            arr[i]     = ox + (nx - ox) * strength;
+            arr[i + 1] = oy + (ny - oy) * strength;
+            arr[i + 2] = oz + (nz - oz) * strength;
+          }
         }
 
         pos.needsUpdate = true;
         geometry.computeVertexNormals();
-        statusEl.textContent = 'applied';
+        statusEl.textContent = 'evaluated';
         statusEl.style.color = '#4ade80';
       } catch (e) {
-        statusEl.textContent = e.message.slice(0, 28);
+        statusEl.textContent = e.message.slice(0, 32);
         statusEl.style.color = '#f87171';
       }
     }
 
-    function resetClay() {
+    function resetToBox() {
       const pos = geometry.attributes.position;
       pos.array.set(originalPositions);
       pos.needsUpdate = true;
       geometry.computeVertexNormals();
-      statusEl.textContent = 'reset';
+      statusEl.textContent = 'box';
       statusEl.style.color = '#94a3b8';
     }
 
-    // ── UI wiring ────────────────────────────────────────────────
-    document.getElementById('apply').addEventListener('click', applyFormula);
-    document.getElementById('reset').addEventListener('click', resetClay);
+    // ── Mode switching ───────────────────────────────────────────
+    const modeY   = document.getElementById('mode-y');
+    const modeVec = document.getElementById('mode-vec');
+    const presetsY   = document.getElementById('presets-y');
+    const presetsVec = document.getElementById('presets-vec');
+
+    modeY.addEventListener('click', () => {
+      mode = 'y';
+      modeY.classList.add('active');
+      modeVec.classList.remove('active');
+      presetsY.style.display = '';
+      presetsVec.style.display = 'none';
+      formulaEl.value = 'Math.sin(x * 3) * Math.cos(z * 3) * 0.25';
+      evaluateMath();
+    });
+
+    modeVec.addEventListener('click', () => {
+      mode = 'vec';
+      modeVec.classList.add('active');
+      modeY.classList.remove('active');
+      presetsY.style.display = 'none';
+      presetsVec.style.display = '';
+      formulaEl.value = '[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]';
+      evaluateMath();
+    });
+
+    // ── UI ───────────────────────────────────────────────────────
+    document.getElementById('apply').addEventListener('click', evaluateMath);
+    document.getElementById('reset').addEventListener('click', resetToBox);
 
     document.querySelectorAll('.presets button').forEach(btn => {
       btn.addEventListener('click', () => {
         formulaEl.value = btn.dataset.f;
-        applyFormula();
+        evaluateMath();
       });
     });
 
     const subdivSlider = document.getElementById('subdiv');
-    const sizeSlider = document.getElementById('size');
+    const sizeSlider   = document.getElementById('size');
     const strengthSlider = document.getElementById('strength');
 
     subdivSlider.addEventListener('input', () => {
@@ -352,7 +408,7 @@
     });
     subdivSlider.addEventListener('change', () => {
       createClay(+subdivSlider.value, +sizeSlider.value);
-      applyFormula();
+      evaluateMath();
     });
 
     sizeSlider.addEventListener('input', () => {
@@ -360,22 +416,21 @@
     });
     sizeSlider.addEventListener('change', () => {
       createClay(+subdivSlider.value, +sizeSlider.value);
-      applyFormula();
+      evaluateMath();
     });
 
     strengthSlider.addEventListener('input', () => {
       document.getElementById('str-val').textContent = (+strengthSlider.value).toFixed(2);
-      applyFormula();
+      evaluateMath();
     });
 
-    // Live update while typing (debounced)
     let debounce;
     formulaEl.addEventListener('input', () => {
       clearTimeout(debounce);
-      debounce = setTimeout(applyFormula, 350);
+      debounce = setTimeout(evaluateMath, 280);
     });
 
-    // ── Animation loop ───────────────────────────────────────────
+    // ── Loop ─────────────────────────────────────────────────────
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
@@ -383,15 +438,13 @@
     }
     animate();
 
-    // Resize
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
     });
 
-    // Initial apply
-    applyFormula();
+    evaluateMath();
   </script>
 </body>
 </html>
