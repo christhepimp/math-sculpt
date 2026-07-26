@@ -22,7 +22,7 @@
       cursor: pointer; box-shadow: -4px 0 16px rgba(0,0,0,0.4); writing-mode: vertical-rl;
     }
     #term-toggle:hover { background: #0284c7; }
-    #overlay-btn, #pin-btn, #stick-btn {
+    #overlay-btn, #pin-btn, #stick-btn, #grid-btn {
       position: absolute; left: 12px; z-index: 25;
       background: rgba(14, 165, 233, 0.9); border: none; color: #fff;
       padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;
@@ -30,17 +30,18 @@
     #overlay-btn { top: 12px; }
     #pin-btn { top: 56px; }
     #stick-btn { top: 100px; }
-    #overlay-btn.on, #pin-btn.on, #stick-btn.on { background: #f472b6; }
+    #grid-btn { top: 144px; }
+    #overlay-btn.on, #pin-btn.on, #stick-btn.on, #grid-btn.on { background: #f472b6; }
     #stats {
-      position: absolute; left: 12px; top: 144px; z-index: 25;
+      position: absolute; left: 12px; top: 188px; z-index: 25;
       font-family: monospace; font-size: 0.68rem; color: #7dd3fc;
       background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px; line-height: 1.45;
     }
     #layer-hud {
-      position: absolute; left: 12px; top: 200px; z-index: 25;
+      position: absolute; left: 12px; top: 244px; z-index: 25;
       font-family: monospace; font-size: 0.62rem; color: #a7f3d0;
       background: rgba(0,0,0,0.55); padding: 8px 10px; border-radius: 8px; line-height: 1.5;
-      max-height: 36vh; overflow-y: auto; max-width: 200px;
+      max-height: 32vh; overflow-y: auto; max-width: 200px;
       border: 1px solid rgba(52, 211, 153, 0.25);
     }
     #layer-hud strong { color: #6ee7b7; }
@@ -57,47 +58,33 @@
     }
     #pin-info.show { display: block; }
     #pin-info strong { color: #f87171; font-size: 1.1rem; }
-
-    /* Stick ruler: draggable line with red unit ticks */
     #stick-ruler {
       position: absolute; z-index: 22;
-      height: 28px;
-      width: 220px;
+      height: 28px; width: 220px;
       background: rgba(20, 20, 28, 0.92);
-      border: 2px solid #f87171;
-      border-radius: 6px;
-      cursor: grab;
-      display: none;
-      pointer-events: auto;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5);
-      overflow: visible;
+      border: 2px solid #f87171; border-radius: 6px;
+      cursor: grab; display: none; pointer-events: auto;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow: visible;
     }
     #stick-ruler.show { display: block; }
     #stick-ruler.dragging { cursor: grabbing; border-color: #ef4444; }
     #stick-ruler .ticks {
-      position: absolute; inset: 0;
-      display: flex; align-items: flex-end;
-      padding: 0 4px 4px;
-      pointer-events: none;
+      position: absolute; inset: 0; display: flex; align-items: flex-end;
+      padding: 0 4px 4px; pointer-events: none;
     }
     #stick-ruler .tick {
-      width: 3px; height: 12px;
-      background: #ef4444;
+      width: 3px; height: 12px; background: #ef4444;
       box-shadow: 0 0 6px #f87171, 0 0 12px #ef4444;
-      border-radius: 1px;
-      flex-shrink: 0;
+      border-radius: 1px; flex-shrink: 0;
     }
     #stick-ruler .tick.major {
-      height: 18px; width: 3px;
-      background: #fca5a5;
+      height: 18px; background: #fca5a5;
       box-shadow: 0 0 8px #f87171, 0 0 16px #ef4444;
     }
     #stick-ruler .stick-label {
       position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-      font-size: 0.58rem; color: #fca5a5; white-space: nowrap;
-      pointer-events: none;
+      font-size: 0.58rem; color: #fca5a5; white-space: nowrap; pointer-events: none;
     }
-
     #terminal {
       position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 60vh;
       background: rgba(10, 10, 16, 0.98); border-top: 1px solid #2a2a3a;
@@ -158,24 +145,14 @@
     .pnum {
       position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 7px;
       color: #0a0a0a; background: #39ff14;
-      border: 1px solid rgba(0,0,0,0.25); border-radius: 2px; padding: 0 2px; white-space: nowrap;
-      line-height: 1.2;
+      border: 1px solid rgba(0,0,0,0.25); border-radius: 2px; padding: 0 2px; white-space: nowrap; line-height: 1.2;
     }
     .pnum.sel { background: #f9a8d4; outline: 1px solid #f472b6; font-weight: 600; }
-    .pnum.corner {
-      font-size: 9px; font-weight: 700; background: #fde68a; border-color: #f59e0b;
-    }
+    .pnum.corner { font-size: 9px; font-weight: 700; background: #fde68a; border-color: #f59e0b; }
     .pnum.pin {
       font-size: 12px; font-weight: 700; background: #ef4444; color: #fff;
       border: 2px solid #fecaca; box-shadow: 0 0 10px #ef4444, 0 0 20px #f87171;
       padding: 2px 5px; z-index: 17;
-    }
-    .face-mark {
-      position: absolute; transform: translate(-50%, -50%);
-      font-family: monospace; font-size: 11px; font-weight: 700;
-      color: #fde68a; background: rgba(0,0,0,0.65);
-      border: 1px solid #f59e0b; border-radius: 4px; padding: 2px 5px;
-      pointer-events: none; z-index: 16;
     }
   </style>
 </head>
@@ -189,6 +166,7 @@
   <button id="overlay-btn">unit #s</button>
   <button id="pin-btn">Pin ruler</button>
   <button id="stick-btn">Stick ruler</button>
+  <button id="grid-btn">Unit grid</button>
   <div id="stats">units: —</div>
   <div id="layer-hud">layers…</div>
   <div id="pin-info"></div>
@@ -203,8 +181,7 @@
     <div id="term-body">
       <h2>Type the math</h2>
       <p class="help">
-        Solid square · <strong>5832 fractions</strong> · each is exactly <code>1 unit length</code> from its neighbors.<br>
-        Numbers run like a book on each face, then around the shell, then inward.
+        Solid square · <strong>5832 fractions</strong> · each is exactly <code>1 unit length</code> from its neighbors.
       </p>
       <label>select units (numbers)</label>
       <textarea id="sel" placeholder="1, 2, 5, 100-200"></textarea>
@@ -223,8 +200,7 @@
       </div>
       <div id="log">ready</div>
       <p class="help" style="margin-top:12px">
-        <strong>Pin ruler</strong>: tap anywhere on the square → closest fraction glows red and its number shows.<br>
-        <strong>Stick ruler</strong>: drag the small straight ruler. Red glowing ticks are spaced exactly 1 unit length apart (same as fractions).
+        <strong>Unit grid</strong>: bright glowing grid on the floor and background. Each square is exactly 1 unit length — the same spacing as fractions. Tap again to switch red ↔ green.
       </p>
     </div>
   </div>
@@ -286,13 +262,81 @@
     ground.position.y = -1.35;
     scene.add(ground);
 
+    // ---- Unit-length glowing grid (floor + vertical walls on black bg) ----
+    let unitGridGroup = null;
+    let gridOn = false;
+    let gridColorMode = 'red'; // 'red' | 'green'
+
+    function makeUnitGrid(cellSize, colorHex) {
+      const group = new THREE.Group();
+      const extent = 10; // world half-size of grid
+      const positions = [];
+      // Floor grid lines (XZ plane at y = -1.34)
+      const yFloor = -1.34;
+      for (let i = -extent; i <= extent + 1e-9; i += cellSize) {
+        positions.push(-extent, yFloor, i, extent, yFloor, i);
+        positions.push(i, yFloor, -extent, i, yFloor, extent);
+      }
+      // Vertical grid on back (XY at z = -extent) for black background depth
+      const zBack = -extent;
+      for (let i = -extent; i <= extent + 1e-9; i += cellSize) {
+        positions.push(-extent, i, zBack, extent, i, zBack);
+        positions.push(i, -extent, zBack, i, extent, zBack);
+      }
+      // Side wall (YZ at x = -extent)
+      const xSide = -extent;
+      for (let i = -extent; i <= extent + 1e-9; i += cellSize) {
+        positions.push(xSide, -extent, i, xSide, extent, i);
+        positions.push(xSide, i, -extent, xSide, i, extent);
+      }
+
+      const geo = new THREE.BufferGeometry();
+      geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      const mat = new THREE.LineBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.95,
+        depthWrite: false
+      });
+      const lines = new THREE.LineSegments(geo, mat);
+      group.add(lines);
+
+      // Extra emissive-style glow pass (slightly thicker feel via second dimmer copy)
+      const matGlow = new THREE.LineBasicMaterial({
+        color: colorHex,
+        transparent: true,
+        opacity: 0.25,
+        depthWrite: false
+      });
+      const glow = new THREE.LineSegments(geo.clone(), matGlow);
+      glow.scale.setScalar(1.001);
+      group.add(glow);
+
+      return group;
+    }
+
+    function setGridVisible(on) {
+      if (unitGridGroup) {
+        scene.remove(unitGridGroup);
+        unitGridGroup.traverse(o => {
+          if (o.geometry) o.geometry.dispose();
+          if (o.material) o.material.dispose();
+        });
+        unitGridGroup = null;
+      }
+      if (!on) return;
+      const hex = gridColorMode === 'green' ? 0x39ff14 : 0xff1a1a;
+      unitGridGroup = makeUnitGrid(cell, hex);
+      scene.add(unitGridGroup);
+    }
+
     let units = [];
     let selected = new Set();
     let mesh = null;
     let dummy = new THREE.Object3D();
     let showNumbers = false;
     let pinOn = false;
-    let pinnedId = null; // glowing red fraction
+    let pinnedId = null;
     let stickOn = false;
     let stickX = 80, stickY = 200;
     let stickDragging = false;
@@ -359,12 +403,9 @@
         if (c.shell !== currentShell) return;
         visited.add(k);
         units.push({
-          id: displayNum,
-          ix, iy, iz,
-          x: c.x, y: c.y, z: c.z,
-          shell: c.shell,
-          r: c.r, g: c.g, b: c.b,
-          fraction: FRACTION
+          id: displayNum, ix, iy, iz,
+          x: c.x, y: c.y, z: c.z, shell: c.shell,
+          r: c.r, g: c.g, b: c.b, fraction: FRACTION
         });
         displayNum++;
       }
@@ -372,26 +413,19 @@
       for (let s = 0; s <= maxShell; s++) {
         currentShell = s;
         layerStarts[s] = displayNum;
-        const lo = s;
-        const hi = SIDE - 1 - s;
+        const lo = s, hi = SIDE - 1 - s;
         if (lo === hi) { addCell(lo, lo, lo); continue; }
-
-        for (let y = hi; y >= lo; y--)
-          for (let x = lo; x <= hi; x++) addCell(x, y, lo);
-        for (let y = hi; y >= lo; y--)
-          for (let z = lo + 1; z <= hi; z++) addCell(hi, y, z);
-        for (let y = hi; y >= lo; y--)
-          for (let x = hi - 1; x >= lo; x--) addCell(x, y, hi);
-        for (let y = hi; y >= lo; y--)
-          for (let z = hi - 1; z >= lo + 1; z--) addCell(lo, y, z);
-        for (let z = lo + 1; z <= hi - 1; z++)
-          for (let x = lo + 1; x <= hi - 1; x++) addCell(x, hi, z);
-        for (let z = lo + 1; z <= hi - 1; z++)
-          for (let x = lo + 1; x <= hi - 1; x++) addCell(x, lo, z);
+        for (let y = hi; y >= lo; y--) for (let x = lo; x <= hi; x++) addCell(x, y, lo);
+        for (let y = hi; y >= lo; y--) for (let z = lo + 1; z <= hi; z++) addCell(hi, y, z);
+        for (let y = hi; y >= lo; y--) for (let x = hi - 1; x >= lo; x--) addCell(x, y, hi);
+        for (let y = hi; y >= lo; y--) for (let z = hi - 1; z >= lo + 1; z--) addCell(lo, y, z);
+        for (let z = lo + 1; z <= hi - 1; z++) for (let x = lo + 1; x <= hi - 1; x++) addCell(x, hi, z);
+        for (let z = lo + 1; z <= hi - 1; z++) for (let x = lo + 1; x <= hi - 1; x++) addCell(x, lo, z);
       }
 
       rebuildVisual();
       updateLayerHud();
+      if (gridOn) setGridVisible(true);
       document.getElementById('stats').innerHTML =
         `units: ${TOTAL.toLocaleString()} · unit length = ${cell.toFixed(6)}<br>numbers 1–${TOTAL}`;
       document.getElementById('sel').value = '';
@@ -425,7 +459,6 @@
       const mat = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.08, flatShading: true });
       mesh = new THREE.InstancedMesh(geo, mat, count);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-
       const colors = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
         const u = units[i];
@@ -433,7 +466,7 @@
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
         if (pinnedId === u.id) {
-          colors[i*3] = 1; colors[i*3+1] = 0.1; colors[i*3+2] = 0.1; // red glow
+          colors[i*3] = 1; colors[i*3+1] = 0.1; colors[i*3+2] = 0.1;
         } else if (selected.has(u.id)) {
           colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
         } else {
@@ -470,11 +503,7 @@
     function dirFromAngles(azDeg, elDeg) {
       const az = azDeg * Math.PI / 180;
       const el = elDeg * Math.PI / 180;
-      return {
-        x: Math.cos(el) * Math.sin(az),
-        y: Math.sin(el),
-        z: Math.cos(el) * Math.cos(az)
-      };
+      return { x: Math.cos(el) * Math.sin(az), y: Math.sin(el), z: Math.cos(el) * Math.cos(az) };
     }
 
     function parseIds(text) {
@@ -503,9 +532,7 @@
       return n;
     }
 
-    function unitByDisplayId(id) {
-      return units.find(u => u.id === id);
-    }
+    function unitByDisplayId(id) { return units.find(u => u.id === id); }
 
     function runMath() {
       try {
@@ -520,15 +547,11 @@
         const scale = dist * cell;
         for (const u of units) {
           if (!selected.has(u.id)) continue;
-          u.x += dir.x * scale;
-          u.y += dir.y * scale;
-          u.z += dir.z * scale;
+          u.x += dir.x * scale; u.y += dir.y * scale; u.z += dir.z * scale;
         }
         syncVisual();
         log(`ok · moved ${valid.length} units · az=${az} el=${el} dist=${dist} unit length(s)`, 'ok');
-      } catch (e) {
-        log(e.message, 'err');
-      }
+      } catch (e) { log(e.message, 'err'); }
     }
 
     function clearSelect() {
@@ -545,8 +568,7 @@
       mouse.x = (clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      const o = raycaster.ray.origin;
-      const d = raycaster.ray.direction;
+      const o = raycaster.ray.origin, d = raycaster.ray.direction;
       let best = null, bestD = Infinity;
       for (const u of units) {
         const ox = u.x - o.x, oy = u.y - o.y, oz = u.z - o.z;
@@ -591,8 +613,6 @@
         const r = term.getBoundingClientRect();
         if (e.clientY >= r.top) return;
       }
-
-      // Pin ruler: snap to closest fraction, glow red, show number
       if (pinOn) {
         const u = nearestUnit(e.clientX, e.clientY);
         if (!u) {
@@ -603,14 +623,10 @@
         pinnedId = u.id;
         syncVisual();
         pinInfo.classList.add('show');
-        pinInfo.innerHTML =
-          `pinned · fraction <strong>#${u.id}</strong>` +
-          ` · shell ${u.shell}` +
-          ` · unit length ${cell.toFixed(6)}`;
+        pinInfo.innerHTML = `pinned · fraction <strong>#${u.id}</strong> · shell ${u.shell} · unit length ${cell.toFixed(6)}`;
         log(`pin · closest fraction #${u.id} (shell ${u.shell})`, 'ok');
         return;
       }
-
       const found = idsNearClick(e.clientX, e.clientY);
       if (!found.length) return;
       const box = document.getElementById('sel');
@@ -623,19 +639,15 @@
       log(`select +${found.length} · total ${selected.size}`);
     });
 
-    // ---- Stick ruler: red ticks at unit-length spacing ----
     function estimateUnitPixels() {
-      // Project two neighboring grid positions to screen to get pixel spacing of 1 unit length
       const a = new THREE.Vector3(0, 0, 0);
       const b = new THREE.Vector3(cell, 0, 0);
-      a.project(camera);
-      b.project(camera);
+      a.project(camera); b.project(camera);
       const ax = (a.x * 0.5 + 0.5) * window.innerWidth;
       const ay = (-a.y * 0.5 + 0.5) * window.innerHeight;
       const bx = (b.x * 0.5 + 0.5) * window.innerWidth;
       const by = (-b.y * 0.5 + 0.5) * window.innerHeight;
-      const px = Math.hypot(bx - ax, by - ay);
-      return Math.max(4, Math.min(40, px || 12));
+      return Math.max(4, Math.min(40, Math.hypot(bx - ax, by - ay) || 12));
     }
 
     function rebuildStickTicks() {
@@ -660,8 +672,7 @@
     }
 
     stickEl.addEventListener('pointerdown', e => {
-      e.preventDefault();
-      e.stopPropagation();
+      e.preventDefault(); e.stopPropagation();
       stickDragging = true;
       stickEl.classList.add('dragging');
       stickOffX = e.clientX - stickX;
@@ -688,23 +699,17 @@
       const show = showNumbers || pinnedId != null;
       if (!show) return;
       overlayEl.classList.add('show');
-
       if (showNumbers) {
         const outer = units.filter(u => u.shell === 0);
         const toShow = new Map();
-        for (let i = 0; i < outer.length; i += Math.max(1, Math.floor(outer.length / 50))) {
-          toShow.set(outer[i].id, outer[i]);
-        }
+        for (let i = 0; i < outer.length; i += Math.max(1, Math.floor(outer.length / 50))) toShow.set(outer[i].id, outer[i]);
         for (let s = 0; s < layerStarts.length; s++) {
           const u0 = unitByDisplayId(layerStarts[s]);
           if (u0) toShow.set(u0.id, u0);
         }
         for (const u of units) {
           if (u.shell !== 0) continue;
-          const c =
-            (u.ix === 0 || u.ix === SIDE - 1) &&
-            (u.iy === 0 || u.iy === SIDE - 1) &&
-            (u.iz === 0 || u.iz === SIDE - 1);
+          const c = (u.ix === 0 || u.ix === SIDE - 1) && (u.iy === 0 || u.iy === SIDE - 1) && (u.iz === 0 || u.iz === SIDE - 1);
           if (c) toShow.set(u.id, u);
         }
         for (const u of toShow.values()) {
@@ -716,20 +721,13 @@
           const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
           if (x < -20 || x > window.innerWidth + 20 || y < -20 || y > window.innerHeight + 20) continue;
           const span = document.createElement('div');
-          const isCorner =
-            u.shell === 0 &&
-            (u.ix === 0 || u.ix === SIDE - 1) &&
-            (u.iy === 0 || u.iy === SIDE - 1) &&
-            (u.iz === 0 || u.iz === SIDE - 1);
+          const isCorner = u.shell === 0 && (u.ix === 0 || u.ix === SIDE - 1) && (u.iy === 0 || u.iy === SIDE - 1) && (u.iz === 0 || u.iz === SIDE - 1);
           span.className = 'pnum' + (selected.has(u.id) ? ' sel' : '') + (isCorner ? ' corner' : '');
           span.textContent = u.id;
-          span.style.left = x + 'px';
-          span.style.top = y + 'px';
+          span.style.left = x + 'px'; span.style.top = y + 'px';
           overlayEl.appendChild(span);
         }
       }
-
-      // Always draw pinned number large and red
       if (pinnedId != null) {
         const u = unitByDisplayId(pinnedId);
         if (u) {
@@ -741,8 +739,7 @@
             const span = document.createElement('div');
             span.className = 'pnum pin';
             span.textContent = u.id;
-            span.style.left = x + 'px';
-            span.style.top = y + 'px';
+            span.style.left = x + 'px'; span.style.top = y + 'px';
             overlayEl.appendChild(span);
           }
         }
@@ -763,13 +760,8 @@
       const btn = document.getElementById('overlay-btn');
       btn.classList.toggle('on', showNumbers);
       btn.textContent = showNumbers ? 'hide #s' : 'unit #s';
-      if (showNumbers || pinnedId != null) {
-        overlayEl.classList.add('show');
-        rebuildNumberOverlay();
-      } else {
-        overlayEl.classList.remove('show');
-        overlayEl.innerHTML = '';
-      }
+      if (showNumbers || pinnedId != null) { overlayEl.classList.add('show'); rebuildNumberOverlay(); }
+      else { overlayEl.classList.remove('show'); overlayEl.innerHTML = ''; }
     });
 
     document.getElementById('pin-btn').addEventListener('click', () => {
@@ -780,7 +772,7 @@
       if (pinOn) {
         pinInfo.classList.add('show');
         pinInfo.textContent = 'tap the square · closest fraction glows red';
-        log('pin ruler on · tap to snap to nearest fraction');
+        log('pin ruler on');
       } else {
         pinnedId = null;
         pinInfo.classList.remove('show');
@@ -795,13 +787,35 @@
       btn.classList.toggle('on', stickOn);
       btn.textContent = stickOn ? 'Stick ON' : 'Stick ruler';
       if (stickOn) {
-        rebuildStickTicks();
-        placeStick();
-        stickEl.classList.add('show');
-        log('stick ruler on · drag it · red ticks = 1 unit length (same as fraction spacing)');
+        rebuildStickTicks(); placeStick(); stickEl.classList.add('show');
+        log('stick ruler on · red ticks = 1 unit length');
       } else {
         stickEl.classList.remove('show');
         log('stick ruler off');
+      }
+    });
+
+    // Unit grid: first tap on, second tap switches red↔green, long pattern: on red → green → off
+    document.getElementById('grid-btn').addEventListener('click', () => {
+      const btn = document.getElementById('grid-btn');
+      if (!gridOn) {
+        gridOn = true;
+        gridColorMode = 'red';
+        setGridVisible(true);
+        btn.classList.add('on');
+        btn.textContent = 'Grid RED';
+        log('unit grid ON · bright red · each square = 1 unit length (fraction spacing)');
+      } else if (gridColorMode === 'red') {
+        gridColorMode = 'green';
+        setGridVisible(true);
+        btn.textContent = 'Grid GREEN';
+        log('unit grid · bright green · each square = 1 unit length');
+      } else {
+        gridOn = false;
+        setGridVisible(false);
+        btn.classList.remove('on');
+        btn.textContent = 'Unit grid';
+        log('unit grid off');
       }
     });
 
