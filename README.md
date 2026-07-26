@@ -1,61 +1,45 @@
 # Math Sculpt
 
-**The entire sculpting process is pure mathematics.**
+**Geometry and color are both pure mathematics.**
 
-You start with a perfect square clay box.  
-Every change after that is defined by a mathematical expression.  
-No brushes. No mouse pushing. Only math.
+Start with a square clay box. Every deformation and every color is defined by math expressions. No brushes. No painted textures. Only formulas.
 
 ## Live Demo
 
-Enable GitHub Pages (Settings → Pages → Deploy from branch `main` / root):
+Enable GitHub Pages (Settings → Pages → branch `main` / root):
 
 **https://christhepimp.github.io/math-sculpt/**
 
-Or open `index.html` directly in any modern browser.
+## Pure math systems
 
-## Two pure-math modes
+### Geometry
+- **Y mode**: formula returns a number → displacement on Y
+- **Vector mode**: formula returns `[nx, ny, nz]` → complete mathematical remapping of every vertex
 
-### 1. Y Displacement (classic)
-Formula returns a **number**. That number is added to the Y coordinate of every vertex.
+### Color
+Formula must return `[r, g, b]` in the 0–1 range. Applied as vertex colors, driven entirely by math on the original box coordinates (and time).
 
+Examples:
 ```js
-Math.sin(x * 3) * Math.cos(z * 3) * 0.25
+[0.75 + 0.25*Math.sin(x*4), 0.55 + 0.2*Math.cos(z*3), 0.4]   // warm clay variation
+[0.2 + 0.3*Math.abs(x), 0.4 + 0.4*Math.abs(y), 0.7 + 0.3*Math.abs(z)]  // xyz → rgb
+[0.9, 0.3 + 0.4*Math.abs(Math.sin(x*8)), 0.15]                 // lava stripes
 ```
 
-### 2. Full Vector Mapping
-Formula returns a **3D point** `[nx, ny, nz]`.  
-The mathematics completely defines the new position of every vertex of the box.
+## Detail
 
-```js
-[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]
-```
+Subdivision goes up to **128** (~100k+ triangles). That is the practical real-time ceiling for a pure client-side Three.js mesh generated from a single box.
 
-```js
-[x * Math.cos(0.4) - z * Math.sin(0.4), y, x * Math.sin(0.4) + z * Math.cos(0.4)]  // rotate
-```
+This cannot match Unreal Engine + Nanite geometric density or Lumen lighting. Those systems are built for offline/authoring pipelines and massive streaming geometry. What you get here is the densest practical **pure-math, real-time, browser-native** sculpt from a starting box.
 
-```js
-[x + y*0.15, y, z + y*0.15]  // shear
-```
-
-## Available symbols
+## Symbols
 
 | Symbol | Meaning |
 |--------|---------|
 | `x y z` | Original coordinates of the square box vertex |
-| `t` | Time in seconds |
-| `Math` | Full JavaScript Math object (`sin`, `cos`, `sqrt`, `abs`, `pow`, `random`, `PI`, …) |
-
-## Strength
-
-The strength slider blends between the original box (0) and the pure mathematical result (1+).
-
-## Philosophy
-
-This is not a digital sculpting program with math as a helper.  
-**Math is the sculptor.** The box is just the starting domain of the function.
+| `t` | Time (seconds) |
+| `Math` | Full JavaScript Math object |
 
 ---
 
-Made for people who like their clay precise.
+Math is the sculptor. Math is the painter.
