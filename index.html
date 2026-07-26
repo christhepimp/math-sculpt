@@ -22,15 +22,19 @@
       top: 50%;
       transform: translateY(-50%);
       z-index: 30;
-      width: 36px;
-      height: 72px;
+      width: 40px;
+      height: 80px;
       background: #0ea5e9;
       border: none;
       border-radius: 10px 0 0 10px;
       color: #fff;
-      font-size: 1.1rem;
+      font-size: 0.7rem;
+      font-weight: 600;
+      letter-spacing: 0.04em;
       cursor: pointer;
       box-shadow: -4px 0 16px rgba(0,0,0,0.4);
+      writing-mode: vertical-rl;
+      text-orientation: mixed;
     }
     #term-toggle:hover { background: #0284c7; }
 
@@ -63,6 +67,20 @@
       border-radius: 6px;
     }
 
+    #hint-view {
+      position: absolute;
+      left: 12px;
+      bottom: 16px;
+      z-index: 20;
+      font-size: 0.65rem;
+      color: #555;
+      background: rgba(0,0,0,0.4);
+      padding: 6px 10px;
+      border-radius: 8px;
+      line-height: 1.4;
+      pointer-events: none;
+    }
+
     #terminal {
       position: absolute;
       left: 0; right: 0; bottom: 0;
@@ -79,30 +97,39 @@
     }
     #terminal.open { transform: translateY(0); }
 
-    #term-handle {
+    #term-header {
       flex-shrink: 0;
-      height: 26px;
       display: flex;
       align-items: center;
-      justify-content: center;
-      color: #555;
-      font-size: 0.7rem;
-      letter-spacing: 0.2em;
-      user-select: none;
+      justify-content: space-between;
+      padding: 10px 14px 6px;
+      border-bottom: 1px solid #1e1e28;
     }
-    #term-handle::before {
-      content: '';
-      width: 36px; height: 4px;
-      background: #444;
-      border-radius: 2px;
-      margin-right: 8px;
+    #term-header span {
+      font-size: 0.72rem;
+      letter-spacing: 0.12em;
+      color: #888;
+      text-transform: uppercase;
     }
+    #term-close {
+      background: #2a2a38;
+      border: 1px solid #444;
+      color: #e2e8f0;
+      width: 36px;
+      height: 36px;
+      border-radius: 8px;
+      font-size: 1.1rem;
+      cursor: pointer;
+      line-height: 1;
+    }
+    #term-close:hover { background: #3f3f50; }
 
     #term-body {
       flex: 1;
       overflow-y: auto;
-      padding: 0 14px 18px;
+      padding: 8px 14px 18px;
       font-family: 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
+      -webkit-overflow-scrolling: touch;
     }
 
     h2 {
@@ -222,16 +249,19 @@
 
   <button id="overlay-btn">particle #s</button>
   <div id="stats">particles: —</div>
-  <button id="term-toggle">☰</button>
+  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan</div>
+  <button id="term-toggle">MATH</button>
 
   <div id="terminal">
-    <div id="term-handle">MATH TERMINAL</div>
+    <div id="term-header">
+      <span>Math terminal</span>
+      <button id="term-close" title="Close">✕</button>
+    </div>
     <div id="term-body">
       <h2>Type the math</h2>
       <p class="help">
-        No toggles. Everything is typed.<br>
-        <code>select</code> particle IDs · <code>azimuth</code> · <code>elevation</code> · <code>distance</code><br>
-        Then run. Movement = angles + distance only.
+        Type particle numbers, angles, and distance — then Run.<br>
+        Movement uses angles + distance only.
       </p>
 
       <label>select particles (numbers)</label>
@@ -251,16 +281,14 @@
         <button class="dim" id="clear">Clear select</button>
       </div>
       <div class="row">
-        <button class="dim" id="reset">Reset block</button>
+        <button class="dim" id="reset">Reset solid block</button>
       </div>
 
       <div id="log">ready · type numbers, angles, distance · run</div>
 
       <p class="help" style="margin-top:12px">
-        Math applied to each selected particle:<br>
         <code>pos += dir(azimuth, elevation) × (distance / 500)</code><br><br>
-        Click the clay to add nearby IDs into the select box.<br>
-        Sub-particles (if any) use the same ID list — type their numbers.
+        Tap the clay to add nearby IDs into select.
       </p>
     </div>
   </div>
@@ -278,10 +306,6 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // MathClay — all sculpt control by typing in the terminal
-    // select by number · azimuth · elevation · distance
-    // no direction toggles · no mode toggles
-
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
     const logEl = document.getElementById('log');
@@ -290,7 +314,7 @@
     scene.background = new THREE.Color(0x07070a);
 
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 100);
-    camera.position.set(3.0, 2.4, 3.6);
+    camera.position.set(2.8, 2.2, 3.4);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
@@ -299,13 +323,25 @@
     renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
+    // Full touch / mouse view controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
-    controls.enablePan = false;
+    controls.enablePan = true;
+    controls.enableZoom = true;
+    controls.enableRotate = true;
+    controls.minDistance = 0.8;
+    controls.maxDistance = 20;
+    controls.rotateSpeed = 0.9;
+    controls.zoomSpeed = 1.1;
+    controls.panSpeed = 0.8;
+    controls.touches = {
+      ONE: THREE.TOUCH.ROTATE,
+      TWO: THREE.TOUCH.DOLLY_PAN
+    };
 
-    scene.add(new THREE.AmbientLight(0xffffff, 0.5));
-    const key = new THREE.DirectionalLight(0xfff5e6, 1.1);
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xfff5e6, 1.15);
     key.position.set(4, 7, 3);
     scene.add(key);
     scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.35).translateX(-3).translateY(2).translateZ(-4));
@@ -318,25 +354,32 @@
     ground.position.y = -1.35;
     scene.add(ground);
 
-    let particles = []; // {id, x,y,z, r,g,b}
+    let particles = [];
     let selected = new Set();
     let pointsObj = null;
     let pointsGeo = null;
     let showNumbers = false;
     const claySize = 2.0;
-    const clickBrush = 0.28;
+    const clickBrush = 0.22;
+
+    // Dense enough + large enough points → looks like one solid block
+    const DEFAULT_DENSITY = 28;
+    let pointSize = 0.095;
 
     function log(msg, kind) {
       logEl.textContent = msg;
       logEl.className = kind === 'err' ? 'err' : kind === 'ok' ? 'ok' : '';
     }
 
-    function createSolidBlock(density = 16) {
+    function createSolidBlock(density = DEFAULT_DENSITY) {
       particles = [];
       selected.clear();
       const n = density;
       const half = claySize * 0.5;
       const step = claySize / (n - 1 || 1);
+      // Point size slightly larger than spacing so particles visually merge
+      pointSize = Math.max(0.06, step * 1.35);
+
       let id = 0;
       for (let iz = 0; iz < n; iz++)
         for (let iy = 0; iy < n; iy++)
@@ -346,15 +389,16 @@
               x: -half + ix * step,
               y: -half + iy * step,
               z: -half + iz * step,
-              r: 0.74 + Math.random() * 0.06,
-              g: 0.58 + Math.random() * 0.05,
-              b: 0.42 + Math.random() * 0.04
+              r: 0.76 + Math.random() * 0.04,
+              g: 0.60 + Math.random() * 0.03,
+              b: 0.44 + Math.random() * 0.03
             });
+
       rebuildPoints();
       document.getElementById('stats').textContent =
         `particles: ${particles.length.toLocaleString()} · ids 0–${particles.length - 1}`;
       document.getElementById('sel').value = '';
-      log('solid block ready · type select + angles + distance');
+      log('solid connected block ready');
       if (showNumbers) rebuildNumberOverlay();
     }
 
@@ -380,8 +424,12 @@
       pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
       pointsObj = new THREE.Points(pointsGeo, new THREE.PointsMaterial({
-        size: 0.07, vertexColors: true, sizeAttenuation: true,
-        transparent: true, opacity: 0.95
+        size: pointSize,
+        vertexColors: true,
+        sizeAttenuation: true,
+        transparent: false,
+        opacity: 1,
+        depthWrite: true
       }));
       scene.add(pointsObj);
     }
@@ -404,7 +452,6 @@
       if (showNumbers) rebuildNumberOverlay();
     }
 
-    // Angles only → unit direction
     function dirFromAngles(azDeg, elDeg) {
       const az = azDeg * Math.PI / 180;
       const el = elDeg * Math.PI / 180;
@@ -441,7 +488,6 @@
       return n;
     }
 
-    // Core: type select + angles + distance → run
     function runMath() {
       try {
         const ids = parseIds(document.getElementById('sel').value);
@@ -454,7 +500,7 @@
 
         selected = new Set(valid);
         const dir = dirFromAngles(az, el);
-        const scale = dist / 500; // 0–1000 → scene scale
+        const scale = dist / 500;
 
         for (const p of particles) {
           if (!selected.has(p.id)) continue;
@@ -464,7 +510,7 @@
         }
 
         syncVisual();
-        log(`ok · moved ${valid.length} particles · az=${az} el=${el} dist=${dist}`, 'ok');
+        log(`ok · moved ${valid.length} · az=${az} el=${el} dist=${dist}`, 'ok');
       } catch (e) {
         log(e.message, 'err');
       }
@@ -477,7 +523,6 @@
       log('selection cleared');
     }
 
-    // Click clay → append nearby IDs into the select text (still typing-based workflow)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -508,6 +553,7 @@
       return found.sort((a,b) => a-b);
     }
 
+    // Tap (not drag) selects — drag is for orbit
     let down = false, dx0 = 0, dy0 = 0, dragged = false;
     renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
@@ -515,7 +561,7 @@
     });
     window.addEventListener('pointermove', e => {
       if (!down) return;
-      if (Math.abs(e.clientX - dx0) > 6 || Math.abs(e.clientY - dy0) > 6) dragged = true;
+      if (Math.abs(e.clientX - dx0) > 8 || Math.abs(e.clientY - dy0) > 8) dragged = true;
     });
     window.addEventListener('pointerup', e => {
       if (!down) return;
@@ -535,14 +581,13 @@
       box.value = sorted.join(', ');
       selected = new Set(sorted.filter(id => id >= 0 && id < particles.length));
       syncVisual();
-      log(`added to select: ${found.join(', ')} · total ${selected.size}`);
+      log(`added to select: ${found.slice(0,12).join(', ')}${found.length>12?'…':''} · total ${selected.size}`);
     });
 
-    // Number overlay
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
       if (!showNumbers) return;
-      const maxLabels = 800;
+      const maxLabels = 600;
       const step = particles.length > maxLabels ? Math.ceil(particles.length / maxLabels) : 1;
       for (let i = 0; i < particles.length; i += step) {
         const p = particles[i];
@@ -561,13 +606,24 @@
       }
     }
 
-    // Terminal open (only UI chrome — not a sculpt toggle)
+    // Open + close terminal
     const terminal = document.getElementById('terminal');
     const termToggle = document.getElementById('term-toggle');
+
+    function openTerminal() {
+      terminal.classList.add('open');
+      termToggle.textContent = 'CLOSE';
+    }
+    function closeTerminal() {
+      terminal.classList.remove('open');
+      termToggle.textContent = 'MATH';
+    }
+
     termToggle.addEventListener('click', () => {
-      terminal.classList.toggle('open');
-      termToggle.textContent = terminal.classList.contains('open') ? '✕' : '☰';
+      if (terminal.classList.contains('open')) closeTerminal();
+      else openTerminal();
     });
+    document.getElementById('term-close').addEventListener('click', closeTerminal);
 
     document.getElementById('overlay-btn').addEventListener('click', () => {
       showNumbers = !showNumbers;
@@ -581,9 +637,8 @@
 
     document.getElementById('run').addEventListener('click', runMath);
     document.getElementById('clear').addEventListener('click', clearSelect);
-    document.getElementById('reset').addEventListener('click', () => createSolidBlock(16));
+    document.getElementById('reset').addEventListener('click', () => createSolidBlock(DEFAULT_DENSITY));
 
-    // Enter in fields runs math
     ['az', 'el', 'dist'].forEach(id => {
       document.getElementById(id).addEventListener('keydown', e => {
         if (e.key === 'Enter') runMath();
@@ -608,7 +663,7 @@
       if (showNumbers) rebuildNumberOverlay();
     });
 
-    createSolidBlock(16);
+    createSolidBlock(DEFAULT_DENSITY);
   </script>
 </body>
 </html>
