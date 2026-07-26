@@ -1,59 +1,60 @@
 # Math Sculpt
 
-**Precision mathematical sculpting starting from a square clay box.**
+**The entire sculpting process is pure mathematics.**
 
-Open the live app → write math → watch the clay deform in real time.
+You start with a perfect square clay box.  
+Every change after that is defined by a mathematical expression.  
+No brushes. No mouse pushing. Only math.
 
 ## Live Demo
 
-Enable GitHub Pages (Settings → Pages → Deploy from branch `main` / root), then the app will be at:
+Enable GitHub Pages (Settings → Pages → Deploy from branch `main` / root):
 
 **https://christhepimp.github.io/math-sculpt/**
 
-You can also just open `index.html` locally in any modern browser.
+Or open `index.html` directly in any modern browser.
 
-## How it works
+## Two pure-math modes
 
-1. You start with a **subdivided cube** (the “clay box”).
-2. Type a JavaScript math expression that returns a **Y displacement**.
-3. Available variables:
-   - `x`, `y`, `z` — original vertex position
-   - `t` — time in seconds
-   - `Math` — full Math object (`sin`, `cos`, `sqrt`, `abs`, `pow`, `random`, etc.)
-4. Hit **Apply** or just keep typing (it updates live).
-
-### Example formulas
+### 1. Y Displacement (classic)
+Formula returns a **number**. That number is added to the Y coordinate of every vertex.
 
 ```js
-Math.sin(x * 3) * Math.cos(z * 3) * 0.25     // classic ripple
-Math.sin(Math.sqrt(x*x + z*z) * 6) * 0.2     // radial waves
-Math.pow(Math.abs(x), 1.5) * Math.sign(x) * 0.2  // sharp crease
-(Math.random() - 0.5) * 0.4                  // noise
+Math.sin(x * 3) * Math.cos(z * 3) * 0.25
 ```
 
-## Controls
+### 2. Full Vector Mapping
+Formula returns a **3D point** `[nx, ny, nz]`.  
+The mathematics completely defines the new position of every vertex of the box.
 
-| Control        | What it does                          |
-|----------------|---------------------------------------|
-| Subdivision    | Higher = finer clay (more vertices)   |
-| Strength       | Multiplier on the formula result      |
-| Box size       | Overall scale of the starting cube    |
-| Presets        | One-click common deformations         |
-| Reset Clay     | Restore the perfect square box        |
+```js
+[x, y + Math.sin(x*3)*Math.cos(z*3)*0.3, z]
+```
 
-## Tech
+```js
+[x * Math.cos(0.4) - z * Math.sin(0.4), y, x * Math.sin(0.4) + z * Math.cos(0.4)]  // rotate
+```
 
-- Pure Three.js (no build step)
-- Single `index.html` — ready for GitHub Pages or any static host
-- Orbit controls, soft lighting, clay-colored material
+```js
+[x + y*0.15, y, z + y*0.15]  // shear
+```
 
-## Next ideas you can add
+## Available symbols
 
-- Export to STL / OBJ
-- Multi-axis displacement (return a vector)
-- Brush-based local sculpting on top of the math
-- Save / load formula presets
-- Animation of the formula over time
+| Symbol | Meaning |
+|--------|---------|
+| `x y z` | Original coordinates of the square box vertex |
+| `t` | Time in seconds |
+| `Math` | Full JavaScript Math object (`sin`, `cos`, `sqrt`, `abs`, `pow`, `random`, `PI`, …) |
+
+## Strength
+
+The strength slider blends between the original box (0) and the pure mathematical result (1+).
+
+## Philosophy
+
+This is not a digital sculpting program with math as a helper.  
+**Math is the sculptor.** The box is just the starting domain of the function.
 
 ---
 
