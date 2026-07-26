@@ -105,20 +105,10 @@
     }
     .pnum.sel { background: rgba(244,114,182,0.9); border-color: #f9a8d4; font-weight: 600; }
 
-    /* Mapper UI */
-    #size-picker {
-      position: absolute; left: 12px; top: 100px; z-index: 28;
-      display: none; flex-direction: column; gap: 6px;
-      background: rgba(10,10,16,0.95); border: 1px solid #333; border-radius: 10px; padding: 10px;
-    }
-    #size-picker.show { display: flex; }
-    #size-picker button {
-      background: #1a1a26; border: 1px solid #444; color: #e2e8f0;
-      padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer;
-    }
-    #size-picker button:hover { background: #0ea5e9; border-color: #0284c7; }
-    #mapper-circle {
+    /* Mapper: probe (small) + readout (large) */
+    #mapper-probe {
       position: absolute; z-index: 18;
+      width: 140px; height: 140px;
       border: 2.5px solid #38bdf8;
       border-radius: 50%;
       background: transparent;
@@ -127,21 +117,59 @@
       display: none;
       box-shadow: 0 0 0 1px rgba(14,165,233,0.3);
     }
-    #mapper-circle.active { display: block; }
-    #mapper-circle.dragging { cursor: grabbing; border-color: #f472b6; }
+    #mapper-probe.active { display: block; }
+    #mapper-probe.dragging { cursor: grabbing; border-color: #f472b6; }
+
+    #mapper-readout {
+      position: absolute; z-index: 19;
+      width: 280px; height: 280px;
+      border: 2.5px solid #7dd3fc;
+      border-radius: 50%;
+      background: rgba(10, 14, 24, 0.92);
+      pointer-events: none;
+      display: none;
+      overflow: hidden;
+      box-shadow: 0 0 24px rgba(0,0,0,0.55);
+    }
+    #mapper-readout.active { display: block; }
+    #mapper-readout .rid {
+      position: absolute;
+      transform: translate(-50%, -50%);
+      font-family: monospace;
+      font-size: 11px;
+      color: #fff;
+      background: rgba(14,165,233,0.85);
+      border: 1px solid rgba(125,211,252,0.55);
+      border-radius: 3px;
+      padding: 1px 4px;
+      white-space: nowrap;
+      line-height: 1.25;
+    }
+    #mapper-readout .rid.sel {
+      background: rgba(244,114,182,0.9);
+      border-color: #f9a8d4;
+      font-weight: 600;
+    }
+    #mapper-readout .readout-label {
+      position: absolute;
+      top: 8px; left: 50%; transform: translateX(-50%);
+      font-size: 0.6rem;
+      color: #7dd3fc;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="number-overlay"></div>
-  <div id="mapper-circle"></div>
+  <div id="mapper-probe"></div>
+  <div id="mapper-readout">
+    <div class="readout-label">readout</div>
+  </div>
   <button id="overlay-btn">unit #s</button>
   <button id="mapper-btn">Mapper</button>
-  <div id="size-picker">
-    <button data-size="90">Small circle</button>
-    <button data-size="160">Medium circle</button>
-    <button data-size="260">Large circle</button>
-  </div>
   <div id="stats">units: —</div>
   <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan</div>
   <button id="term-toggle">MATH</button>
@@ -178,12 +206,10 @@
       <div id="log">ready</div>
       <p class="help" style="margin-top:12px">
         <strong>Unit lengths</strong> (the measure for distance):<br>
-        <code>1</code> = move one unit<br>
-        <code>2</code> = move two units<br>
-        <code>0.5</code> = move half a unit<br>
+        <code>1</code> = move one unit · <code>2</code> = two units · <code>0.5</code> = half a unit<br>
         <code>pos += dir(azimuth, elevation) × (distance × unit length)</code><br>
         Tap the square to add nearby unit numbers into select.<br>
-        Use <strong>Mapper</strong> to drag a hollow circle — tiny numbers inside are spread so each ID is readable.
+        <strong>Mapper</strong>: drag the probe circle over the cube. The large readout shows the same IDs in the same left→right, top→bottom order.
       </p>
     </div>
   </div>
@@ -200,14 +226,13 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // Solid square of fractions · InstancedMesh cubes · pure math control of every unit
-    // Distance in unit lengths · Mapper uses tiny spread numbers for clarity
+    // MathClay · solid fractions · unit-length distance · Mapper probe + spatial readout
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
     const logEl = document.getElementById('log');
-    const mapperCircle = document.getElementById('mapper-circle');
-    const sizePicker = document.getElementById('size-picker');
+    const probeEl = document.getElementById('mapper-probe');
+    const readoutEl = document.getElementById('mapper-readout');
     const mapperBtn = document.getElementById('mapper-btn');
 
     const scene = new THREE.Scene();
@@ -260,13 +285,14 @@
     const FRACTION = 1 / TOTAL;
     let cell = claySize / SIDE;
 
-    // Mapper state
+    // Mapper: fixed medium probe + large readout
+    const PROBE_SIZE = 140;
+    const READOUT_SIZE = 280;
     let mapperActive = false;
-    let mapperSize = 160;
-    let mapperX = window.innerWidth / 2;
-    let mapperY = window.innerHeight / 2;
-    let mapperDragging = false;
-    let mapperOffX = 0, mapperOffY = 0;
+    let probeX = window.innerWidth / 2;
+    let probeY = window.innerHeight / 2;
+    let probeDragging = false;
+    let probeOffX = 0, probeOffY = 0;
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -299,7 +325,7 @@
         `units: ${TOTAL.toLocaleString()} · each fraction ≈ ${FRACTION.toFixed(6)}<br>ids 0–${TOTAL - 1}`;
       document.getElementById('sel').value = '';
       log(`solid square · ${TOTAL} units · each fraction 1/${TOTAL}`);
-      if (mapperActive) updateMapperLabels();
+      if (mapperActive) updateMapperReadout();
       else if (showNumbers) rebuildNumberOverlay();
     }
 
@@ -357,7 +383,7 @@
       }
       mesh.instanceMatrix.needsUpdate = true;
       mesh.instanceColor.needsUpdate = true;
-      if (mapperActive) updateMapperLabels();
+      if (mapperActive) updateMapperReadout();
       else if (showNumbers) rebuildNumberOverlay();
     }
 
@@ -459,7 +485,7 @@
     let down = false, dx0 = 0, dy0 = 0, dragged = false;
     renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
-      if (mapperActive && mapperCircle.contains(e.target)) return;
+      if (mapperActive && probeEl.contains(e.target)) return;
       down = true; dragged = false; dx0 = e.clientX; dy0 = e.clientY;
     });
     window.addEventListener('pointermove', e => {
@@ -488,25 +514,42 @@
       log(`select +${found.length} · total ${selected.size}`);
     });
 
-    // ---------- Mapper ----------
-    function placeMapperCircle() {
-      mapperCircle.style.width = mapperSize + 'px';
-      mapperCircle.style.height = mapperSize + 'px';
-      mapperCircle.style.left = (mapperX - mapperSize / 2) + 'px';
-      mapperCircle.style.top = (mapperY - mapperSize / 2) + 'px';
+    // ---------- Mapper: probe + spatial readout ----------
+    function placeProbe() {
+      probeEl.style.left = (probeX - PROBE_SIZE / 2) + 'px';
+      probeEl.style.top = (probeY - PROBE_SIZE / 2) + 'px';
     }
 
-    // Collect units inside the circle, then spread tiny numbers in a tight readable grid
-    function updateMapperLabels() {
-      overlayEl.innerHTML = '';
+    // Park the large readout in a corner that doesn't cover the probe
+    function placeReadout() {
+      const margin = 16;
+      const w = window.innerWidth;
+      const h = window.innerHeight;
+      // Prefer top-right; if probe is there, use top-left
+      let rx, ry;
+      if (probeX > w * 0.55) {
+        rx = margin + READOUT_SIZE / 2;
+      } else {
+        rx = w - margin - READOUT_SIZE / 2;
+      }
+      ry = margin + READOUT_SIZE / 2 + 40; // below top buttons
+      readoutEl.style.left = (rx - READOUT_SIZE / 2) + 'px';
+      readoutEl.style.top = (ry - READOUT_SIZE / 2) + 'px';
+      return { rx, ry };
+    }
+
+    function updateMapperReadout() {
+      // clear previous ID labels inside readout (keep the title)
+      const old = readoutEl.querySelectorAll('.rid');
+      old.forEach(n => n.remove());
       if (!mapperActive) return;
-      overlayEl.classList.add('show');
 
-      const r = mapperSize / 2;
-      const cx = mapperX;
-      const cy = mapperY;
-      const r2 = r * r;
+      const pr = PROBE_SIZE / 2;
+      const px = probeX;
+      const py = probeY;
+      const pr2 = pr * pr;
 
+      // Collect units under the probe, with their screen positions
       const inside = [];
       for (let i = 0; i < units.length; i++) {
         const u = units[i];
@@ -515,107 +558,109 @@
         if (v.z > 1) continue;
         const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
         const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
-        const dx = sx - cx;
-        const dy = sy - cy;
-        if (dx * dx + dy * dy > r2) continue;
-        inside.push({ id: u.id, selected: selected.has(u.id) });
+        const dx = sx - px;
+        const dy = sy - py;
+        if (dx * dx + dy * dy > pr2) continue;
+        inside.push({ id: u.id, selected: selected.has(u.id), sx, sy });
       }
 
       if (inside.length === 0) return;
 
-      inside.sort((a, b) => a.id - b.id);
+      // Sort left→right, then top→bottom (same order the eye reads the probe area)
+      inside.sort((a, b) => {
+        const rowA = Math.floor(a.sy / 8);
+        const rowB = Math.floor(b.sy / 8);
+        if (rowA !== rowB) return rowA - rowB;
+        return a.sx - b.sx;
+      });
 
-      // Tiny grid so many IDs fit without becoming a blob
-      const maxShow = Math.min(inside.length, 150);
-      const cols = Math.ceil(Math.sqrt(maxShow * 1.4));
-      const rows = Math.ceil(maxShow / cols);
-      const cellW = 22;
-      const cellH = 11;
-      const gridW = cols * cellW;
-      const gridH = rows * cellH;
-      const startX = cx - gridW / 2 + cellW / 2;
-      const startY = cy - gridH / 2 + cellH / 2;
+      const { rx, ry } = placeReadout();
+      const maxShow = Math.min(inside.length, 80);
+      const rr = READOUT_SIZE / 2 - 18; // keep labels inside the big circle
 
+      // Map relative positions from probe → readout, preserving spatial order
+      // Use normalized offset from probe center, scaled into readout circle
       for (let i = 0; i < maxShow; i++) {
         const item = inside[i];
-        const col = i % cols;
-        const row = Math.floor(i / cols);
-        const lx = startX + col * cellW;
-        const ly = startY + row * cellH;
+        // relative position inside probe (-1..1)
+        const nx = (item.sx - px) / pr;
+        const ny = (item.sy - py) / pr;
+        // place in readout at same relative location
+        const lx = rx + nx * rr;
+        const ly = ry + ny * rr;
 
         const span = document.createElement('div');
-        span.className = 'pnum' + (item.selected ? ' sel' : '');
+        span.className = 'rid' + (item.selected ? ' sel' : '');
         span.textContent = item.id;
         span.style.left = lx + 'px';
         span.style.top = ly + 'px';
-        overlayEl.appendChild(span);
+        // coordinates are absolute to the page; readout is also absolute,
+        // so convert to readout-local coords
+        const rLeft = parseFloat(readoutEl.style.left) || 0;
+        const rTop = parseFloat(readoutEl.style.top) || 0;
+        span.style.left = (lx - rLeft) + 'px';
+        span.style.top = (ly - rTop) + 'px';
+        readoutEl.appendChild(span);
       }
     }
 
-    function openMapper(size) {
-      mapperSize = size;
+    function openMapper() {
       mapperActive = true;
       mapperBtn.classList.add('on');
       mapperBtn.textContent = 'Close Mapper';
-      sizePicker.classList.remove('show');
-      mapperCircle.classList.add('active');
-      placeMapperCircle();
+      probeEl.classList.add('active');
+      readoutEl.classList.add('active');
+      placeProbe();
+      placeReadout();
       showNumbers = false;
       document.getElementById('overlay-btn').classList.remove('on');
       document.getElementById('overlay-btn').textContent = 'unit #s';
-      updateMapperLabels();
-      log('Mapper on · drag the hollow circle · tiny numbers are spread so each ID is clear');
+      overlayEl.innerHTML = '';
+      overlayEl.classList.remove('show');
+      updateMapperReadout();
+      log('Mapper on · drag the probe over the cube · large circle shows the same IDs in the same order');
     }
 
     function closeMapper() {
       mapperActive = false;
       mapperBtn.classList.remove('on');
       mapperBtn.textContent = 'Mapper';
-      sizePicker.classList.remove('show');
-      mapperCircle.classList.remove('active');
-      overlayEl.innerHTML = '';
-      overlayEl.classList.remove('show');
+      probeEl.classList.remove('active');
+      readoutEl.classList.remove('active');
+      const old = readoutEl.querySelectorAll('.rid');
+      old.forEach(n => n.remove());
       log('Mapper closed');
     }
 
     mapperBtn.addEventListener('click', () => {
-      if (mapperActive) {
-        closeMapper();
-      } else {
-        sizePicker.classList.toggle('show');
-      }
+      if (mapperActive) closeMapper();
+      else openMapper();
     });
 
-    sizePicker.querySelectorAll('button').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const size = parseInt(btn.dataset.size, 10);
-        openMapper(size);
-      });
-    });
-
-    mapperCircle.addEventListener('pointerdown', e => {
+    // Drag the probe
+    probeEl.addEventListener('pointerdown', e => {
       e.preventDefault();
       e.stopPropagation();
-      mapperDragging = true;
-      mapperCircle.classList.add('dragging');
-      mapperOffX = e.clientX - mapperX;
-      mapperOffY = e.clientY - mapperY;
-      mapperCircle.setPointerCapture(e.pointerId);
+      probeDragging = true;
+      probeEl.classList.add('dragging');
+      probeOffX = e.clientX - probeX;
+      probeOffY = e.clientY - probeY;
+      probeEl.setPointerCapture(e.pointerId);
       controls.enabled = false;
     });
-    mapperCircle.addEventListener('pointermove', e => {
-      if (!mapperDragging) return;
-      mapperX = e.clientX - mapperOffX;
-      mapperY = e.clientY - mapperOffY;
-      placeMapperCircle();
-      updateMapperLabels();
+    probeEl.addEventListener('pointermove', e => {
+      if (!probeDragging) return;
+      probeX = e.clientX - probeOffX;
+      probeY = e.clientY - probeOffY;
+      placeProbe();
+      updateMapperReadout();
     });
-    mapperCircle.addEventListener('pointerup', e => {
-      if (!mapperDragging) return;
-      mapperDragging = false;
-      mapperCircle.classList.remove('dragging');
+    probeEl.addEventListener('pointerup', e => {
+      if (!probeDragging) return;
+      probeDragging = false;
+      probeEl.classList.remove('dragging');
       controls.enabled = true;
-      try { mapperCircle.releasePointerCapture(e.pointerId); } catch (_) {}
+      try { probeEl.releasePointerCapture(e.pointerId); } catch (_) {}
     });
 
     function rebuildNumberOverlay() {
@@ -673,13 +718,8 @@
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
-      if (mapperActive && (controls.enabled === false || mapperDragging)) {
-        // already updated on drag
-      } else if (mapperActive) {
-        updateMapperLabels();
-      } else if (showNumbers) {
-        rebuildNumberOverlay();
-      }
+      if (mapperActive && !probeDragging) updateMapperReadout();
+      else if (showNumbers) rebuildNumberOverlay();
     }
     animate();
 
@@ -688,8 +728,8 @@
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       if (mapperActive) {
-        placeMapperCircle();
-        updateMapperLabels();
+        placeProbe();
+        updateMapperReadout();
       } else if (showNumbers) rebuildNumberOverlay();
     });
 
