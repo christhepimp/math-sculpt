@@ -16,7 +16,6 @@
     }
     #canvas-container { position: absolute; inset: 0; }
 
-    /* Side toggle for math terminal */
     #term-toggle {
       position: absolute;
       right: 0;
@@ -35,8 +34,7 @@
     }
     #term-toggle:hover { background: #0284c7; }
 
-    /* Overlay toggle */
-    #overlay-toggle {
+    #overlay-btn {
       position: absolute;
       left: 12px;
       top: 12px;
@@ -49,9 +47,8 @@
       font-size: 0.78rem;
       font-weight: 500;
       cursor: pointer;
-      box-shadow: 0 4px 16px rgba(0,0,0,0.35);
     }
-    #overlay-toggle.active { background: #f472b6; }
+    #overlay-btn.on { background: #f472b6; }
 
     #stats {
       position: absolute;
@@ -66,131 +63,130 @@
       border-radius: 6px;
     }
 
-    /* Math terminal — slides up from bottom */
     #terminal {
       position: absolute;
-      left: 0;
-      right: 0;
-      bottom: 0;
+      left: 0; right: 0; bottom: 0;
       z-index: 40;
-      max-height: 55vh;
-      background: rgba(12, 12, 18, 0.97);
+      max-height: 60vh;
+      background: rgba(10, 10, 16, 0.98);
       border-top: 1px solid #2a2a3a;
       border-radius: 16px 16px 0 0;
       transform: translateY(100%);
       transition: transform 0.28s ease;
       display: flex;
       flex-direction: column;
-      box-shadow: 0 -8px 40px rgba(0,0,0,0.5);
+      box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
     }
     #terminal.open { transform: translateY(0); }
 
     #term-handle {
       flex-shrink: 0;
-      height: 28px;
+      height: 26px;
       display: flex;
       align-items: center;
       justify-content: center;
-      cursor: grab;
       color: #555;
-      font-size: 0.75rem;
-      letter-spacing: 0.15em;
+      font-size: 0.7rem;
+      letter-spacing: 0.2em;
       user-select: none;
     }
     #term-handle::before {
       content: '';
-      width: 40px;
-      height: 4px;
+      width: 36px; height: 4px;
       background: #444;
       border-radius: 2px;
-      margin-right: 10px;
+      margin-right: 8px;
     }
 
     #term-body {
       flex: 1;
       overflow-y: auto;
-      padding: 0 16px 20px;
+      padding: 0 14px 18px;
+      font-family: 'Cascadia Code', 'Fira Code', ui-monospace, monospace;
     }
 
     h2 {
-      font-size: 0.95rem;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      font-size: 0.9rem;
       font-weight: 600;
-      margin-bottom: 10px;
-      color: #e2e8f0;
+      margin-bottom: 6px;
     }
+    .help {
+      font-size: 0.65rem;
+      color: #666;
+      line-height: 1.45;
+      margin-bottom: 12px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    code { color: #7dd3fc; }
+
     label {
       display: block;
-      font-size: 0.65rem;
+      font-size: 0.62rem;
       color: #888;
       text-transform: uppercase;
-      letter-spacing: 0.05em;
-      margin-bottom: 4px;
-      margin-top: 12px;
+      letter-spacing: 0.06em;
+      margin: 10px 0 4px;
+      font-family: 'Segoe UI', system-ui, sans-serif;
     }
-    .value {
-      float: right;
-      color: #7dd3fc;
-      font-family: monospace;
-      font-size: 0.75rem;
-      text-transform: none;
-      letter-spacing: 0;
-    }
-    input[type="range"] {
+
+    textarea, input[type="text"] {
       width: 100%;
-      accent-color: #38bdf8;
-    }
-    input[type="text"] {
-      width: 100%;
-      background: #1a1a24;
+      background: #14141c;
       border: 1px solid #333;
       border-radius: 8px;
       color: #7dd3fc;
-      font-family: monospace;
-      font-size: 0.85rem;
+      font-family: inherit;
+      font-size: 0.82rem;
       padding: 10px 12px;
       outline: none;
+      resize: vertical;
     }
-    input[type="text"]:focus { border-color: #38bdf8; }
+    textarea:focus, input[type="text"]:focus { border-color: #38bdf8; }
+    textarea { min-height: 52px; line-height: 1.35; }
 
     .row { display: flex; gap: 8px; margin-top: 10px; }
-    button.act {
+    button.go {
       flex: 1;
-      background: #1e293b;
-      border: 1px solid #334155;
-      color: #e2e8f0;
-      padding: 10px;
+      background: #0ea5e9;
+      border: 1px solid #0284c7;
+      color: #fff;
+      padding: 11px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      font-weight: 500;
+      cursor: pointer;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
+    button.go:hover { background: #0284c7; }
+    button.dim {
+      flex: 1;
+      background: #1a1a26;
+      border: 1px solid #333;
+      color: #aaa;
+      padding: 11px;
       border-radius: 8px;
       font-size: 0.78rem;
       cursor: pointer;
+      font-family: 'Segoe UI', system-ui, sans-serif;
     }
-    button.act:hover { background: #334155; }
-    button.act.primary {
-      background: #0ea5e9;
-      border-color: #0284c7;
-      color: #fff;
-      font-weight: 500;
-    }
-    button.act.primary:hover { background: #0284c7; }
-    button.act.danger {
-      background: #3f1d2e;
-      border-color: #9d174d;
-      color: #f9a8d4;
-    }
+    button.dim:hover { background: #2a2a3a; }
 
-    .hint {
-      font-size: 0.65rem;
-      color: #555;
-      margin-top: 6px;
-      line-height: 1.4;
+    #log {
+      margin-top: 12px;
+      padding: 8px 10px;
+      background: #0c0c12;
+      border: 1px solid #222;
+      border-radius: 8px;
+      font-size: 0.72rem;
+      color: #94a3b8;
+      min-height: 36px;
+      white-space: pre-wrap;
+      word-break: break-word;
     }
-    .section {
-      border-top: 1px solid #222230;
-      margin-top: 14px;
-      padding-top: 4px;
-    }
-    code { color: #a5b4fc; font-size: 0.7rem; }
+    #log.err { color: #f87171; }
+    #log.ok { color: #4ade80; }
 
-    /* Particle number overlay labels (HTML layer) */
     #number-overlay {
       position: absolute;
       inset: 0;
@@ -205,16 +201,15 @@
       transform: translate(-50%, -50%);
       font-family: monospace;
       font-size: 9px;
-      color: rgba(255, 255, 255, 0.75);
-      background: rgba(14, 165, 233, 0.35);
-      border: 1px solid rgba(125, 211, 252, 0.4);
-      border-radius: 4px;
+      color: rgba(255,255,255,0.8);
+      background: rgba(14,165,233,0.32);
+      border: 1px solid rgba(125,211,252,0.35);
+      border-radius: 3px;
       padding: 1px 3px;
       white-space: nowrap;
-      pointer-events: none;
     }
-    .pnum.selected {
-      background: rgba(244, 114, 182, 0.55);
+    .pnum.sel {
+      background: rgba(244,114,182,0.55);
       border-color: #f9a8d4;
       color: #fff;
       font-weight: 600;
@@ -225,54 +220,48 @@
   <div id="canvas-container"></div>
   <div id="number-overlay"></div>
 
-  <button id="overlay-toggle">Show particle #s</button>
+  <button id="overlay-btn">particle #s</button>
   <div id="stats">particles: —</div>
-  <button id="term-toggle" title="Math terminal">☰</button>
+  <button id="term-toggle">☰</button>
 
   <div id="terminal">
-    <div id="term-handle">MATH</div>
+    <div id="term-handle">MATH TERMINAL</div>
     <div id="term-body">
-      <h2>MathClay terminal</h2>
-      <p class="hint">Move = angles + distance only. No direction buttons.</p>
+      <h2>Type the math</h2>
+      <p class="help">
+        No toggles. Everything is typed.<br>
+        <code>select</code> particle IDs · <code>azimuth</code> · <code>elevation</code> · <code>distance</code><br>
+        Then run. Movement = angles + distance only.
+      </p>
 
-      <div class="section">
-        <label>Select particles</label>
-        <input type="text" id="selectInput" placeholder="e.g. 0, 5, 12-20  or click the clay" />
-        <p class="hint">Type IDs (comma or ranges) · or click the block to select nearby particles</p>
-        <div class="row">
-          <button class="act" id="btnSelect">Select</button>
-          <button class="act danger" id="btnClearSel">Clear selection</button>
-        </div>
-        <p class="hint" id="selInfo">selected: 0</p>
+      <label>select particles (numbers)</label>
+      <textarea id="sel" placeholder="0, 1, 5, 10-25"></textarea>
+
+      <label>azimuth angle (degrees 0–360)</label>
+      <input type="text" id="az" value="0" placeholder="0" />
+
+      <label>elevation angle (degrees −90–90)</label>
+      <input type="text" id="el" value="0" placeholder="0" />
+
+      <label>distance (0–1000)</label>
+      <input type="text" id="dist" value="50" placeholder="50" />
+
+      <div class="row">
+        <button class="go" id="run">Run math</button>
+        <button class="dim" id="clear">Clear select</button>
+      </div>
+      <div class="row">
+        <button class="dim" id="reset">Reset block</button>
       </div>
 
-      <div class="section">
-        <label>Azimuth angle ° <span class="value" id="az-val">0</span></label>
-        <input type="range" id="azimuth" min="0" max="360" value="0" step="1" />
+      <div id="log">ready · type numbers, angles, distance · run</div>
 
-        <label>Elevation angle ° <span class="value" id="el-val">0</span></label>
-        <input type="range" id="elevation" min="-90" max="90" value="0" step="1" />
-
-        <label>Distance (0–1000) <span class="value" id="dist-val">50</span></label>
-        <input type="range" id="distance" min="0" max="1000" value="50" step="1" />
-
-        <p class="hint">
-          Math: <code>pos += directionFrom(azimuth, elevation) × (distance / 500)</code>
-        </p>
-
-        <div class="row">
-          <button class="act primary" id="btnApply">Apply math to selection</button>
-        </div>
-      </div>
-
-      <div class="section">
-        <label>Brush size (for click-select) <span class="value" id="brush-val">0.30</span></label>
-        <input type="range" id="brush" min="0.05" max="1.0" value="0.30" step="0.05" />
-
-        <div class="row" style="margin-top:12px">
-          <button class="act" id="btnReset">Reset solid block</button>
-        </div>
-      </div>
+      <p class="help" style="margin-top:12px">
+        Math applied to each selected particle:<br>
+        <code>pos += dir(azimuth, elevation) × (distance / 500)</code><br><br>
+        Click the clay to add nearby IDs into the select box.<br>
+        Sub-particles (if any) use the same ID list — type their numbers.
+      </p>
     </div>
   </div>
 
@@ -289,13 +278,14 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // ═══════════════════════════════════════════════════════════
-    // MathClay — angles + distance only
-    // Select by number or click · particle # overlay
-    // ═══════════════════════════════════════════════════════════
+    // MathClay — all sculpt control by typing in the terminal
+    // select by number · azimuth · elevation · distance
+    // no direction toggles · no mode toggles
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
+    const logEl = document.getElementById('log');
+
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
 
@@ -328,19 +318,18 @@
     ground.position.y = -1.35;
     scene.add(ground);
 
-    // ── Solid particle block ───────────────────────────────────
     let particles = []; // {id, x,y,z, r,g,b}
     let selected = new Set();
     let pointsObj = null;
     let pointsGeo = null;
     let showNumbers = false;
-    let brushRadius = 0.30;
     const claySize = 2.0;
+    const clickBrush = 0.28;
 
-    // Math params — angles + distance only
-    let azimuth = 0;    // degrees 0-360
-    let elevation = 0;  // degrees -90..90
-    let distance = 50;  // 0-1000
+    function log(msg, kind) {
+      logEl.textContent = msg;
+      logEl.className = kind === 'err' ? 'err' : kind === 'ok' ? 'ok' : '';
+    }
 
     function createSolidBlock(density = 16) {
       particles = [];
@@ -349,9 +338,9 @@
       const half = claySize * 0.5;
       const step = claySize / (n - 1 || 1);
       let id = 0;
-      for (let iz = 0; iz < n; iz++) {
-        for (let iy = 0; iy < n; iy++) {
-          for (let ix = 0; ix < n; ix++) {
+      for (let iz = 0; iz < n; iz++)
+        for (let iy = 0; iy < n; iy++)
+          for (let ix = 0; ix < n; ix++)
             particles.push({
               id: id++,
               x: -half + ix * step,
@@ -361,13 +350,11 @@
               g: 0.58 + Math.random() * 0.05,
               b: 0.42 + Math.random() * 0.04
             });
-          }
-        }
-      }
       rebuildPoints();
-      updateSelInfo();
       document.getElementById('stats').textContent =
-        `particles: ${particles.length.toLocaleString()}`;
+        `particles: ${particles.length.toLocaleString()} · ids 0–${particles.length - 1}`;
+      document.getElementById('sel').value = '';
+      log('solid block ready · type select + angles + distance');
       if (showNumbers) rebuildNumberOverlay();
     }
 
@@ -384,7 +371,7 @@
         const p = particles[i];
         pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
         if (selected.has(p.id)) {
-          col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75; // selected = pink
+          col[i*3] = 0.95; col[i*3+1] = 0.45; col[i*3+2] = 0.75;
         } else {
           col[i*3] = p.r; col[i*3+1] = p.g; col[i*3+2] = p.b;
         }
@@ -392,18 +379,14 @@
       pointsGeo = new THREE.BufferGeometry();
       pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-      const mat = new THREE.PointsMaterial({
-        size: 0.07,
-        vertexColors: true,
-        sizeAttenuation: true,
-        transparent: true,
-        opacity: 0.95
-      });
-      pointsObj = new THREE.Points(pointsGeo, mat);
+      pointsObj = new THREE.Points(pointsGeo, new THREE.PointsMaterial({
+        size: 0.07, vertexColors: true, sizeAttenuation: true,
+        transparent: true, opacity: 0.95
+      }));
       scene.add(pointsObj);
     }
 
-    function syncPositionsAndColors() {
+    function syncVisual() {
       if (!pointsGeo) return;
       const pos = pointsGeo.attributes.position.array;
       const col = pointsGeo.attributes.color.array;
@@ -418,41 +401,21 @@
       }
       pointsGeo.attributes.position.needsUpdate = true;
       pointsGeo.attributes.color.needsUpdate = true;
-    }
-
-    // Direction from angles only (no fixed Up/Left buttons)
-    function directionFromAngles(azDeg, elDeg) {
-      const az = azDeg * Math.PI / 180;
-      const el = elDeg * Math.PI / 180;
-      // spherical → cartesian
-      const x = Math.cos(el) * Math.sin(az);
-      const y = Math.sin(el);
-      const z = Math.cos(el) * Math.cos(az);
-      return { x, y, z };
-    }
-
-    // Apply: pos += dir(angles) × (distance/500)
-    // distance UI is 0–1000; scale keeps motion usable in scene units
-    function applyMathToSelection() {
-      if (selected.size === 0) {
-        updateSelInfo('nothing selected');
-        return;
-      }
-      const dir = directionFromAngles(azimuth, elevation);
-      const scale = distance / 500; // 0–1000 → 0–2 world units
-
-      for (const p of particles) {
-        if (!selected.has(p.id)) continue;
-        p.x += dir.x * scale;
-        p.y += dir.y * scale;
-        p.z += dir.z * scale;
-      }
-      syncPositionsAndColors();
       if (showNumbers) rebuildNumberOverlay();
     }
 
-    // ── Selection by typed numbers ─────────────────────────────
-    function parseSelection(text) {
+    // Angles only → unit direction
+    function dirFromAngles(azDeg, elDeg) {
+      const az = azDeg * Math.PI / 180;
+      const el = elDeg * Math.PI / 180;
+      return {
+        x: Math.cos(el) * Math.sin(az),
+        y: Math.sin(el),
+        z: Math.cos(el) * Math.cos(az)
+      };
+    }
+
+    function parseIds(text) {
       const ids = new Set();
       const parts = text.split(/[,\s]+/).filter(Boolean);
       for (const part of parts) {
@@ -470,96 +433,127 @@
       return ids;
     }
 
-    function selectFromInput() {
-      const text = document.getElementById('selectInput').value;
-      const ids = parseSelection(text);
-      selected = new Set([...ids].filter(id => id >= 0 && id < particles.length));
-      syncPositionsAndColors();
-      updateSelInfo();
-      if (showNumbers) rebuildNumberOverlay();
+    function parseNumber(el, name, min, max) {
+      const raw = el.value.trim();
+      const n = Number(raw);
+      if (raw === '' || Number.isNaN(n)) throw new Error(`${name} must be a number`);
+      if (n < min || n > max) throw new Error(`${name} must be ${min}–${max}`);
+      return n;
     }
 
-    function clearSelection() {
+    // Core: type select + angles + distance → run
+    function runMath() {
+      try {
+        const ids = parseIds(document.getElementById('sel').value);
+        const valid = [...ids].filter(id => id >= 0 && id < particles.length);
+        if (valid.length === 0) throw new Error('no valid particle numbers in select');
+
+        const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
+        const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
+        const dist = parseNumber(document.getElementById('dist'), 'distance', 0, 1000);
+
+        selected = new Set(valid);
+        const dir = dirFromAngles(az, el);
+        const scale = dist / 500; // 0–1000 → scene scale
+
+        for (const p of particles) {
+          if (!selected.has(p.id)) continue;
+          p.x += dir.x * scale;
+          p.y += dir.y * scale;
+          p.z += dir.z * scale;
+        }
+
+        syncVisual();
+        log(`ok · moved ${valid.length} particles · az=${az} el=${el} dist=${dist}`, 'ok');
+      } catch (e) {
+        log(e.message, 'err');
+      }
+    }
+
+    function clearSelect() {
       selected.clear();
-      document.getElementById('selectInput').value = '';
-      syncPositionsAndColors();
-      updateSelInfo();
-      if (showNumbers) rebuildNumberOverlay();
+      document.getElementById('sel').value = '';
+      syncVisual();
+      log('selection cleared');
     }
 
-    function updateSelInfo(extra) {
-      const el = document.getElementById('selInfo');
-      el.textContent = extra || `selected: ${selected.size}`;
-    }
-
-    // ── Click to select group near tap ─────────────────────────
+    // Click clay → append nearby IDs into the select text (still typing-based workflow)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    function pickNearRay(clientX, clientY) {
+    function idsNearClick(clientX, clientY) {
       mouse.x = (clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
-      const origin = raycaster.ray.origin;
-      const dir = raycaster.ray.direction;
+      const o = raycaster.ray.origin;
+      const d = raycaster.ray.direction;
 
-      let bestDist = Infinity;
-      let bestP = null;
+      let best = null, bestD = Infinity;
       for (const p of particles) {
-        const ox = p.x - origin.x, oy = p.y - origin.y, oz = p.z - origin.z;
-        const t = ox*dir.x + oy*dir.y + oz*dir.z;
+        const ox = p.x - o.x, oy = p.y - o.y, oz = p.z - o.z;
+        const t = ox*d.x + oy*d.y + oz*d.z;
         if (t < 0) continue;
-        const cx = origin.x + dir.x * t;
-        const cy = origin.y + dir.y * t;
-        const cz = origin.z + dir.z * t;
+        const cx = o.x + d.x * t, cy = o.y + d.y * t, cz = o.z + d.z * t;
         const d2 = (p.x-cx)**2 + (p.y-cy)**2 + (p.z-cz)**2;
-        if (d2 < bestDist) {
-          bestDist = d2;
-          bestP = p;
-        }
+        if (d2 < bestD) { bestD = d2; best = p; }
       }
-      if (!bestP || bestDist > brushRadius * brushRadius * 9) return null;
-      return bestP;
-    }
+      if (!best || bestD > clickBrush * clickBrush * 9) return [];
 
-    function selectGroupAt(clientX, clientY) {
-      const center = pickNearRay(clientX, clientY);
-      if (!center) return;
-      const r2 = brushRadius * brushRadius;
+      const r2 = clickBrush * clickBrush;
+      const found = [];
       for (const p of particles) {
-        const dx = p.x - center.x, dy = p.y - center.y, dz = p.z - center.z;
-        if (dx*dx + dy*dy + dz*dz <= r2) selected.add(p.id);
+        const dx = p.x - best.x, dy = p.y - best.y, dz = p.z - best.z;
+        if (dx*dx + dy*dy + dz*dz <= r2) found.push(p.id);
       }
-      // Reflect in text field
-      const sorted = [...selected].sort((a,b) => a-b);
-      document.getElementById('selectInput').value = sorted.join(', ');
-      syncPositionsAndColors();
-      updateSelInfo();
-      if (showNumbers) rebuildNumberOverlay();
+      return found.sort((a,b) => a-b);
     }
 
-    // ── Number overlay ─────────────────────────────────────────
+    let down = false, dx0 = 0, dy0 = 0, dragged = false;
+    renderer.domElement.addEventListener('pointerdown', e => {
+      if (e.button !== 0) return;
+      down = true; dragged = false; dx0 = e.clientX; dy0 = e.clientY;
+    });
+    window.addEventListener('pointermove', e => {
+      if (!down) return;
+      if (Math.abs(e.clientX - dx0) > 6 || Math.abs(e.clientY - dy0) > 6) dragged = true;
+    });
+    window.addEventListener('pointerup', e => {
+      if (!down) return;
+      down = false;
+      if (dragged || e.button !== 0) return;
+      const term = document.getElementById('terminal');
+      if (term.classList.contains('open')) {
+        const r = term.getBoundingClientRect();
+        if (e.clientY >= r.top) return;
+      }
+      const found = idsNearClick(e.clientX, e.clientY);
+      if (!found.length) return;
+      const box = document.getElementById('sel');
+      const existing = parseIds(box.value);
+      found.forEach(id => existing.add(id));
+      const sorted = [...existing].sort((a,b) => a-b);
+      box.value = sorted.join(', ');
+      selected = new Set(sorted.filter(id => id >= 0 && id < particles.length));
+      syncVisual();
+      log(`added to select: ${found.join(', ')} · total ${selected.size}`);
+    });
+
+    // Number overlay
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
       if (!showNumbers) return;
-
-      // Limit labels for performance — show all if few, else subsample
       const maxLabels = 800;
-      const step = particles.length > maxLabels
-        ? Math.ceil(particles.length / maxLabels)
-        : 1;
-
+      const step = particles.length > maxLabels ? Math.ceil(particles.length / maxLabels) : 1;
       for (let i = 0; i < particles.length; i += step) {
         const p = particles[i];
         const v = new THREE.Vector3(p.x, p.y, p.z);
         v.project(camera);
-        if (v.z > 1) continue; // behind camera
+        if (v.z > 1) continue;
         const x = (v.x * 0.5 + 0.5) * window.innerWidth;
         const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
-        if (x < -20 || x > window.innerWidth + 20 || y < -20 || y > window.innerHeight + 20) continue;
-
+        if (x < -30 || x > window.innerWidth + 30 || y < -30 || y > window.innerHeight + 30) continue;
         const span = document.createElement('div');
-        span.className = 'pnum' + (selected.has(p.id) ? ' selected' : '');
+        span.className = 'pnum' + (selected.has(p.id) ? ' sel' : '');
         span.textContent = p.id;
         span.style.left = x + 'px';
         span.style.top = y + 'px';
@@ -567,38 +561,7 @@
       }
     }
 
-    // ── Input: click = select (when not orbiting) ──────────────
-    let pointerDown = false;
-    let downX = 0, downY = 0;
-    let moved = false;
-
-    renderer.domElement.addEventListener('pointerdown', e => {
-      if (e.button !== 0) return;
-      pointerDown = true;
-      moved = false;
-      downX = e.clientX;
-      downY = e.clientY;
-    });
-    window.addEventListener('pointermove', e => {
-      if (!pointerDown) return;
-      if (Math.abs(e.clientX - downX) > 6 || Math.abs(e.clientY - downY) > 6) moved = true;
-    });
-    window.addEventListener('pointerup', e => {
-      if (!pointerDown) return;
-      pointerDown = false;
-      // Tap without drag → select particles at that spot
-      if (!moved && e.button === 0) {
-        // Don't select if terminal is open and click was on terminal
-        const term = document.getElementById('terminal');
-        if (term.classList.contains('open')) {
-          const rect = term.getBoundingClientRect();
-          if (e.clientY >= rect.top) return;
-        }
-        selectGroupAt(e.clientX, e.clientY);
-      }
-    });
-
-    // ── Terminal open / close ──────────────────────────────────
+    // Terminal open (only UI chrome — not a sculpt toggle)
     const terminal = document.getElementById('terminal');
     const termToggle = document.getElementById('term-toggle');
     termToggle.addEventListener('click', () => {
@@ -606,50 +569,30 @@
       termToggle.textContent = terminal.classList.contains('open') ? '✕' : '☰';
     });
 
-    // Simple drag handle to close
-    document.getElementById('term-handle').addEventListener('click', () => {
-      // optional: could drag — for now click handle also toggles
-    });
-
-    // Overlay toggle
-    const overlayBtn = document.getElementById('overlay-toggle');
-    overlayBtn.addEventListener('click', () => {
+    document.getElementById('overlay-btn').addEventListener('click', () => {
       showNumbers = !showNumbers;
-      overlayBtn.classList.toggle('active', showNumbers);
-      overlayBtn.textContent = showNumbers ? 'Hide particle #s' : 'Show particle #s';
+      const btn = document.getElementById('overlay-btn');
+      btn.classList.toggle('on', showNumbers);
+      btn.textContent = showNumbers ? 'hide #s' : 'particle #s';
       overlayEl.classList.toggle('show', showNumbers);
       if (showNumbers) rebuildNumberOverlay();
       else overlayEl.innerHTML = '';
     });
 
-    // Terminal controls
-    document.getElementById('azimuth').addEventListener('input', e => {
-      azimuth = +e.target.value;
-      document.getElementById('az-val').textContent = azimuth;
+    document.getElementById('run').addEventListener('click', runMath);
+    document.getElementById('clear').addEventListener('click', clearSelect);
+    document.getElementById('reset').addEventListener('click', () => createSolidBlock(16));
+
+    // Enter in fields runs math
+    ['az', 'el', 'dist'].forEach(id => {
+      document.getElementById(id).addEventListener('keydown', e => {
+        if (e.key === 'Enter') runMath();
+      });
     });
-    document.getElementById('elevation').addEventListener('input', e => {
-      elevation = +e.target.value;
-      document.getElementById('el-val').textContent = elevation;
-    });
-    document.getElementById('distance').addEventListener('input', e => {
-      distance = +e.target.value;
-      document.getElementById('dist-val').textContent = distance;
-    });
-    document.getElementById('brush').addEventListener('input', e => {
-      brushRadius = +e.target.value;
-      document.getElementById('brush-val').textContent = brushRadius.toFixed(2);
+    document.getElementById('sel').addEventListener('keydown', e => {
+      if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runMath(); }
     });
 
-    document.getElementById('btnSelect').addEventListener('click', selectFromInput);
-    document.getElementById('btnClearSel').addEventListener('click', clearSelection);
-    document.getElementById('btnApply').addEventListener('click', applyMathToSelection);
-    document.getElementById('btnReset').addEventListener('click', () => createSolidBlock(16));
-
-    document.getElementById('selectInput').addEventListener('keydown', e => {
-      if (e.key === 'Enter') selectFromInput();
-    });
-
-    // ── Loop ───────────────────────────────────────────────────
     function animate() {
       requestAnimationFrame(animate);
       controls.update();
