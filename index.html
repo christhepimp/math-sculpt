@@ -98,11 +98,11 @@
     }
     #number-overlay.show { display: block; }
     .pnum {
-      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 9px;
-      color: #fff; background: rgba(14,165,233,0.55);
-      border: 1px solid rgba(125,211,252,0.5); border-radius: 3px; padding: 1px 3px; white-space: nowrap;
+      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 10px;
+      color: #fff; background: rgba(14,165,233,0.75);
+      border: 1px solid rgba(125,211,252,0.6); border-radius: 4px; padding: 2px 4px; white-space: nowrap;
     }
-    .pnum.sel { background: rgba(244,114,182,0.7); border-color: #f9a8d4; font-weight: 600; }
+    .pnum.sel { background: rgba(244,114,182,0.85); border-color: #f9a8d4; font-weight: 600; }
 
     /* Mapper UI */
     #size-picker {
@@ -182,7 +182,7 @@
         <code>0.5</code> = move half a unit<br>
         <code>pos += dir(azimuth, elevation) × (distance × unit length)</code><br>
         Tap the square to add nearby unit numbers into select.<br>
-        Use <strong>Mapper</strong> to drag a hollow circle and see only the fraction numbers inside it.
+        Use <strong>Mapper</strong> to drag a hollow circle — numbers inside are spread out clearly so you can read every ID.
       </p>
     </div>
   </div>
@@ -200,7 +200,7 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // Solid square of fractions · InstancedMesh cubes · pure math control of every unit
-    // Distance in unit lengths · Mapper hollow circle shows numbers inside only
+    // Distance in unit lengths · Mapper spreads numbers clearly inside the circle
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -495,17 +495,21 @@
       mapperCircle.style.top = (mapperY - mapperSize / 2) + 'px';
     }
 
+    // Collect units inside the circle, then spread their numbers in a clear readable grid
+    // so each ID is easy to see (the circle is just the filter region, not the label layout).
     function updateMapperLabels() {
       overlayEl.innerHTML = '';
       if (!mapperActive) return;
       overlayEl.classList.add('show');
+
       const r = mapperSize / 2;
       const cx = mapperX;
       const cy = mapperY;
       const r2 = r * r;
-      let shown = 0;
-      const maxShow = 120; // hard safety limit
-      for (let i = 0; i < units.length && shown < maxShow; i++) {
+
+      // 1. Find every unit whose screen position is inside the hollow circle
+      const inside = [];
+      for (let i = 0; i < units.length; i++) {
         const u = units[i];
         const v = new THREE.Vector3(u.x, u.y, u.z);
         v.project(camera);
@@ -515,13 +519,39 @@
         const dx = sx - cx;
         const dy = sy - cy;
         if (dx * dx + dy * dy > r2) continue;
+        inside.push({ id: u.id, selected: selected.has(u.id) });
+      }
+
+      if (inside.length === 0) return;
+
+      // 2. Sort by id so the list is predictable
+      inside.sort((a, b) => a.id - b.id);
+
+      // 3. Lay the numbers out in a clean grid centered on the circle
+      //    (spread out so they never overlap — the circle only decides *which* numbers appear)
+      const maxShow = Math.min(inside.length, 100);
+      const cols = Math.ceil(Math.sqrt(maxShow));
+      const rows = Math.ceil(maxShow / cols);
+      const cellW = 36;
+      const cellH = 18;
+      const gridW = cols * cellW;
+      const gridH = rows * cellH;
+      const startX = cx - gridW / 2 + cellW / 2;
+      const startY = cy - gridH / 2 + cellH / 2;
+
+      for (let i = 0; i < maxShow; i++) {
+        const item = inside[i];
+        const col = i % cols;
+        const row = Math.floor(i / cols);
+        const lx = startX + col * cellW;
+        const ly = startY + row * cellH;
+
         const span = document.createElement('div');
-        span.className = 'pnum' + (selected.has(u.id) ? ' sel' : '');
-        span.textContent = u.id;
-        span.style.left = sx + 'px';
-        span.style.top = sy + 'px';
+        span.className = 'pnum' + (item.selected ? ' sel' : '');
+        span.textContent = item.id;
+        span.style.left = lx + 'px';
+        span.style.top = ly + 'px';
         overlayEl.appendChild(span);
-        shown++;
       }
     }
 
@@ -537,7 +567,7 @@
       document.getElementById('overlay-btn').classList.remove('on');
       document.getElementById('overlay-btn').textContent = 'unit #s';
       updateMapperLabels();
-      log('Mapper on · drag the hollow circle · only numbers inside are shown');
+      log('Mapper on · drag the hollow circle · numbers inside are spread out clearly');
     }
 
     function closeMapper() {
@@ -648,11 +678,9 @@
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
-      // only refresh mapper labels when camera is moving or circle is being dragged
       if (mapperActive && (controls.enabled === false || mapperDragging)) {
         // already updated on drag
       } else if (mapperActive) {
-        // light refresh when orbiting
         updateMapperLabels();
       } else if (showNumbers) {
         rebuildNumberOverlay();
