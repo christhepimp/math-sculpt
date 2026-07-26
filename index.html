@@ -22,24 +22,39 @@
       cursor: pointer; box-shadow: -4px 0 16px rgba(0,0,0,0.4); writing-mode: vertical-rl;
     }
     #term-toggle:hover { background: #0284c7; }
-    #overlay-btn, #mapper-btn {
+    #overlay-btn, #ruler-btn {
       position: absolute; left: 12px; z-index: 25;
       background: rgba(14, 165, 233, 0.9); border: none; color: #fff;
       padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;
     }
     #overlay-btn { top: 12px; }
-    #mapper-btn { top: 56px; }
-    #overlay-btn.on, #mapper-btn.on { background: #f472b6; }
+    #ruler-btn { top: 56px; }
+    #overlay-btn.on, #ruler-btn.on { background: #f472b6; }
     #stats {
       position: absolute; left: 12px; top: 100px; z-index: 25;
       font-family: monospace; font-size: 0.68rem; color: #7dd3fc;
       background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px; line-height: 1.45;
     }
+    #layer-hud {
+      position: absolute; left: 12px; top: 160px; z-index: 25;
+      font-family: monospace; font-size: 0.62rem; color: #a7f3d0;
+      background: rgba(0,0,0,0.55); padding: 8px 10px; border-radius: 8px; line-height: 1.5;
+      max-height: 40vh; overflow-y: auto; max-width: 200px;
+      border: 1px solid rgba(52, 211, 153, 0.25);
+    }
+    #layer-hud strong { color: #6ee7b7; }
     #hint-view {
       position: absolute; left: 12px; bottom: 16px; z-index: 20;
       font-size: 0.65rem; color: #555; background: rgba(0,0,0,0.4);
       padding: 6px 10px; border-radius: 8px; pointer-events: none;
     }
+    #ruler-info {
+      position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%);
+      z-index: 25; font-family: monospace; font-size: 0.72rem; color: #fde68a;
+      background: rgba(0,0,0,0.7); padding: 8px 14px; border-radius: 10px;
+      display: none; white-space: nowrap; border: 1px solid rgba(251, 191, 36, 0.35);
+    }
+    #ruler-info.show { display: block; }
     #terminal {
       position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 60vh;
       background: rgba(10, 10, 16, 0.98); border-top: 1px solid #2a2a3a;
@@ -98,96 +113,33 @@
     }
     #number-overlay.show { display: block; }
     .pnum {
-      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 6px;
-      color: #fff; background: rgba(14,165,233,0.82);
-      border: 1px solid rgba(125,211,252,0.5); border-radius: 2px; padding: 0 2px; white-space: nowrap;
+      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 7px;
+      color: #0a0a0a; background: #39ff14;
+      border: 1px solid rgba(0,0,0,0.25); border-radius: 2px; padding: 0 2px; white-space: nowrap;
       line-height: 1.2;
     }
-    .pnum.sel { background: rgba(244,114,182,0.9); border-color: #f9a8d4; font-weight: 600; }
-
-    #mapper-probe {
-      position: absolute; z-index: 18;
-      width: 140px; height: 140px;
-      border: 2.5px solid #38bdf8;
-      border-radius: 50%;
-      background: transparent;
-      pointer-events: auto;
-      cursor: grab;
-      display: none;
-      box-shadow: 0 0 0 1px rgba(14,165,233,0.3);
+    .pnum.sel { background: #f9a8d4; outline: 1px solid #f472b6; font-weight: 600; }
+    .pnum.corner {
+      font-size: 9px; font-weight: 700; background: #fde68a; border-color: #f59e0b;
     }
-    #mapper-probe.active { display: block; }
-    #mapper-probe.dragging { cursor: grabbing; border-color: #f472b6; }
-
-    #mapper-readout {
-      position: absolute; z-index: 19;
-      width: 280px; height: 280px;
-      border: 2.5px solid #7dd3fc;
-      border-radius: 50%;
-      background: rgba(10, 14, 24, 0.92);
-      pointer-events: none;
-      display: none;
-      overflow: hidden;
-      box-shadow: 0 0 24px rgba(0,0,0,0.55);
+    .face-mark {
+      position: absolute; transform: translate(-50%, -50%);
+      font-family: monospace; font-size: 11px; font-weight: 700;
+      color: #fde68a; background: rgba(0,0,0,0.65);
+      border: 1px solid #f59e0b; border-radius: 4px; padding: 2px 5px;
+      pointer-events: none; z-index: 16;
     }
-    #mapper-readout.active { display: block; }
-    #mapper-readout .rid {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      font-family: monospace;
-      font-size: 10px;
-      color: #0a0a0a;
-      border-radius: 3px;
-      padding: 1px 3px;
-      white-space: nowrap;
-      line-height: 1.2;
-      border: 1px solid rgba(0,0,0,0.2);
-    }
-    #mapper-readout .rid.sel {
-      outline: 2px solid #f9a8d4;
-      font-weight: 700;
-    }
-    #mapper-readout .readout-label {
-      position: absolute;
-      top: 8px; left: 50%; transform: translateX(-50%);
-      font-size: 0.58rem;
-      color: #7dd3fc;
-      letter-spacing: 0.06em;
-      text-transform: uppercase;
-      pointer-events: none;
-      white-space: nowrap;
-    }
-    #layer-btn {
-      position: absolute;
-      bottom: 12px; left: 50%; transform: translateX(-50%);
-      z-index: 20;
-      pointer-events: auto;
-      background: #15803d;
-      border: 1px solid #39ff14;
-      color: #fff;
-      font-size: 0.65rem;
-      font-weight: 600;
-      padding: 5px 12px;
-      border-radius: 14px;
-      cursor: pointer;
-      display: none;
-    }
-    #layer-btn.show { display: block; }
-    #layer-btn:active { background: #39ff14; color: #0a0a0a; }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="number-overlay"></div>
-  <div id="mapper-probe"></div>
-  <div id="mapper-readout">
-    <div class="readout-label" id="readout-label">all under probe</div>
-    <button id="layer-btn">shell filter: all</button>
-  </div>
   <button id="overlay-btn">unit #s</button>
-  <button id="mapper-btn">Mapper</button>
+  <button id="ruler-btn">Ruler</button>
   <div id="stats">units: —</div>
-  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan</div>
+  <div id="layer-hud">layers…</div>
+  <div id="ruler-info"></div>
+  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan · Ruler: tap two fractions</div>
   <button id="term-toggle">MATH</button>
 
   <div id="terminal">
@@ -198,10 +150,11 @@
     <div id="term-body">
       <h2>Type the math</h2>
       <p class="help">
-        One solid square of clay · <strong>5832 units</strong> · each fraction <code>1/5832</code>.
+        Solid square · <strong>5832 fractions</strong> · each is exactly <code>1 unit length</code> from its neighbors.<br>
+        Numbers run like a book on each face (left→right, top→bottom), then wrap to the next face around the shell, then inward shells.
       </p>
       <label>select units (numbers)</label>
-      <textarea id="sel" placeholder="0, 1, 5, 100-200"></textarea>
+      <textarea id="sel" placeholder="1, 2, 5, 100-200"></textarea>
       <label>azimuth angle (degrees 0–360)</label>
       <input type="text" id="az" value="0" placeholder="0" />
       <label>elevation angle (degrees −90–90)</label>
@@ -217,9 +170,10 @@
       </div>
       <div id="log">ready</div>
       <p class="help" style="margin-top:12px">
-        <strong>Unit lengths</strong>: 1 = one unit · 0.5 = half<br>
-        <strong>Mapper</strong>: small circle = where · big circle = all fraction numbers under it, same left→right top→bottom layout.<br>
-        Optional shell button filters outside → deeper inside (not camera-based).
+        <strong>Unit length</strong> = exact spacing between neighboring fractions (very small).<br>
+        <code>1</code> = one unit · <code>0.5</code> = half · <code>2</code> = two units<br>
+        <strong>Ruler</strong>: tap two fractions to measure how many unit lengths apart they are.<br>
+        Layer HUD lists the starting number of each shell (outside → inside).
       </p>
     </div>
   </div>
@@ -236,17 +190,14 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // Mapper: small circle picks units → big circle shows ALL those fraction IDs
-    // in the same spatial order. Optional shell filter (outside → inside).
+    // MathClay · reading-order IDs by face then around the shell, then inward
+    // No mapper. Layer-start HUD + ruler for exact unit-length distance.
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
     const logEl = document.getElementById('log');
-    const probeEl = document.getElementById('mapper-probe');
-    const readoutEl = document.getElementById('mapper-readout');
-    const mapperBtn = document.getElementById('mapper-btn');
-    const layerBtn = document.getElementById('layer-btn');
-    const readoutLabel = document.getElementById('readout-label');
+    const layerHud = document.getElementById('layer-hud');
+    const rulerInfo = document.getElementById('ruler-info');
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
@@ -286,10 +237,12 @@
     scene.add(ground);
 
     let units = [];
-    let selected = new Set();
+    let selected = new Set(); // stores display numbers (1-based)
     let mesh = null;
     let dummy = new THREE.Object3D();
     let showNumbers = false;
+    let rulerOn = false;
+    let rulerPicks = []; // display numbers
     const claySize = 2.0;
     const clickBrush = 0.22;
 
@@ -298,55 +251,143 @@
     const FRACTION = 1 / TOTAL;
     let cell = claySize / SIDE;
 
-    const PROBE_SIZE = 140;
-    const READOUT_SIZE = 280;
-    let mapperActive = false;
-    let probeX = window.innerWidth / 2;
-    let probeY = window.innerHeight / 2;
-    let probeDragging = false;
-    let probeOffX = 0, probeOffY = 0;
-
-    // -1 = show all under probe; 0+ = filter to that structural shell
-    let shellFilter = -1;
-    let maxShell = 0;
-
-    const GREEN_OUTSIDE = '#39ff14';
-    const GREEN_INSIDE = ['#22c55e', '#15803d', '#166534', '#14532d', '#0a3d1f'];
+    // layerStarts[shell] = first display number (1-based) of that shell
+    let layerStarts = [];
 
     function log(msg, kind) {
       logEl.textContent = msg;
       logEl.className = kind === 'err' ? 'err' : kind === 'ok' ? 'ok' : '';
     }
 
+    // Shell index for grid cell: 0 = outer surface, higher = deeper inside
+    function shellOf(ix, iy, iz) {
+      return Math.min(ix, iy, iz, SIDE - 1 - ix, SIDE - 1 - iy, SIDE - 1 - iz);
+    }
+
+    // Build all units in reading-order by shell:
+    // For each shell s = 0 .. floor((SIDE-1)/2):
+    //   Walk faces of that hollow cube in fixed order, each face left→right, top→bottom.
+    // Display numbers start at 1.
     function createSolidSquare() {
       units = [];
       selected.clear();
+      rulerPicks = [];
       cell = claySize / SIDE;
       const half = claySize * 0.5;
       const origin = -half + cell * 0.5;
-      let id = 0;
-      for (let iz = 0; iz < SIDE; iz++)
-        for (let iy = 0; iy < SIDE; iy++)
-          for (let ix = 0; ix < SIDE; ix++)
-            units.push({
-              id: id++,
+      layerStarts = [];
+
+      // Temporary grid of positions
+      const grid = [];
+      for (let iz = 0; iz < SIDE; iz++) {
+        grid[iz] = [];
+        for (let iy = 0; iy < SIDE; iy++) {
+          grid[iz][iy] = [];
+          for (let ix = 0; ix < SIDE; ix++) {
+            grid[iz][iy][ix] = {
+              ix, iy, iz,
               x: origin + ix * cell,
               y: origin + iy * cell,
               z: origin + iz * cell,
+              shell: shellOf(ix, iy, iz),
               r: 0.76 + Math.random() * 0.03,
               g: 0.60 + Math.random() * 0.025,
               b: 0.44 + Math.random() * 0.025,
               fraction: FRACTION
-            });
+            };
+          }
+        }
+      }
+
+      const visited = new Set();
+      const key = (ix, iy, iz) => ix + ',' + iy + ',' + iz;
+      let displayNum = 1;
+      const maxShell = Math.floor((SIDE - 1) / 2);
+
+      function addCell(ix, iy, iz) {
+        const k = key(ix, iy, iz);
+        if (visited.has(k)) return;
+        if (ix < 0 || iy < 0 || iz < 0 || ix >= SIDE || iy >= SIDE || iz >= SIDE) return;
+        const c = grid[iz][iy][ix];
+        if (c.shell !== currentShell) return;
+        visited.add(k);
+        units.push({
+          id: displayNum, // 1-based display number used in terminal/select
+          ix, iy, iz,
+          x: c.x, y: c.y, z: c.z,
+          shell: c.shell,
+          r: c.r, g: c.g, b: c.b,
+          fraction: FRACTION
+        });
+        displayNum++;
+      }
+
+      // Face walk for a hollow shell s: lo = s, hi = SIDE-1-s
+      // Order: front (−Z), right (+X), back (+Z), left (−X), top (+Y), bottom (−Y)
+      // Each face: left→right, top→bottom relative to that face (like reading a book).
+      let currentShell = 0;
+      for (let s = 0; s <= maxShell; s++) {
+        currentShell = s;
+        layerStarts[s] = displayNum;
+        const lo = s;
+        const hi = SIDE - 1 - s;
+
+        if (lo === hi) {
+          // single center cell for odd SIDE
+          addCell(lo, lo, lo);
+          continue;
+        }
+
+        // Front face z = lo : x lo→hi, y hi→lo (top to bottom)
+        for (let y = hi; y >= lo; y--)
+          for (let x = lo; x <= hi; x++)
+            addCell(x, y, lo);
+
+        // Right face x = hi : z lo+1→hi, y hi→lo (skip front edge already done)
+        for (let y = hi; y >= lo; y--)
+          for (let z = lo + 1; z <= hi; z++)
+            addCell(hi, y, z);
+
+        // Back face z = hi : x hi-1→lo, y hi→lo
+        for (let y = hi; y >= lo; y--)
+          for (let x = hi - 1; x >= lo; x--)
+            addCell(x, y, hi);
+
+        // Left face x = lo : z hi-1→lo+1, y hi→lo
+        for (let y = hi; y >= lo; y--)
+          for (let z = hi - 1; z >= lo + 1; z--)
+            addCell(lo, y, z);
+
+        // Top face y = hi : only interior of top (edges already on side faces)
+        for (let z = lo + 1; z <= hi - 1; z++)
+          for (let x = lo + 1; x <= hi - 1; x++)
+            addCell(x, hi, z);
+
+        // Bottom face y = lo : interior
+        for (let z = lo + 1; z <= hi - 1; z++)
+          for (let x = lo + 1; x <= hi - 1; x++)
+            addCell(x, lo, z);
+      }
 
       rebuildVisual();
+      updateLayerHud();
       document.getElementById('stats').innerHTML =
-        `units: ${TOTAL.toLocaleString()} · each fraction ≈ ${FRACTION.toFixed(6)}<br>ids 0–${TOTAL - 1}`;
+        `units: ${TOTAL.toLocaleString()} · unit length = ${cell.toFixed(6)}<br>numbers 1–${TOTAL}`;
       document.getElementById('sel').value = '';
-      log(`solid square · ${TOTAL} units · each fraction 1/${TOTAL}`);
-      shellFilter = -1;
-      if (mapperActive) updateMapperReadout();
-      else if (showNumbers) rebuildNumberOverlay();
+      log(`solid square · ${TOTAL} fractions · unit length ${cell.toFixed(6)} · numbers 1…${TOTAL} reading order by shell`);
+      if (showNumbers) rebuildNumberOverlay();
+    }
+
+    function updateLayerHud() {
+      const lines = ['<strong>layer starts</strong>'];
+      for (let s = 0; s < layerStarts.length; s++) {
+        const start = layerStarts[s];
+        const end = (s + 1 < layerStarts.length ? layerStarts[s + 1] : TOTAL + 1) - 1;
+        const label = s === 0 ? 'outside' : (s === layerStarts.length - 1 ? 'center' : 'inside');
+        lines.push(`L${s} ${label}: <strong>${start}</strong>–${end}`);
+      }
+      lines.push(`<br>unit length: <strong>${cell.toFixed(6)}</strong>`);
+      layerHud.innerHTML = lines.join('<br>');
     }
 
     function rebuildVisual() {
@@ -397,8 +438,7 @@
       }
       mesh.instanceMatrix.needsUpdate = true;
       mesh.instanceColor.needsUpdate = true;
-      if (mapperActive) updateMapperReadout();
-      else if (showNumbers) rebuildNumberOverlay();
+      if (showNumbers) rebuildNumberOverlay();
     }
 
     function dirFromAngles(azDeg, elDeg) {
@@ -437,10 +477,14 @@
       return n;
     }
 
+    function unitByDisplayId(id) {
+      return units.find(u => u.id === id);
+    }
+
     function runMath() {
       try {
         const ids = parseIds(document.getElementById('sel').value);
-        const valid = [...ids].filter(id => id >= 0 && id < units.length);
+        const valid = [...ids].filter(id => unitByDisplayId(id));
         if (valid.length === 0) throw new Error('no valid unit numbers in select');
         const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
@@ -455,7 +499,7 @@
           u.z += dir.z * scale;
         }
         syncVisual();
-        log(`ok · moved ${valid.length} units · az=${az} el=${el} dist=${dist} unit(s)`, 'ok');
+        log(`ok · moved ${valid.length} units · az=${az} el=${el} dist=${dist} unit length(s)`, 'ok');
       } catch (e) {
         log(e.message, 'err');
       }
@@ -471,7 +515,7 @@
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
-    function idsNearClick(clientX, clientY) {
+    function nearestUnit(clientX, clientY) {
       mouse.x = (clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(clientY / window.innerHeight) * 2 + 1;
       raycaster.setFromCamera(mouse, camera);
@@ -486,7 +530,13 @@
         const d2 = (u.x-cx)**2 + (u.y-cy)**2 + (u.z-cz)**2;
         if (d2 < bestD) { bestD = d2; best = u; }
       }
-      if (!best || bestD > clickBrush * clickBrush * 9) return [];
+      if (!best || bestD > clickBrush * clickBrush * 9) return null;
+      return best;
+    }
+
+    function idsNearClick(clientX, clientY) {
+      const best = nearestUnit(clientX, clientY);
+      if (!best) return [];
       const r2 = clickBrush * clickBrush;
       const found = [];
       for (const u of units) {
@@ -499,7 +549,6 @@
     let down = false, dx0 = 0, dy0 = 0, dragged = false;
     renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
-      if (mapperActive && (probeEl.contains(e.target) || layerBtn.contains(e.target))) return;
       down = true; dragged = false; dx0 = e.clientX; dy0 = e.clientY;
     });
     window.addEventListener('pointermove', e => {
@@ -510,12 +559,31 @@
       if (!down) return;
       down = false;
       if (dragged || e.button !== 0) return;
-      if (mapperActive) return;
       const term = document.getElementById('terminal');
       if (term.classList.contains('open')) {
         const r = term.getBoundingClientRect();
         if (e.clientY >= r.top) return;
       }
+
+      if (rulerOn) {
+        const u = nearestUnit(e.clientX, e.clientY);
+        if (!u) return;
+        rulerPicks.push(u);
+        if (rulerPicks.length === 1) {
+          rulerInfo.classList.add('show');
+          rulerInfo.textContent = `ruler: #${u.id} selected · tap second fraction`;
+        } else if (rulerPicks.length >= 2) {
+          const a = rulerPicks[0], b = rulerPicks[1];
+          const dist = Math.hypot(a.x - b.x, a.y - b.y, a.z - b.z);
+          const unitsApart = dist / cell;
+          rulerInfo.classList.add('show');
+          rulerInfo.textContent = `#${a.id} ↔ #${b.id}  ·  ${unitsApart.toFixed(4)} unit lengths  ·  (${dist.toFixed(6)})`;
+          log(`ruler · #${a.id} to #${b.id} = ${unitsApart.toFixed(4)} unit lengths`, 'ok');
+          rulerPicks = [];
+        }
+        return;
+      }
+
       const found = idsNearClick(e.clientX, e.clientY);
       if (!found.length) return;
       const box = document.getElementById('sel');
@@ -523,269 +591,76 @@
       found.forEach(id => existing.add(id));
       const sorted = [...existing].sort((a,b) => a-b);
       box.value = sorted.join(', ');
-      selected = new Set(sorted.filter(id => id >= 0 && id < units.length));
+      selected = new Set(sorted.filter(id => unitByDisplayId(id)));
       syncVisual();
       log(`select +${found.length} · total ${selected.size}`);
     });
 
-    function placeProbe() {
-      probeEl.style.left = (probeX - PROBE_SIZE / 2) + 'px';
-      probeEl.style.top = (probeY - PROBE_SIZE / 2) + 'px';
-    }
-
-    function placeReadout() {
-      const margin = 16;
-      const w = window.innerWidth;
-      let rx = probeX > w * 0.55 ? margin + READOUT_SIZE / 2 : w - margin - READOUT_SIZE / 2;
-      let ry = margin + READOUT_SIZE / 2 + 40;
-      readoutEl.style.left = (rx - READOUT_SIZE / 2) + 'px';
-      readoutEl.style.top = (ry - READOUT_SIZE / 2) + 'px';
-      return { rx, ry };
-    }
-
-    // Structural shell: 0 = surface (missing a neighbor), then inward.
-    // Independent of camera. Recomputed from current positions after sculpt.
-    function computeShells(list) {
-      const n = list.length;
-      if (n === 0) return;
-      const r = cell * 1.15;
-      const r2 = r * r;
-      // neighbor count along approx 6 axes is expensive; use: surface if min dist to any other
-      // is > 0.5 cell in at least one cardinal sense — simpler: surface if fewer than 5 close neighbors
-      const closeR2 = (cell * 1.2) * (cell * 1.2);
-      const neighborCount = new Array(n).fill(0);
-      for (let i = 0; i < n; i++) {
-        for (let j = i + 1; j < n; j++) {
-          const dx = list[i].x - list[j].x;
-          const dy = list[i].y - list[j].y;
-          const dz = list[i].z - list[j].z;
-          if (dx*dx + dy*dy + dz*dz <= closeR2) {
-            neighborCount[i]++;
-            neighborCount[j]++;
-          }
-        }
-      }
-      // shell 0 = low neighbor count (exposed)
-      for (let i = 0; i < n; i++) {
-        list[i].shell = neighborCount[i] < 5 ? 0 : 99;
-      }
-      // BFS inward shells among list only (good enough under probe + nearby)
-      let changed = true;
-      let guard = 0;
-      while (changed && guard++ < 20) {
-        changed = false;
-        for (let i = 0; i < n; i++) {
-          if (list[i].shell !== 99) continue;
-          let best = 99;
-          for (let j = 0; j < n; j++) {
-            if (list[j].shell === 99) continue;
-            const dx = list[i].x - list[j].x;
-            const dy = list[i].y - list[j].y;
-            const dz = list[i].z - list[j].z;
-            if (dx*dx + dy*dy + dz*dz <= closeR2) {
-              best = Math.min(best, list[j].shell + 1);
-            }
-          }
-          if (best < 99) {
-            list[i].shell = best;
-            changed = true;
-          }
-        }
-      }
-      for (let i = 0; i < n; i++) if (list[i].shell === 99) list[i].shell = 0;
-    }
-
-    function updateMapperReadout() {
-      const old = readoutEl.querySelectorAll('.rid');
-      old.forEach(n => n.remove());
-      if (!mapperActive) return;
-
-      const pr = PROBE_SIZE / 2;
-      const px = probeX;
-      const py = probeY;
-      const pr2 = pr * pr;
-
-      // ALL units whose screen position falls inside the probe circle
-      const inside = [];
-      for (let i = 0; i < units.length; i++) {
-        const u = units[i];
-        const v = new THREE.Vector3(u.x, u.y, u.z);
-        v.project(camera);
-        if (v.z > 1) continue;
-        const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
-        const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
-        if ((sx - px) ** 2 + (sy - py) ** 2 > pr2) continue;
-        inside.push({
-          id: u.id,
-          x: u.x, y: u.y, z: u.z,
-          sx, sy,
-          selected: selected.has(u.id),
-          shell: 0
-        });
-      }
-
-      if (inside.length === 0) {
-        readoutLabel.textContent = 'no units under probe';
-        layerBtn.classList.remove('show');
-        return;
-      }
-
-      // Structural shells for coloring / optional filter (not camera depth)
-      computeShells(inside);
-      maxShell = 0;
-      for (const it of inside) if (it.shell > maxShell) maxShell = it.shell;
-
-      let show = inside;
-      if (shellFilter >= 0) {
-        show = inside.filter(it => it.shell === shellFilter);
-      }
-
-      show.sort((a, b) => {
-        const rowA = Math.floor(a.sy / 6);
-        const rowB = Math.floor(b.sy / 6);
-        if (rowA !== rowB) return rowA - rowB;
-        return a.sx - b.sx;
-      });
-
-      if (shellFilter < 0) {
-        readoutLabel.textContent = `all under probe · ${inside.length}`;
-        layerBtn.textContent = 'shell: all → outside';
-      } else if (shellFilter === 0) {
-        readoutLabel.textContent = `shell 0 · outside · ${show.length}`;
-        layerBtn.textContent = maxShell > 0 ? 'shell → deeper' : 'shell: all';
-      } else if (shellFilter >= maxShell) {
-        readoutLabel.textContent = `shell ${shellFilter} · deepest · ${show.length}`;
-        layerBtn.textContent = 'shell: all';
-      } else {
-        readoutLabel.textContent = `shell ${shellFilter} · inside · ${show.length}`;
-        layerBtn.textContent = 'shell → deeper';
-      }
-      layerBtn.classList.add('show');
-
-      const { rx, ry } = placeReadout();
-      const maxShow = Math.min(show.length, 120);
-      const rr = READOUT_SIZE / 2 - 20;
-      const rLeft = parseFloat(readoutEl.style.left) || 0;
-      const rTop = parseFloat(readoutEl.style.top) || 0;
-
-      // Spread numbers evenly in a grid inside the big circle so none are missing
-      // while still roughly matching left→right top→bottom of the probe region
-      const cols = Math.ceil(Math.sqrt(maxShow * 1.2));
-      const rows = Math.ceil(maxShow / cols);
-
-      for (let i = 0; i < maxShow; i++) {
-        const item = show[i];
-        // Mix spatial placement with slight grid so dense packs stay readable
-        const nx = (item.sx - px) / pr;
-        const ny = (item.sy - py) / pr;
-        const lx = rx + nx * rr * 0.92;
-        const ly = ry + ny * rr * 0.92;
-
-        const shell = item.shell;
-        const isOut = shell === 0;
-        const green = isOut ? GREEN_OUTSIDE : GREEN_INSIDE[Math.min(shell - 1, GREEN_INSIDE.length - 1)];
-        const textColor = (!isOut && shell >= 3) ? '#e8ffe8' : '#0a0a0a';
-
-        const span = document.createElement('div');
-        span.className = 'rid' + (item.selected ? ' sel' : '');
-        span.textContent = item.id;
-        span.style.left = (lx - rLeft) + 'px';
-        span.style.top = (ly - rTop) + 'px';
-        span.style.background = green;
-        span.style.color = textColor;
-        readoutEl.appendChild(span);
-      }
-    }
-
-    function openMapper() {
-      mapperActive = true;
-      shellFilter = -1;
-      mapperBtn.classList.add('on');
-      mapperBtn.textContent = 'Close Mapper';
-      probeEl.classList.add('active');
-      readoutEl.classList.add('active');
-      placeProbe();
-      placeReadout();
-      showNumbers = false;
-      document.getElementById('overlay-btn').classList.remove('on');
-      document.getElementById('overlay-btn').textContent = 'unit #s';
-      overlayEl.innerHTML = '';
-      overlayEl.classList.remove('show');
-      updateMapperReadout();
-      log('Mapper · every fraction under the small circle appears in the big circle');
-    }
-
-    function closeMapper() {
-      mapperActive = false;
-      shellFilter = -1;
-      mapperBtn.classList.remove('on');
-      mapperBtn.textContent = 'Mapper';
-      probeEl.classList.remove('active');
-      readoutEl.classList.remove('active');
-      layerBtn.classList.remove('show');
-      readoutEl.querySelectorAll('.rid').forEach(n => n.remove());
-      log('Mapper closed');
-    }
-
-    mapperBtn.addEventListener('click', () => {
-      if (mapperActive) closeMapper(); else openMapper();
-    });
-
-    layerBtn.addEventListener('click', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      // Cycle: all → 0 (outside) → 1 → … → max → all
-      if (shellFilter < 0) shellFilter = 0;
-      else if (shellFilter >= maxShell) shellFilter = -1;
-      else shellFilter++;
-      updateMapperReadout();
-    });
-
-    probeEl.addEventListener('pointerdown', e => {
-      e.preventDefault();
-      e.stopPropagation();
-      probeDragging = true;
-      probeEl.classList.add('dragging');
-      probeOffX = e.clientX - probeX;
-      probeOffY = e.clientY - probeY;
-      probeEl.setPointerCapture(e.pointerId);
-      controls.enabled = false;
-      shellFilter = -1;
-    });
-    probeEl.addEventListener('pointermove', e => {
-      if (!probeDragging) return;
-      probeX = e.clientX - probeOffX;
-      probeY = e.clientY - probeOffY;
-      placeProbe();
-      updateMapperReadout();
-    });
-    probeEl.addEventListener('pointerup', e => {
-      if (!probeDragging) return;
-      probeDragging = false;
-      probeEl.classList.remove('dragging');
-      controls.enabled = true;
-      try { probeEl.releasePointerCapture(e.pointerId); } catch (_) {}
-    });
-
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
-      if (!showNumbers || mapperActive) return;
-      const maxLabels = 80;
-      const step = units.length > maxLabels ? Math.ceil(units.length / maxLabels) : 1;
-      for (let i = 0; i < units.length; i += step) {
-        const u = units[i];
+      if (!showNumbers) return;
+
+      // Show a sparse sample + always the 4 corner numbers of the outer shell on each visible approach
+      const maxLabels = 100;
+      const step = Math.max(1, Math.ceil(units.length / maxLabels));
+
+      // Prefer outer shell numbers + corners
+      const outer = units.filter(u => u.shell === 0);
+      const toShow = new Map();
+      for (let i = 0; i < outer.length; i += Math.max(1, Math.floor(outer.length / 60))) {
+        toShow.set(outer[i].id, outer[i]);
+      }
+      // First and last of each layer
+      for (let s = 0; s < layerStarts.length; s++) {
+        const start = layerStarts[s];
+        const u0 = unitByDisplayId(start);
+        if (u0) toShow.set(u0.id, u0);
+      }
+      // Corners of outer shell (grid corners)
+      for (const u of units) {
+        if (u.shell !== 0) continue;
+        const c =
+          (u.ix === 0 || u.ix === SIDE - 1) &&
+          (u.iy === 0 || u.iy === SIDE - 1) &&
+          (u.iz === 0 || u.iz === SIDE - 1);
+        if (c) toShow.set(u.id, u);
+      }
+
+      for (const u of toShow.values()) {
         const v = new THREE.Vector3(u.x, u.y, u.z);
         v.project(camera);
         if (v.z > 1) continue;
         const x = (v.x * 0.5 + 0.5) * window.innerWidth;
         const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
-        if (x < -30 || x > window.innerWidth + 30 || y < -30 || y > window.innerHeight + 30) continue;
+        if (x < -20 || x > window.innerWidth + 20 || y < -20 || y > window.innerHeight + 20) continue;
         const span = document.createElement('div');
-        span.className = 'pnum' + (selected.has(u.id) ? ' sel' : '');
+        const isCorner =
+          u.shell === 0 &&
+          (u.ix === 0 || u.ix === SIDE - 1) &&
+          (u.iy === 0 || u.iy === SIDE - 1) &&
+          (u.iz === 0 || u.iz === SIDE - 1);
+        span.className = 'pnum' + (selected.has(u.id) ? ' sel' : '') + (isCorner ? ' corner' : '');
         span.textContent = u.id;
         span.style.left = x + 'px';
         span.style.top = y + 'px';
         overlayEl.appendChild(span);
+      }
+
+      // Face-start markers (★) at layerStarts on shell 0 faces — first number of outside
+      const first = unitByDisplayId(layerStarts[0]);
+      if (first) {
+        const v = new THREE.Vector3(first.x, first.y, first.z);
+        v.project(camera);
+        if (v.z <= 1) {
+          const x = (v.x * 0.5 + 0.5) * window.innerWidth;
+          const y = (-v.y * 0.5 + 0.5) * window.innerHeight;
+          const mark = document.createElement('div');
+          mark.className = 'face-mark';
+          mark.textContent = '★ ' + first.id;
+          mark.style.left = x + 'px';
+          mark.style.top = (y - 14) + 'px';
+          overlayEl.appendChild(mark);
+        }
       }
     }
 
@@ -799,13 +674,28 @@
     document.getElementById('term-close').addEventListener('click', closeTerminal);
 
     document.getElementById('overlay-btn').addEventListener('click', () => {
-      if (mapperActive) closeMapper();
       showNumbers = !showNumbers;
       const btn = document.getElementById('overlay-btn');
       btn.classList.toggle('on', showNumbers);
       btn.textContent = showNumbers ? 'hide #s' : 'unit #s';
       overlayEl.classList.toggle('show', showNumbers);
       if (showNumbers) rebuildNumberOverlay(); else overlayEl.innerHTML = '';
+    });
+
+    document.getElementById('ruler-btn').addEventListener('click', () => {
+      rulerOn = !rulerOn;
+      rulerPicks = [];
+      const btn = document.getElementById('ruler-btn');
+      btn.classList.toggle('on', rulerOn);
+      btn.textContent = rulerOn ? 'Ruler ON' : 'Ruler';
+      if (rulerOn) {
+        rulerInfo.classList.add('show');
+        rulerInfo.textContent = `unit length = ${cell.toFixed(6)} · tap two fractions to measure`;
+        log('ruler on · each fraction is exactly 1 unit length from its grid neighbor');
+      } else {
+        rulerInfo.classList.remove('show');
+        log('ruler off');
+      }
     });
 
     document.getElementById('run').addEventListener('click', runMath);
@@ -822,8 +712,7 @@
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
-      if (mapperActive && !probeDragging) updateMapperReadout();
-      else if (showNumbers) rebuildNumberOverlay();
+      if (showNumbers) rebuildNumberOverlay();
     }
     animate();
 
@@ -831,8 +720,7 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      if (mapperActive) { placeProbe(); updateMapperReadout(); }
-      else if (showNumbers) rebuildNumberOverlay();
+      if (showNumbers) rebuildNumberOverlay();
     });
 
     createSolidSquare();
