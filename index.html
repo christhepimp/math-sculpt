@@ -15,231 +15,97 @@
       touch-action: none;
     }
     #canvas-container { position: absolute; inset: 0; }
-
     #term-toggle {
-      position: absolute;
-      right: 0;
-      top: 50%;
-      transform: translateY(-50%);
-      z-index: 30;
-      width: 40px;
-      height: 80px;
-      background: #0ea5e9;
-      border: none;
-      border-radius: 10px 0 0 10px;
-      color: #fff;
-      font-size: 0.7rem;
-      font-weight: 600;
-      cursor: pointer;
-      box-shadow: -4px 0 16px rgba(0,0,0,0.4);
-      writing-mode: vertical-rl;
+      position: absolute; right: 0; top: 50%; transform: translateY(-50%);
+      z-index: 30; width: 40px; height: 80px; background: #0ea5e9; border: none;
+      border-radius: 10px 0 0 10px; color: #fff; font-size: 0.7rem; font-weight: 600;
+      cursor: pointer; box-shadow: -4px 0 16px rgba(0,0,0,0.4); writing-mode: vertical-rl;
     }
     #term-toggle:hover { background: #0284c7; }
-
     #overlay-btn {
-      position: absolute;
-      left: 12px;
-      top: 12px;
-      z-index: 25;
-      background: rgba(14, 165, 233, 0.9);
-      border: none;
-      color: #fff;
-      padding: 10px 14px;
-      border-radius: 10px;
-      font-size: 0.78rem;
-      font-weight: 500;
-      cursor: pointer;
+      position: absolute; left: 12px; top: 12px; z-index: 25;
+      background: rgba(14, 165, 233, 0.9); border: none; color: #fff;
+      padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;
     }
     #overlay-btn.on { background: #f472b6; }
-
     #stats {
-      position: absolute;
-      left: 12px;
-      top: 56px;
-      z-index: 25;
-      font-family: monospace;
-      font-size: 0.68rem;
-      color: #7dd3fc;
-      background: rgba(0,0,0,0.5);
-      padding: 6px 10px;
-      border-radius: 6px;
-      line-height: 1.45;
+      position: absolute; left: 12px; top: 56px; z-index: 25;
+      font-family: monospace; font-size: 0.68rem; color: #7dd3fc;
+      background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px; line-height: 1.45;
     }
-
     #hint-view {
-      position: absolute;
-      left: 12px;
-      bottom: 16px;
-      z-index: 20;
-      font-size: 0.65rem;
-      color: #555;
-      background: rgba(0,0,0,0.4);
-      padding: 6px 10px;
-      border-radius: 8px;
-      pointer-events: none;
+      position: absolute; left: 12px; bottom: 16px; z-index: 20;
+      font-size: 0.65rem; color: #555; background: rgba(0,0,0,0.4);
+      padding: 6px 10px; border-radius: 8px; pointer-events: none;
     }
-
     #terminal {
-      position: absolute;
-      left: 0; right: 0; bottom: 0;
-      z-index: 40;
-      max-height: 60vh;
-      background: rgba(10, 10, 16, 0.98);
-      border-top: 1px solid #2a2a3a;
-      border-radius: 16px 16px 0 0;
-      transform: translateY(100%);
-      transition: transform 0.28s ease;
-      display: flex;
-      flex-direction: column;
-      box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 60vh;
+      background: rgba(10, 10, 16, 0.98); border-top: 1px solid #2a2a3a;
+      border-radius: 16px 16px 0 0; transform: translateY(100%); transition: transform 0.28s ease;
+      display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
     }
     #terminal.open { transform: translateY(0); }
-
     #term-header {
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      padding: 10px 14px 6px;
-      border-bottom: 1px solid #1e1e28;
+      flex-shrink: 0; display: flex; align-items: center; justify-content: space-between;
+      padding: 10px 14px 6px; border-bottom: 1px solid #1e1e28;
     }
-    #term-header span {
-      font-size: 0.72rem;
-      letter-spacing: 0.12em;
-      color: #888;
-      text-transform: uppercase;
-    }
+    #term-header span { font-size: 0.72rem; letter-spacing: 0.12em; color: #888; text-transform: uppercase; }
     #term-close {
-      background: #2a2a38;
-      border: 1px solid #444;
-      color: #e2e8f0;
-      width: 36px;
-      height: 36px;
-      border-radius: 8px;
-      font-size: 1.1rem;
-      cursor: pointer;
+      background: #2a2a38; border: 1px solid #444; color: #e2e8f0;
+      width: 36px; height: 36px; border-radius: 8px; font-size: 1.1rem; cursor: pointer;
     }
-
     #term-body {
-      flex: 1;
-      overflow-y: auto;
-      padding: 8px 14px 18px;
-      font-family: ui-monospace, monospace;
-      -webkit-overflow-scrolling: touch;
+      flex: 1; overflow-y: auto; padding: 8px 14px 18px;
+      font-family: ui-monospace, monospace; -webkit-overflow-scrolling: touch;
     }
-
-    h2 {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      font-size: 0.9rem;
-      font-weight: 600;
-      margin-bottom: 6px;
-    }
+    h2 { font-family: 'Segoe UI', system-ui, sans-serif; font-size: 0.9rem; font-weight: 600; margin-bottom: 6px; }
     .help {
-      font-size: 0.65rem;
-      color: #666;
-      line-height: 1.45;
-      margin-bottom: 12px;
+      font-size: 0.65rem; color: #666; line-height: 1.45; margin-bottom: 12px;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
     code { color: #7dd3fc; }
-
     label {
-      display: block;
-      font-size: 0.62rem;
-      color: #888;
-      text-transform: uppercase;
-      letter-spacing: 0.06em;
-      margin: 10px 0 4px;
-      font-family: 'Segoe UI', system-ui, sans-serif;
+      display: block; font-size: 0.62rem; color: #888; text-transform: uppercase;
+      letter-spacing: 0.06em; margin: 10px 0 4px; font-family: 'Segoe UI', system-ui, sans-serif;
     }
-
     textarea, input[type="text"] {
-      width: 100%;
-      background: #14141c;
-      border: 1px solid #333;
-      border-radius: 8px;
-      color: #7dd3fc;
-      font-family: inherit;
-      font-size: 0.82rem;
-      padding: 10px 12px;
-      outline: none;
-      resize: vertical;
+      width: 100%; background: #14141c; border: 1px solid #333; border-radius: 8px;
+      color: #7dd3fc; font-family: inherit; font-size: 0.82rem; padding: 10px 12px; outline: none; resize: vertical;
     }
     textarea:focus, input[type="text"]:focus { border-color: #38bdf8; }
     textarea { min-height: 52px; }
-
     .row { display: flex; gap: 8px; margin-top: 10px; }
     button.go {
-      flex: 1;
-      background: #0ea5e9;
-      border: 1px solid #0284c7;
-      color: #fff;
-      padding: 11px;
-      border-radius: 8px;
-      font-size: 0.8rem;
-      font-weight: 500;
-      cursor: pointer;
+      flex: 1; background: #0ea5e9; border: 1px solid #0284c7; color: #fff;
+      padding: 11px; border-radius: 8px; font-size: 0.8rem; font-weight: 500; cursor: pointer;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
     button.dim {
-      flex: 1;
-      background: #1a1a26;
-      border: 1px solid #333;
-      color: #aaa;
-      padding: 11px;
-      border-radius: 8px;
-      font-size: 0.78rem;
-      cursor: pointer;
+      flex: 1; background: #1a1a26; border: 1px solid #333; color: #aaa;
+      padding: 11px; border-radius: 8px; font-size: 0.78rem; cursor: pointer;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
-
     #log {
-      margin-top: 12px;
-      padding: 8px 10px;
-      background: #0c0c12;
-      border: 1px solid #222;
-      border-radius: 8px;
-      font-size: 0.72rem;
-      color: #94a3b8;
-      min-height: 36px;
-      white-space: pre-wrap;
+      margin-top: 12px; padding: 8px 10px; background: #0c0c12; border: 1px solid #222;
+      border-radius: 8px; font-size: 0.72rem; color: #94a3b8; min-height: 36px; white-space: pre-wrap;
     }
     #log.err { color: #f87171; }
     #log.ok { color: #4ade80; }
-
     #number-overlay {
-      position: absolute;
-      inset: 0;
-      pointer-events: none;
-      z-index: 15;
-      display: none;
-      overflow: hidden;
+      position: absolute; inset: 0; pointer-events: none; z-index: 15; display: none; overflow: hidden;
     }
     #number-overlay.show { display: block; }
     .pnum {
-      position: absolute;
-      transform: translate(-50%, -50%);
-      font-family: monospace;
-      font-size: 9px;
-      color: rgba(255,255,255,0.8);
-      background: rgba(14,165,233,0.32);
-      border: 1px solid rgba(125,211,252,0.35);
-      border-radius: 3px;
-      padding: 1px 3px;
-      white-space: nowrap;
+      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 8px;
+      color: rgba(255,255,255,0.75); background: rgba(14,165,233,0.28);
+      border: 1px solid rgba(125,211,252,0.3); border-radius: 3px; padding: 0 2px; white-space: nowrap;
     }
-    .pnum.sel {
-      background: rgba(244,114,182,0.55);
-      border-color: #f9a8d4;
-      color: #fff;
-      font-weight: 600;
-    }
+    .pnum.sel { background: rgba(244,114,182,0.55); border-color: #f9a8d4; color: #fff; font-weight: 600; }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="number-overlay"></div>
-
   <button id="overlay-btn">unit #s</button>
   <div id="stats">units: —</div>
   <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan</div>
@@ -254,22 +120,18 @@
       <h2>Type the math</h2>
       <p class="help">
         One solid square of clay.<br>
-        Divided into <strong>100 units</strong> — each unit is fraction <code>0.01</code> of the whole square.<br>
+        Divided into <strong>5832 units</strong> (at least 5000).<br>
+        Each unit is fraction <code>1/5832</code> of the whole square.<br>
         Select by number · type angles + distance · Run.
       </p>
-
-      <label>select units (numbers 0–99)</label>
-      <textarea id="sel" placeholder="0, 1, 5, 10-25"></textarea>
-
+      <label>select units (numbers)</label>
+      <textarea id="sel" placeholder="0, 1, 5, 100-200"></textarea>
       <label>azimuth angle (degrees 0–360)</label>
       <input type="text" id="az" value="0" placeholder="0" />
-
       <label>elevation angle (degrees −90–90)</label>
       <input type="text" id="el" value="0" placeholder="0" />
-
       <label>distance (0–1000)</label>
       <input type="text" id="dist" value="50" placeholder="50" />
-
       <div class="row">
         <button class="go" id="run">Run math</button>
         <button class="dim" id="clear">Clear select</button>
@@ -277,9 +139,7 @@
       <div class="row">
         <button class="dim" id="reset">Reset solid square</button>
       </div>
-
       <div id="log">ready</div>
-
       <p class="help" style="margin-top:12px">
         <code>pos += dir(azimuth, elevation) × (distance / 500)</code><br>
         Tap the square to add nearby unit numbers into select.
@@ -295,14 +155,11 @@
     }
   }
   </script>
-
   <script type="module">
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // One solid square.
-    // 100 units · each unit = fraction 0.01 of the whole.
-    // Not particles — addressable fractions of the clay.
+    // Solid square · ≥5000 units · each unit = 1/TOTAL fraction of the whole
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -329,10 +186,7 @@
     controls.enableRotate = true;
     controls.minDistance = 0.8;
     controls.maxDistance = 20;
-    controls.touches = {
-      ONE: THREE.TOUCH.ROTATE,
-      TWO: THREE.TOUCH.DOLLY_PAN
-    };
+    controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
     scene.add(new THREE.AmbientLight(0xffffff, 0.55));
     const key = new THREE.DirectionalLight(0xfff5e6, 1.15);
@@ -354,16 +208,13 @@
     let pointsGeo = null;
     let showNumbers = false;
     const claySize = 2.0;
-    const clickBrush = 0.35;
+    const clickBrush = 0.22;
 
-    // Exactly 100 units → each fraction = 0.01 of the square
-    // Grid 5 × 5 × 4 = 100
-    const NX = 5, NY = 5, NZ = 4;
-    const TOTAL = NX * NY * NZ; // 100
-    const FRACTION = 1 / TOTAL;  // 0.01
-    let cellX = claySize / NX;
-    let cellY = claySize / NY;
-    let cellZ = claySize / NZ;
+    // 18³ = 5832 ≥ 5000
+    const SIDE = 18;
+    const TOTAL = SIDE * SIDE * SIDE;
+    const FRACTION = 1 / TOTAL;
+    let cell = claySize / SIDE;
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -373,37 +224,29 @@
     function createSolidSquare() {
       units = [];
       selected.clear();
-      cellX = claySize / NX;
-      cellY = claySize / NY;
-      cellZ = claySize / NZ;
+      cell = claySize / SIDE;
       const half = claySize * 0.5;
-      const ox = -half + cellX * 0.5;
-      const oy = -half + cellY * 0.5;
-      const oz = -half + cellZ * 0.5;
-
+      const origin = -half + cell * 0.5;
       let id = 0;
-      for (let iz = 0; iz < NZ; iz++) {
-        for (let iy = 0; iy < NY; iy++) {
-          for (let ix = 0; ix < NX; ix++) {
+      for (let iz = 0; iz < SIDE; iz++)
+        for (let iy = 0; iy < SIDE; iy++)
+          for (let ix = 0; ix < SIDE; ix++)
             units.push({
               id: id++,
-              x: ox + ix * cellX,
-              y: oy + iy * cellY,
-              z: oz + iz * cellZ,
+              x: origin + ix * cell,
+              y: origin + iy * cell,
+              z: origin + iz * cell,
               r: 0.76 + Math.random() * 0.03,
               g: 0.60 + Math.random() * 0.025,
               b: 0.44 + Math.random() * 0.025,
               fraction: FRACTION
             });
-          }
-        }
-      }
 
       rebuildVisual();
       document.getElementById('stats').innerHTML =
-        `units: ${TOTAL} · each = fraction ${FRACTION} of square<br>ids 0–${TOTAL - 1}`;
+        `units: ${TOTAL.toLocaleString()} · each fraction ≈ ${FRACTION.toFixed(6)}<br>ids 0–${TOTAL - 1}`;
       document.getElementById('sel').value = '';
-      log(`solid square · ${TOTAL} units · each fraction ${FRACTION}`);
+      log(`solid square · ${TOTAL} units · each fraction 1/${TOTAL}`);
       if (showNumbers) rebuildNumberOverlay();
     }
 
@@ -428,15 +271,9 @@
       pointsGeo = new THREE.BufferGeometry();
       pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
-
-      // Size so neighboring units touch / fill the square
-      const size = Math.min(cellX, cellY, cellZ) * 1.15;
+      const size = cell * 1.12;
       pointsObj = new THREE.Points(pointsGeo, new THREE.PointsMaterial({
-        size,
-        vertexColors: true,
-        sizeAttenuation: true,
-        transparent: false,
-        depthWrite: true
+        size, vertexColors: true, sizeAttenuation: true, transparent: false, depthWrite: true
       }));
       scene.add(pointsObj);
     }
@@ -500,25 +337,20 @@
         const ids = parseIds(document.getElementById('sel').value);
         const valid = [...ids].filter(id => id >= 0 && id < units.length);
         if (valid.length === 0) throw new Error('no valid unit numbers in select');
-
         const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
         const dist = parseNumber(document.getElementById('dist'), 'distance', 0, 1000);
-
         selected = new Set(valid);
         const dir = dirFromAngles(az, el);
         const scale = dist / 500;
-
         for (const u of units) {
           if (!selected.has(u.id)) continue;
           u.x += dir.x * scale;
           u.y += dir.y * scale;
           u.z += dir.z * scale;
         }
-
         syncVisual();
-        const frac = (valid.length * FRACTION).toFixed(2);
-        log(`ok · moved ${valid.length} units (fraction ${frac} of square) · az=${az} el=${el} dist=${dist}`, 'ok');
+        log(`ok · moved ${valid.length} units (fraction ${(valid.length * FRACTION).toFixed(4)}) · az=${az} el=${el} dist=${dist}`, 'ok');
       } catch (e) {
         log(e.message, 'err');
       }
@@ -540,7 +372,6 @@
       raycaster.setFromCamera(mouse, camera);
       const o = raycaster.ray.origin;
       const d = raycaster.ray.direction;
-
       let best = null, bestD = Infinity;
       for (const u of units) {
         const ox = u.x - o.x, oy = u.y - o.y, oz = u.z - o.z;
@@ -551,7 +382,6 @@
         if (d2 < bestD) { bestD = d2; best = u; }
       }
       if (!best || bestD > clickBrush * clickBrush * 9) return [];
-
       const r2 = clickBrush * clickBrush;
       const found = [];
       for (const u of units) {
@@ -588,13 +418,15 @@
       box.value = sorted.join(', ');
       selected = new Set(sorted.filter(id => id >= 0 && id < units.length));
       syncVisual();
-      log(`select +${found.length} units · total ${selected.size} · fraction ${(selected.size * FRACTION).toFixed(2)}`);
+      log(`select +${found.length} · total ${selected.size}`);
     });
 
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
       if (!showNumbers) return;
-      for (let i = 0; i < units.length; i++) {
+      const maxLabels = 400;
+      const step = units.length > maxLabels ? Math.ceil(units.length / maxLabels) : 1;
+      for (let i = 0; i < units.length; i += step) {
         const u = units[i];
         const v = new THREE.Vector3(u.x, u.y, u.z);
         v.project(camera);
@@ -613,19 +445,10 @@
 
     const terminal = document.getElementById('terminal');
     const termToggle = document.getElementById('term-toggle');
-
-    function openTerminal() {
-      terminal.classList.add('open');
-      termToggle.textContent = 'CLOSE';
-    }
-    function closeTerminal() {
-      terminal.classList.remove('open');
-      termToggle.textContent = 'MATH';
-    }
-
+    function openTerminal() { terminal.classList.add('open'); termToggle.textContent = 'CLOSE'; }
+    function closeTerminal() { terminal.classList.remove('open'); termToggle.textContent = 'MATH'; }
     termToggle.addEventListener('click', () => {
-      if (terminal.classList.contains('open')) closeTerminal();
-      else openTerminal();
+      if (terminal.classList.contains('open')) closeTerminal(); else openTerminal();
     });
     document.getElementById('term-close').addEventListener('click', closeTerminal);
 
@@ -635,18 +458,14 @@
       btn.classList.toggle('on', showNumbers);
       btn.textContent = showNumbers ? 'hide #s' : 'unit #s';
       overlayEl.classList.toggle('show', showNumbers);
-      if (showNumbers) rebuildNumberOverlay();
-      else overlayEl.innerHTML = '';
+      if (showNumbers) rebuildNumberOverlay(); else overlayEl.innerHTML = '';
     });
 
     document.getElementById('run').addEventListener('click', runMath);
     document.getElementById('clear').addEventListener('click', clearSelect);
     document.getElementById('reset').addEventListener('click', createSolidSquare);
-
     ['az', 'el', 'dist'].forEach(id => {
-      document.getElementById(id).addEventListener('keydown', e => {
-        if (e.key === 'Enter') runMath();
-      });
+      document.getElementById(id).addEventListener('keydown', e => { if (e.key === 'Enter') runMath(); });
     });
     document.getElementById('sel').addEventListener('keydown', e => {
       if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); runMath(); }
