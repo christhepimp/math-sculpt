@@ -13,13 +13,19 @@ You control every unit with pure math.
 ## The core idea
 
 ```
-pos += dir(azimuth, elevation) × (distance / 500)
+pos += dir(azimuth, elevation) × (distance × unit length)
 ```
+
+**Unit lengths** (the measure for distance):
+
+- `1` = move one unit
+- `2` = move two units
+- `0.5` = move half a unit
 
 1. Select any units by number (or range, or by tapping)
 2. Type any azimuth angle (0–360°)
 3. Type any elevation angle (−90–90°)
-4. Type any distance
+4. Type distance in unit lengths
 5. Run
 
 That single operation is enough to push, pull, stretch, and reshape the solid square into **any 3D form**.
@@ -41,7 +47,7 @@ Everything is driven by typed numbers:
 
 - Select units: `0, 1, 5, 100-200` or tap the clay
 - Azimuth + elevation define an exact 3D direction
-- Distance scales how far those fractions travel
+- Distance is in **unit lengths** (1 = one unit, 0.5 = half a unit, …)
 - Run as many times as you want — the design space is unlimited
 
 No brushes limited to preset directions. No locked tools.  
@@ -55,7 +61,7 @@ Just math applied to fractions of a solid square.
 |----------------|---------------------------------------|
 | Building block | Unit / fraction (id, position, color) |
 | Solid form     | Dense packing of 5,832 cubes          |
-| Sculpt         | `pos += dir × distance`               |
+| Sculpt         | `pos += dir × (distance × unit length)` |
 | Control        | Pure typed math (any angle + distance)|
 | Detail         | More units = higher precision         |
 | Interface      | Simple terminal anyone can use        |
@@ -68,7 +74,7 @@ You are moving the actual fractions that make up the clay.
 ## Current status
 
 - Solid InstancedMesh cube (no sparse points)
-- Full math terminal (any direction, any distance)
+- Full math terminal (any direction, distance in unit lengths)
 - Click / tap to add nearby units to selection
 - Unit number overlay
 - Reset to perfect solid square
