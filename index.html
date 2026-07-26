@@ -16,113 +16,66 @@
     #canvas-container { position: absolute; inset: 0; }
     #ui {
       position: absolute;
-      top: 12px;
-      left: 12px;
-      width: 320px;
-      background: rgba(10, 10, 16, 0.94);
+      top: 10px;
+      left: 10px;
+      width: 340px;
+      background: rgba(10, 10, 16, 0.95);
       border: 1px solid #2a2a38;
       border-radius: 14px;
-      padding: 16px;
+      padding: 14px;
       backdrop-filter: blur(16px);
       box-shadow: 0 12px 40px rgba(0,0,0,0.5);
-      max-height: calc(100vh - 24px);
+      max-height: calc(100vh - 20px);
       overflow-y: auto;
       z-index: 10;
     }
-    h1 {
-      font-size: 1.25rem;
-      font-weight: 650;
-      letter-spacing: -0.03em;
-      margin-bottom: 2px;
-    }
-    .tagline {
-      font-size: 0.72rem;
-      color: #777;
-      margin-bottom: 14px;
-    }
+    h1 { font-size: 1.2rem; font-weight: 650; letter-spacing: -0.03em; margin-bottom: 2px; }
+    .tagline { font-size: 0.7rem; color: #777; margin-bottom: 12px; }
     label {
       display: block;
-      font-size: 0.68rem;
+      font-size: 0.65rem;
       color: #999;
-      margin-bottom: 4px;
+      margin-bottom: 3px;
       text-transform: uppercase;
-      letter-spacing: 0.06em;
+      letter-spacing: 0.05em;
     }
-    .row { display: flex; gap: 8px; margin-top: 10px; }
+    .row { display: flex; gap: 6px; margin-top: 8px; }
     button {
       flex: 1;
       background: #1a1a26;
       border: 1px solid #333344;
       color: #e2e8f0;
-      padding: 9px 10px;
-      border-radius: 8px;
-      font-size: 0.78rem;
+      padding: 7px 8px;
+      border-radius: 7px;
+      font-size: 0.72rem;
       cursor: pointer;
       transition: all 0.15s;
     }
     button:hover { background: #2a2a3a; }
-    button.primary {
-      background: #0ea5e9;
-      border-color: #0284c7;
-      color: #fff;
-      font-weight: 500;
-    }
+    button.primary { background: #0ea5e9; border-color: #0284c7; color: #fff; font-weight: 500; }
     button.primary:hover { background: #0284c7; }
-    button.active {
-      background: #0ea5e9;
-      border-color: #0284c7;
-      color: #fff;
-    }
-    .slider-group { margin-top: 12px; }
-    input[type="range"] {
-      width: 100%;
-      margin-top: 3px;
-      accent-color: #38bdf8;
-    }
-    .value {
-      float: right;
-      color: #7dd3fc;
-      font-family: monospace;
-      font-size: 0.75rem;
-    }
-    .info {
-      font-size: 0.7rem;
-      color: #666;
-      margin-top: 12px;
-      line-height: 1.45;
-    }
-    .stat {
-      font-family: monospace;
-      font-size: 0.72rem;
-      color: #7dd3fc;
-      margin-bottom: 10px;
-    }
-    .section {
-      margin-top: 14px;
-      padding-top: 12px;
-      border-top: 1px solid #222230;
-    }
-    .dirs {
+    button.active { background: #0ea5e9; border-color: #0284c7; color: #fff; }
+    .slider-group { margin-top: 10px; }
+    input[type="range"] { width: 100%; margin-top: 2px; accent-color: #38bdf8; }
+    .value { float: right; color: #7dd3fc; font-family: monospace; font-size: 0.72rem; }
+    .stat { font-family: monospace; font-size: 0.7rem; color: #7dd3fc; margin-bottom: 8px; }
+    .section { margin-top: 12px; padding-top: 10px; border-top: 1px solid #222230; }
+    .dirs, .shapes {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
-      gap: 5px;
-      margin-top: 6px;
+      gap: 4px;
+      margin-top: 5px;
     }
-    .dirs button { font-size: 0.7rem; padding: 7px 4px; }
-    .shapes {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 5px;
-      margin-top: 6px;
+    .shapes { grid-template-columns: 1fr 1fr; }
+    .dirs button, .shapes button { font-size: 0.65rem; padding: 6px 3px; }
+    .info { font-size: 0.65rem; color: #666; margin-top: 10px; line-height: 1.4; }
+    code { color: #a5b4fc; font-size: 0.65rem; }
+    .sub-label {
+      font-size: 0.7rem;
+      color: #f9a8d4;
+      margin-bottom: 6px;
+      font-weight: 500;
     }
-    .shapes button { font-size: 0.7rem; padding: 7px 4px; }
-    .hint {
-      font-size: 0.65rem;
-      color: #555;
-      margin-top: 8px;
-      line-height: 1.4;
-    }
-    code { color: #a5b4fc; font-size: 0.68rem; }
   </style>
 </head>
 <body>
@@ -130,16 +83,22 @@
 
   <div id="ui">
     <h1>MathClay</h1>
-    <p class="tagline">Simple math moves the clay · only the tips have shapes</p>
+    <p class="tagline">Simple math · you control every particle & sub-particle</p>
 
     <div class="stat" id="stats">particles: —</div>
 
+    <!-- Main clay controls -->
     <label>Brush radius <span class="value" id="radius-val">0.35</span></label>
-    <input type="range" id="radius" min="0.05" max="1.5" value="0.35" step="0.05" />
+    <input type="range" id="radius" min="0.05" max="1.2" value="0.35" step="0.05" />
 
     <div class="slider-group">
-      <label>Push distance <span class="value" id="dist-val">0.08</span></label>
-      <input type="range" id="distance" min="0.01" max="0.4" value="0.08" step="0.01" />
+      <label>Distance <span class="value" id="dist-val">0.10</span></label>
+      <input type="range" id="distance" min="0.01" max="0.5" value="0.10" step="0.01" />
+    </div>
+
+    <div class="slider-group">
+      <label>Angle (degrees) <span class="value" id="angle-val">0</span></label>
+      <input type="range" id="angle" min="0" max="360" value="0" step="5" />
     </div>
 
     <div class="section">
@@ -149,12 +108,13 @@
         <button data-d="0,-1,0">Down</button>
         <button data-d="1,0,0">Right</button>
         <button data-d="-1,0,0">Left</button>
-        <button data-d="0,0,1">Forward</button>
+        <button data-d="0,0,1">Fwd</button>
         <button data-d="0,0,-1">Back</button>
       </div>
-      <div class="row" style="margin-top:6px">
+      <div class="row" style="margin-top:5px">
         <button id="dir-out" class="active">Out</button>
         <button id="dir-in">In</button>
+        <button id="dir-view">View</button>
       </div>
     </div>
 
@@ -166,30 +126,69 @@
         <button data-shape="cube">Cube</button>
         <button data-shape="diamond">Diamond</button>
       </div>
-      <p class="hint">Only the visual tip changes. Sculpt math stays the same.</p>
+    </div>
+
+    <!-- Sub-particle controls -->
+    <div class="section">
+      <div class="sub-label">Sub-particles (born when you pull length)</div>
+
+      <label>Spawn sub-particles <span class="value" id="sub-count-val">3</span></label>
+      <input type="range" id="subCount" min="0" max="8" value="3" step="1" />
+
+      <div class="slider-group">
+        <label>Sub distance <span class="value" id="sub-dist-val">0.06</span></label>
+        <input type="range" id="subDistance" min="0.01" max="0.3" value="0.06" step="0.01" />
+      </div>
+
+      <div class="slider-group">
+        <label>Sub angle (degrees) <span class="value" id="sub-angle-val">0</span></label>
+        <input type="range" id="subAngle" min="0" max="360" value="0" step="5" />
+      </div>
+
+      <label style="margin-top:8px">Sub direction</label>
+      <div class="dirs" id="sub-dirs">
+        <button data-sd="0,1,0">Up</button>
+        <button data-sd="0,-1,0">Down</button>
+        <button data-sd="1,0,0">Right</button>
+        <button data-sd="-1,0,0">Left</button>
+        <button data-sd="0,0,1">Fwd</button>
+        <button data-sd="0,0,-1">Back</button>
+      </div>
+      <div class="row" style="margin-top:5px">
+        <button id="sub-dir-same" class="active">Same as main</button>
+        <button id="sub-dir-fixed">Fixed</button>
+      </div>
+
+      <label style="margin-top:8px">Sub tip shape</label>
+      <div class="shapes" id="sub-shape-btns">
+        <button data-subshape="same" class="active">Same</button>
+        <button data-subshape="point">Point</button>
+        <button data-subshape="sphere">Sphere</button>
+        <button data-subshape="cube">Cube</button>
+      </div>
     </div>
 
     <div class="section">
-      <label>Particle density <span class="value" id="dens-val">20</span></label>
-      <input type="range" id="density" min="8" max="36" value="20" step="2" />
+      <label>Density <span class="value" id="dens-val">18</span></label>
+      <input type="range" id="density" min="8" max="32" value="18" step="2" />
     </div>
 
     <div class="section">
       <label>Color</label>
       <div class="row">
-        <input type="color" id="paintColor" value="#c4a484" style="flex:1;height:34px;border:none;border-radius:6px;background:#1a1a26;cursor:pointer" />
+        <input type="color" id="paintColor" value="#c4a484" style="flex:1;height:32px;border:none;border-radius:6px;background:#1a1a26;cursor:pointer" />
         <button id="paintMode">Paint</button>
       </div>
     </div>
 
-    <div class="row" style="margin-top:14px">
+    <div class="row" style="margin-top:12px">
       <button class="primary" id="reset">Reset Clay</button>
     </div>
 
     <p class="info">
-      <strong>All sculpting is your simple math:</strong><br>
-      <code>position + direction × distance</code><br><br>
-      The tip shape is only how each particle looks.
+      Main particles: <code>pos + dir × distance</code> (with angle)<br>
+      When you pull length, sub-particles are born.<br>
+      You control their direction, shape, distance & angle too.
     </p>
   </div>
 
@@ -208,8 +207,8 @@
 
     // ═══════════════════════════════════════════════════════════
     // MathClay Engine
-    // Sculpting = only simple math: pos += dir × distance
-    // Particle tips = selectable visual shapes only
+    // Main + sub-particles: you control direction, shape, distance, angle
+    // Core math stays simple: pos += dir × distance
     // ═══════════════════════════════════════════════════════════
 
     const container = document.getElementById('canvas-container');
@@ -245,22 +244,75 @@
     ground.position.y = -1.4;
     scene.add(ground);
 
-    // ── Particle data (the real clay) ──────────────────────────
-    let positions;  // Float32Array
-    let colors;     // Float32Array
-    let particleCount = 0;
-    let tipShape = 'point'; // point | sphere | cube | diamond
-
+    // ── Particle store ─────────────────────────────────────────
+    // Dynamic array so we can birth sub-particles
+    let particles = []; // {x,y,z, r,g,b, shape}
+    let tipShape = 'point';
+    let pointsObj = null;
+    let instancedObj = null;
+    let pointsGeo = null;
+    const dummy = new THREE.Object3D();
     const clayCenter = new THREE.Vector3(0, 0, 0);
     let claySize = 2.0;
 
-    // Visual objects
-    let pointsObj = null;      // THREE.Points (soft tips)
-    let instancedObj = null;   // THREE.InstancedMesh (solid tips)
-    let pointsGeo = null;
+    // Main controls
+    let brushRadius = 0.35;
+    let pushDistance = 0.10;
+    let angleDeg = 0;
+    let directionMode = 'out';
+    let fixedDir = new THREE.Vector3(0, 1, 0);
 
-    const dummy = new THREE.Object3D();
-    const tempColor = new THREE.Color();
+    // Sub-particle controls (you control all of these)
+    let subCount = 3;
+    let subDistance = 0.06;
+    let subAngleDeg = 0;
+    let subDirMode = 'same'; // 'same' | 'fixed'
+    let subFixedDir = new THREE.Vector3(0, 1, 0);
+    let subShape = 'same';
+
+    let isPainting = false;
+    let paintColor = new THREE.Color('#c4a484');
+    let isSculpting = false;
+
+    function rotateY(dir, deg) {
+      const rad = deg * Math.PI / 180;
+      const c = Math.cos(rad), s = Math.sin(rad);
+      return new THREE.Vector3(
+        dir.x * c - dir.z * s,
+        dir.y,
+        dir.x * s + dir.z * c
+      );
+    }
+
+    function createClay(density = 18) {
+      particles = [];
+      const n = density;
+      const half = claySize * 0.5;
+      const step = claySize / (n - 1 || 1);
+
+      for (let iz = 0; iz < n; iz++) {
+        for (let iy = 0; iy < n; iy++) {
+          for (let ix = 0; ix < n; ix++) {
+            particles.push({
+              x: -half + ix * step,
+              y: -half + iy * step,
+              z: -half + iz * step,
+              r: 0.72 + Math.random() * 0.08,
+              g: 0.58 + Math.random() * 0.06,
+              b: 0.42 + Math.random() * 0.05,
+              shape: tipShape
+            });
+          }
+        }
+      }
+      buildVisuals();
+      updateStats();
+    }
+
+    function updateStats() {
+      document.getElementById('stats').textContent =
+        `particles: ${particles.length.toLocaleString()}`;
+    }
 
     function clearVisuals() {
       if (pointsObj) {
@@ -279,141 +331,100 @@
 
     function buildVisuals() {
       clearVisuals();
+      const count = particles.length;
+      if (count === 0) return;
 
-      if (tipShape === 'point') {
+      // For simplicity and performance with dynamic birth:
+      // always use Points for now when particle count changes often.
+      // Solid shapes still available at lower counts.
+      const useSolid = tipShape !== 'point' && count < 12000;
+
+      if (!useSolid) {
+        const pos = new Float32Array(count * 3);
+        const col = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+          const p = particles[i];
+          pos[i*3] = p.x; pos[i*3+1] = p.y; pos[i*3+2] = p.z;
+          col[i*3] = p.r; col[i*3+1] = p.g; col[i*3+2] = p.b;
+        }
         pointsGeo = new THREE.BufferGeometry();
-        pointsGeo.setAttribute('position', new THREE.BufferAttribute(positions, 3));
-        pointsGeo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
-
+        pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+        pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
         const mat = new THREE.PointsMaterial({
-          size: 0.06,
+          size: 0.055,
           vertexColors: true,
           sizeAttenuation: true,
           transparent: true,
-          opacity: 0.92,
-          depthWrite: true
+          opacity: 0.92
         });
         pointsObj = new THREE.Points(pointsGeo, mat);
         scene.add(pointsObj);
       } else {
         let geo;
-        const s = 0.045;
-        if (tipShape === 'sphere') {
-          geo = new THREE.SphereGeometry(s * 0.7, 6, 5);
-        } else if (tipShape === 'cube') {
-          geo = new THREE.BoxGeometry(s, s, s);
-        } else { // diamond
-          geo = new THREE.OctahedronGeometry(s * 0.75, 0);
-        }
+        const s = 0.042;
+        if (tipShape === 'sphere') geo = new THREE.SphereGeometry(s * 0.7, 5, 4);
+        else if (tipShape === 'cube') geo = new THREE.BoxGeometry(s, s, s);
+        else geo = new THREE.OctahedronGeometry(s * 0.7, 0);
 
-        const mat = new THREE.MeshStandardMaterial({
-          roughness: 0.65,
-          metalness: 0.08,
-          vertexColors: false // we use instanceColor
-        });
-
-        instancedObj = new THREE.InstancedMesh(geo, mat, particleCount);
+        const mat = new THREE.MeshStandardMaterial({ roughness: 0.65, metalness: 0.08 });
+        instancedObj = new THREE.InstancedMesh(geo, mat, count);
         instancedObj.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-
-        // Per-instance colors
-        const colorArr = new Float32Array(particleCount * 3);
-        colorArr.set(colors);
+        const colorArr = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+          const p = particles[i];
+          dummy.position.set(p.x, p.y, p.z);
+          dummy.updateMatrix();
+          instancedObj.setMatrixAt(i, dummy.matrix);
+          colorArr[i*3] = p.r; colorArr[i*3+1] = p.g; colorArr[i*3+2] = p.b;
+        }
         instancedObj.instanceColor = new THREE.InstancedBufferAttribute(colorArr, 3);
-
-        updateInstanceMatrices();
+        instancedObj.instanceMatrix.needsUpdate = true;
         scene.add(instancedObj);
       }
     }
 
-    function updateInstanceMatrices() {
-      if (!instancedObj) return;
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        dummy.position.set(positions[i3], positions[i3+1], positions[i3+2]);
-        dummy.updateMatrix();
-        instancedObj.setMatrixAt(i, dummy.matrix);
-      }
-      instancedObj.instanceMatrix.needsUpdate = true;
-    }
-
-    function updateInstanceColors() {
-      if (!instancedObj || !instancedObj.instanceColor) return;
-      const arr = instancedObj.instanceColor.array;
-      arr.set(colors);
-      instancedObj.instanceColor.needsUpdate = true;
-    }
-
     function syncVisuals() {
-      if (tipShape === 'point' && pointsObj) {
-        pointsGeo.attributes.position.needsUpdate = true;
-        pointsGeo.attributes.color.needsUpdate = true;
-      } else if (instancedObj) {
-        updateInstanceMatrices();
-        updateInstanceColors();
-      }
-    }
-
-    function createClay(density = 20) {
-      const n = density;
-      particleCount = n * n * n;
-
-      positions = new Float32Array(particleCount * 3);
-      colors    = new Float32Array(particleCount * 3);
-
-      const half = claySize * 0.5;
-      const step = claySize / (n - 1 || 1);
-      let idx = 0;
-
-      for (let iz = 0; iz < n; iz++) {
-        for (let iy = 0; iy < n; iy++) {
-          for (let ix = 0; ix < n; ix++) {
-            const i3 = idx * 3;
-            positions[i3]     = -half + ix * step;
-            positions[i3 + 1] = -half + iy * step;
-            positions[i3 + 2] = -half + iz * step;
-
-            colors[i3]     = 0.72 + Math.random() * 0.08;
-            colors[i3 + 1] = 0.58 + Math.random() * 0.06;
-            colors[i3 + 2] = 0.42 + Math.random() * 0.05;
-            idx++;
-          }
-        }
-      }
-
+      // Rebuild is simplest and correct when particles are added
       buildVisuals();
-      document.getElementById('stats').textContent =
-        `particles: ${particleCount.toLocaleString()}`;
     }
 
-    createClay(20);
+    createClay(18);
 
-    // ── Core sculpt — ONLY simple math ─────────────────────────
-    // New Position = Current Position + Direction × Distance
+    // ── Core sculpt + sub-particle birth ───────────────────────
+    function getMainDirection(px, py, pz) {
+      let dir;
+      if (directionMode === 'out') {
+        dir = new THREE.Vector3(px - clayCenter.x, py - clayCenter.y, pz - clayCenter.z);
+      } else if (directionMode === 'in') {
+        dir = new THREE.Vector3(clayCenter.x - px, clayCenter.y - py, clayCenter.z - pz);
+      } else if (directionMode === 'view') {
+        dir = new THREE.Vector3();
+        camera.getWorldDirection(dir);
+        dir.negate();
+      } else {
+        dir = fixedDir.clone();
+      }
+      if (dir.lengthSq() < 1e-8) dir.set(0, 1, 0);
+      dir.normalize();
+      return rotateY(dir, angleDeg);
+    }
 
-    let brushRadius = 0.35;
-    let pushDistance = 0.08;
-    let directionMode = 'out';
-    let fixedDir = new THREE.Vector3(0, 1, 0);
-    let isPainting = false;
-    let paintColor = new THREE.Color('#c4a484');
-    let isSculpting = false;
-
-    const raycaster = new THREE.Raycaster();
-    const mouse = new THREE.Vector2();
+    function getSubDirection(mainDir) {
+      if (subDirMode === 'same') {
+        return rotateY(mainDir.clone(), subAngleDeg);
+      }
+      return rotateY(subFixedDir.clone().normalize(), subAngleDeg);
+    }
 
     function applyBrush(worldPoint) {
       const r2 = brushRadius * brushRadius;
-      let moved = 0;
+      const newParticles = [];
 
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        const px = positions[i3];
-        const py = positions[i3 + 1];
-        const pz = positions[i3 + 2];
-
-        const dx = px - worldPoint.x;
-        const dy = py - worldPoint.y;
-        const dz = pz - worldPoint.z;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const dx = p.x - worldPoint.x;
+        const dy = p.y - worldPoint.y;
+        const dz = p.z - worldPoint.z;
         const dist2 = dx*dx + dy*dy + dz*dz;
         if (dist2 > r2) continue;
 
@@ -422,41 +433,54 @@
         const strength = falloff * falloff;
 
         if (isPainting) {
-          colors[i3]     = paintColor.r;
-          colors[i3 + 1] = paintColor.g;
-          colors[i3 + 2] = paintColor.b;
+          p.r = paintColor.r;
+          p.g = paintColor.g;
+          p.b = paintColor.b;
         } else {
-          // ── THE ONLY SCULPT MATH ──
-          let dirX, dirY, dirZ;
-
-          if (directionMode === 'out') {
-            dirX = px - clayCenter.x;
-            dirY = py - clayCenter.y;
-            dirZ = pz - clayCenter.z;
-            const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ) || 1;
-            dirX /= len; dirY /= len; dirZ /= len;
-          } else if (directionMode === 'in') {
-            dirX = clayCenter.x - px;
-            dirY = clayCenter.y - py;
-            dirZ = clayCenter.z - pz;
-            const len = Math.sqrt(dirX*dirX + dirY*dirY + dirZ*dirZ) || 1;
-            dirX /= len; dirY /= len; dirZ /= len;
-          } else {
-            dirX = fixedDir.x;
-            dirY = fixedDir.y;
-            dirZ = fixedDir.z;
-          }
-
+          // Main particle: simple math
+          const mainDir = getMainDirection(p.x, p.y, p.z);
           const d = pushDistance * strength;
-          positions[i3]     += dirX * d;
-          positions[i3 + 1] += dirY * d;
-          positions[i3 + 2] += dirZ * d;
+
+          const oldX = p.x, oldY = p.y, oldZ = p.z;
+          p.x += mainDir.x * d;
+          p.y += mainDir.y * d;
+          p.z += mainDir.z * d;
+
+          // Birth sub-particles along the pull length
+          // You control their direction, distance, angle, shape
+          if (subCount > 0 && d > 0.001) {
+            const subDir = getSubDirection(mainDir);
+            const resolvedShape = subShape === 'same' ? tipShape : subShape;
+
+            for (let s = 1; s <= subCount; s++) {
+              const t = s / (subCount + 1);
+              // Place along the main pull, then offset by sub direction × sub distance
+              const sx = oldX + (p.x - oldX) * t + subDir.x * subDistance * strength;
+              const sy = oldY + (p.y - oldY) * t + subDir.y * subDistance * strength;
+              const sz = oldZ + (p.z - oldZ) * t + subDir.z * subDistance * strength;
+
+              newParticles.push({
+                x: sx, y: sy, z: sz,
+                r: p.r, g: p.g, b: p.b,
+                shape: resolvedShape
+              });
+            }
+          }
         }
-        moved++;
       }
 
-      if (moved > 0) syncVisuals();
+      if (newParticles.length > 0) {
+        // Cap total particles for browser safety
+        const room = Math.max(0, 25000 - particles.length);
+        particles.push(...newParticles.slice(0, room));
+        updateStats();
+      }
+
+      syncVisuals();
     }
+
+    const raycaster = new THREE.Raycaster();
+    const mouse = new THREE.Vector2();
 
     function getBrushPoint(clientX, clientY) {
       mouse.x = (clientX / window.innerWidth) * 2 - 1;
@@ -468,19 +492,18 @@
       let bestDist = Infinity;
       let best = null;
 
-      for (let i = 0; i < particleCount; i++) {
-        const i3 = i * 3;
-        const px = positions[i3], py = positions[i3+1], pz = positions[i3+2];
-        const ox = px - origin.x, oy = py - origin.y, oz = pz - origin.z;
+      for (let i = 0; i < particles.length; i++) {
+        const p = particles[i];
+        const ox = p.x - origin.x, oy = p.y - origin.y, oz = p.z - origin.z;
         const t = ox*dir.x + oy*dir.y + oz*dir.z;
         if (t < 0) continue;
         const cx = origin.x + dir.x * t;
         const cy = origin.y + dir.y * t;
         const cz = origin.z + dir.z * t;
-        const d2 = (px-cx)**2 + (py-cy)**2 + (pz-cz)**2;
+        const d2 = (p.x-cx)**2 + (p.y-cy)**2 + (p.z-cz)**2;
         if (d2 < bestDist && d2 < brushRadius * brushRadius * 4) {
           bestDist = d2;
-          best = new THREE.Vector3(px, py, pz);
+          best = new THREE.Vector3(p.x, p.y, p.z);
         }
       }
       return best;
@@ -516,13 +539,19 @@
       pushDistance = +e.target.value;
       document.getElementById('dist-val').textContent = pushDistance.toFixed(2);
     });
+    document.getElementById('angle').addEventListener('input', e => {
+      angleDeg = +e.target.value;
+      document.getElementById('angle-val').textContent = angleDeg;
+    });
 
     document.querySelectorAll('.dirs button').forEach(btn => {
+      if (!btn.dataset.d) return;
       btn.addEventListener('click', () => {
-        document.querySelectorAll('.dirs button').forEach(b => b.classList.remove('active'));
+        document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         document.getElementById('dir-out').classList.remove('active');
         document.getElementById('dir-in').classList.remove('active');
+        document.getElementById('dir-view').classList.remove('active');
         directionMode = 'fixed';
         const [x,y,z] = btn.dataset.d.split(',').map(Number);
         fixedDir.set(x, y, z);
@@ -533,22 +562,77 @@
       directionMode = 'out';
       document.getElementById('dir-out').classList.add('active');
       document.getElementById('dir-in').classList.remove('active');
-      document.querySelectorAll('.dirs button').forEach(b => b.classList.remove('active'));
+      document.getElementById('dir-view').classList.remove('active');
+      document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
     });
     document.getElementById('dir-in').addEventListener('click', () => {
       directionMode = 'in';
       document.getElementById('dir-in').classList.add('active');
       document.getElementById('dir-out').classList.remove('active');
-      document.querySelectorAll('.dirs button').forEach(b => b.classList.remove('active'));
+      document.getElementById('dir-view').classList.remove('active');
+      document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
+    });
+    document.getElementById('dir-view').addEventListener('click', () => {
+      directionMode = 'view';
+      document.getElementById('dir-view').classList.add('active');
+      document.getElementById('dir-out').classList.remove('active');
+      document.getElementById('dir-in').classList.remove('active');
+      document.querySelectorAll('.dirs button[data-d]').forEach(b => b.classList.remove('active'));
     });
 
-    // Tip shape selector
     document.querySelectorAll('#shape-btns button').forEach(btn => {
       btn.addEventListener('click', () => {
         document.querySelectorAll('#shape-btns button').forEach(b => b.classList.remove('active'));
         btn.classList.add('active');
         tipShape = btn.dataset.shape;
+        // update existing particle tip preference
+        particles.forEach(p => { if (p.shape === 'same' || !p.shape) p.shape = tipShape; });
         buildVisuals();
+      });
+    });
+
+    // Sub-particle controls
+    document.getElementById('subCount').addEventListener('input', e => {
+      subCount = +e.target.value;
+      document.getElementById('sub-count-val').textContent = subCount;
+    });
+    document.getElementById('subDistance').addEventListener('input', e => {
+      subDistance = +e.target.value;
+      document.getElementById('sub-dist-val').textContent = subDistance.toFixed(2);
+    });
+    document.getElementById('subAngle').addEventListener('input', e => {
+      subAngleDeg = +e.target.value;
+      document.getElementById('sub-angle-val').textContent = subAngleDeg;
+    });
+
+    document.querySelectorAll('#sub-dirs button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#sub-dirs button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        document.getElementById('sub-dir-same').classList.remove('active');
+        document.getElementById('sub-dir-fixed').classList.add('active');
+        subDirMode = 'fixed';
+        const [x,y,z] = btn.dataset.sd.split(',').map(Number);
+        subFixedDir.set(x, y, z);
+      });
+    });
+    document.getElementById('sub-dir-same').addEventListener('click', () => {
+      subDirMode = 'same';
+      document.getElementById('sub-dir-same').classList.add('active');
+      document.getElementById('sub-dir-fixed').classList.remove('active');
+      document.querySelectorAll('#sub-dirs button').forEach(b => b.classList.remove('active'));
+    });
+    document.getElementById('sub-dir-fixed').addEventListener('click', () => {
+      subDirMode = 'fixed';
+      document.getElementById('sub-dir-fixed').classList.add('active');
+      document.getElementById('sub-dir-same').classList.remove('active');
+    });
+
+    document.querySelectorAll('#sub-shape-btns button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        document.querySelectorAll('#sub-shape-btns button').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        subShape = btn.dataset.subshape;
       });
     });
 
@@ -562,7 +646,6 @@
     document.getElementById('paintColor').addEventListener('input', e => {
       paintColor.set(e.target.value);
     });
-
     const paintBtn = document.getElementById('paintMode');
     paintBtn.addEventListener('click', () => {
       isPainting = !isPainting;
