@@ -323,7 +323,6 @@
     renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
 
-    // Full touch / mouse view controls
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
@@ -360,25 +359,27 @@
     let pointsGeo = null;
     let showNumbers = false;
     const claySize = 2.0;
-    const clickBrush = 0.22;
+    const clickBrush = 0.35;
 
-    // Dense enough + large enough points → looks like one solid block
-    const DEFAULT_DENSITY = 28;
-    let pointSize = 0.095;
+    // Few particles — each just touching its neighbors (size ≈ spacing)
+    // 8 per side = 512 particles total
+    const DEFAULT_COUNT = 8;
+    let pointSize = 0.25;
 
     function log(msg, kind) {
       logEl.textContent = msg;
       logEl.className = kind === 'err' ? 'err' : kind === 'ok' ? 'ok' : '';
     }
 
-    function createSolidBlock(density = DEFAULT_DENSITY) {
+    function createSolidBlock(countPerSide = DEFAULT_COUNT) {
       particles = [];
       selected.clear();
-      const n = density;
+      const n = countPerSide;
       const half = claySize * 0.5;
       const step = claySize / (n - 1 || 1);
-      // Point size slightly larger than spacing so particles visually merge
-      pointSize = Math.max(0.06, step * 1.35);
+
+      // Particle diameter = spacing → they sit next to each other, touching
+      pointSize = step;
 
       let id = 0;
       for (let iz = 0; iz < n; iz++)
@@ -398,7 +399,7 @@
       document.getElementById('stats').textContent =
         `particles: ${particles.length.toLocaleString()} · ids 0–${particles.length - 1}`;
       document.getElementById('sel').value = '';
-      log('solid connected block ready');
+      log('block ready · particles touching neighbors');
       if (showNumbers) rebuildNumberOverlay();
     }
 
@@ -553,7 +554,6 @@
       return found.sort((a,b) => a-b);
     }
 
-    // Tap (not drag) selects — drag is for orbit
     let down = false, dx0 = 0, dy0 = 0, dragged = false;
     renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
@@ -587,9 +587,7 @@
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
       if (!showNumbers) return;
-      const maxLabels = 600;
-      const step = particles.length > maxLabels ? Math.ceil(particles.length / maxLabels) : 1;
-      for (let i = 0; i < particles.length; i += step) {
+      for (let i = 0; i < particles.length; i++) {
         const p = particles[i];
         const v = new THREE.Vector3(p.x, p.y, p.z);
         v.project(camera);
@@ -606,7 +604,6 @@
       }
     }
 
-    // Open + close terminal
     const terminal = document.getElementById('terminal');
     const termToggle = document.getElementById('term-toggle');
 
@@ -637,7 +634,7 @@
 
     document.getElementById('run').addEventListener('click', runMath);
     document.getElementById('clear').addEventListener('click', clearSelect);
-    document.getElementById('reset').addEventListener('click', () => createSolidBlock(DEFAULT_DENSITY));
+    document.getElementById('reset').addEventListener('click', () => createSolidBlock(DEFAULT_COUNT));
 
     ['az', 'el', 'dist'].forEach(id => {
       document.getElementById(id).addEventListener('keydown', e => {
@@ -663,7 +660,7 @@
       if (showNumbers) rebuildNumberOverlay();
     });
 
-    createSolidBlock(DEFAULT_DENSITY);
+    createSolidBlock(DEFAULT_COUNT);
   </script>
 </body>
 </html>
