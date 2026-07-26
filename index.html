@@ -22,14 +22,16 @@
       cursor: pointer; box-shadow: -4px 0 16px rgba(0,0,0,0.4); writing-mode: vertical-rl;
     }
     #term-toggle:hover { background: #0284c7; }
-    #overlay-btn {
-      position: absolute; left: 12px; top: 12px; z-index: 25;
+    #overlay-btn, #mapper-btn {
+      position: absolute; left: 12px; z-index: 25;
       background: rgba(14, 165, 233, 0.9); border: none; color: #fff;
       padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;
     }
-    #overlay-btn.on { background: #f472b6; }
+    #overlay-btn { top: 12px; }
+    #mapper-btn { top: 56px; }
+    #overlay-btn.on, #mapper-btn.on { background: #f472b6; }
     #stats {
-      position: absolute; left: 12px; top: 56px; z-index: 25;
+      position: absolute; left: 12px; top: 100px; z-index: 25;
       font-family: monospace; font-size: 0.68rem; color: #7dd3fc;
       background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px; line-height: 1.45;
     }
@@ -96,17 +98,49 @@
     }
     #number-overlay.show { display: block; }
     .pnum {
-      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 8px;
-      color: rgba(255,255,255,0.75); background: rgba(14,165,233,0.28);
-      border: 1px solid rgba(125,211,252,0.3); border-radius: 3px; padding: 0 2px; white-space: nowrap;
+      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 9px;
+      color: #fff; background: rgba(14,165,233,0.55);
+      border: 1px solid rgba(125,211,252,0.5); border-radius: 3px; padding: 1px 3px; white-space: nowrap;
     }
-    .pnum.sel { background: rgba(244,114,182,0.55); border-color: #f9a8d4; color: #fff; font-weight: 600; }
+    .pnum.sel { background: rgba(244,114,182,0.7); border-color: #f9a8d4; font-weight: 600; }
+
+    /* Mapper UI */
+    #size-picker {
+      position: absolute; left: 12px; top: 100px; z-index: 28;
+      display: none; flex-direction: column; gap: 6px;
+      background: rgba(10,10,16,0.95); border: 1px solid #333; border-radius: 10px; padding: 10px;
+    }
+    #size-picker.show { display: flex; }
+    #size-picker button {
+      background: #1a1a26; border: 1px solid #444; color: #e2e8f0;
+      padding: 8px 12px; border-radius: 8px; font-size: 0.75rem; cursor: pointer;
+    }
+    #size-picker button:hover { background: #0ea5e9; border-color: #0284c7; }
+    #mapper-circle {
+      position: absolute; z-index: 18;
+      border: 2.5px solid #38bdf8;
+      border-radius: 50%;
+      background: transparent;
+      pointer-events: auto;
+      cursor: grab;
+      display: none;
+      box-shadow: 0 0 0 1px rgba(14,165,233,0.3);
+    }
+    #mapper-circle.active { display: block; }
+    #mapper-circle.dragging { cursor: grabbing; border-color: #f472b6; }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="number-overlay"></div>
+  <div id="mapper-circle"></div>
   <button id="overlay-btn">unit #s</button>
+  <button id="mapper-btn">Mapper</button>
+  <div id="size-picker">
+    <button data-size="90">Small circle</button>
+    <button data-size="160">Medium circle</button>
+    <button data-size="260">Large circle</button>
+  </div>
   <div id="stats">units: —</div>
   <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan</div>
   <button id="term-toggle">MATH</button>
@@ -147,7 +181,8 @@
         <code>2</code> = move two units<br>
         <code>0.5</code> = move half a unit<br>
         <code>pos += dir(azimuth, elevation) × (distance × unit length)</code><br>
-        Tap the square to add nearby unit numbers into select.
+        Tap the square to add nearby unit numbers into select.<br>
+        Use <strong>Mapper</strong> to drag a hollow circle and see only the fraction numbers inside it.
       </p>
     </div>
   </div>
@@ -165,11 +200,14 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // Solid square of fractions · InstancedMesh cubes · pure math control of every unit
-    // Distance is measured in unit lengths: 1 = one unit, 0.5 = half a unit, etc.
+    // Distance in unit lengths · Mapper hollow circle shows numbers inside only
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
     const logEl = document.getElementById('log');
+    const mapperCircle = document.getElementById('mapper-circle');
+    const sizePicker = document.getElementById('size-picker');
+    const mapperBtn = document.getElementById('mapper-btn');
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
@@ -219,7 +257,15 @@
     const SIDE = 18;
     const TOTAL = SIDE * SIDE * SIDE;
     const FRACTION = 1 / TOTAL;
-    let cell = claySize / SIDE;   // one unit length
+    let cell = claySize / SIDE;
+
+    // Mapper state
+    let mapperActive = false;
+    let mapperSize = 160;
+    let mapperX = window.innerWidth / 2;
+    let mapperY = window.innerHeight / 2;
+    let mapperDragging = false;
+    let mapperOffX = 0, mapperOffY = 0;
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -252,7 +298,8 @@
         `units: ${TOTAL.toLocaleString()} · each fraction ≈ ${FRACTION.toFixed(6)}<br>ids 0–${TOTAL - 1}`;
       document.getElementById('sel').value = '';
       log(`solid square · ${TOTAL} units · each fraction 1/${TOTAL}`);
-      if (showNumbers) rebuildNumberOverlay();
+      if (mapperActive) updateMapperLabels();
+      else if (showNumbers) rebuildNumberOverlay();
     }
 
     function rebuildVisual() {
@@ -309,7 +356,8 @@
       }
       mesh.instanceMatrix.needsUpdate = true;
       mesh.instanceColor.needsUpdate = true;
-      if (showNumbers) rebuildNumberOverlay();
+      if (mapperActive) updateMapperLabels();
+      else if (showNumbers) rebuildNumberOverlay();
     }
 
     function dirFromAngles(azDeg, elDeg) {
@@ -355,11 +403,10 @@
         if (valid.length === 0) throw new Error('no valid unit numbers in select');
         const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
-        // Distance is now in unit lengths: 1 = one unit, 0.5 = half a unit, etc.
         const dist = parseNumber(document.getElementById('dist'), 'distance', -100, 100);
         selected = new Set(valid);
         const dir = dirFromAngles(az, el);
-        const scale = dist * cell;   // unit lengths → world units
+        const scale = dist * cell;
         for (const u of units) {
           if (!selected.has(u.id)) continue;
           u.x += dir.x * scale;
@@ -411,6 +458,7 @@
     let down = false, dx0 = 0, dy0 = 0, dragged = false;
     renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
+      if (mapperActive && mapperCircle.contains(e.target)) return;
       down = true; dragged = false; dx0 = e.clientX; dy0 = e.clientY;
     });
     window.addEventListener('pointermove', e => {
@@ -421,6 +469,7 @@
       if (!down) return;
       down = false;
       if (dragged || e.button !== 0) return;
+      if (mapperActive) return;
       const term = document.getElementById('terminal');
       if (term.classList.contains('open')) {
         const r = term.getBoundingClientRect();
@@ -438,10 +487,116 @@
       log(`select +${found.length} · total ${selected.size}`);
     });
 
+    // ---------- Mapper ----------
+    function placeMapperCircle() {
+      mapperCircle.style.width = mapperSize + 'px';
+      mapperCircle.style.height = mapperSize + 'px';
+      mapperCircle.style.left = (mapperX - mapperSize / 2) + 'px';
+      mapperCircle.style.top = (mapperY - mapperSize / 2) + 'px';
+    }
+
+    function updateMapperLabels() {
+      overlayEl.innerHTML = '';
+      if (!mapperActive) return;
+      overlayEl.classList.add('show');
+      const r = mapperSize / 2;
+      const cx = mapperX;
+      const cy = mapperY;
+      const r2 = r * r;
+      let shown = 0;
+      const maxShow = 120; // hard safety limit
+      for (let i = 0; i < units.length && shown < maxShow; i++) {
+        const u = units[i];
+        const v = new THREE.Vector3(u.x, u.y, u.z);
+        v.project(camera);
+        if (v.z > 1) continue;
+        const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
+        const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
+        const dx = sx - cx;
+        const dy = sy - cy;
+        if (dx * dx + dy * dy > r2) continue;
+        const span = document.createElement('div');
+        span.className = 'pnum' + (selected.has(u.id) ? ' sel' : '');
+        span.textContent = u.id;
+        span.style.left = sx + 'px';
+        span.style.top = sy + 'px';
+        overlayEl.appendChild(span);
+        shown++;
+      }
+    }
+
+    function openMapper(size) {
+      mapperSize = size;
+      mapperActive = true;
+      mapperBtn.classList.add('on');
+      mapperBtn.textContent = 'Close Mapper';
+      sizePicker.classList.remove('show');
+      mapperCircle.classList.add('active');
+      placeMapperCircle();
+      showNumbers = false;
+      document.getElementById('overlay-btn').classList.remove('on');
+      document.getElementById('overlay-btn').textContent = 'unit #s';
+      updateMapperLabels();
+      log('Mapper on · drag the hollow circle · only numbers inside are shown');
+    }
+
+    function closeMapper() {
+      mapperActive = false;
+      mapperBtn.classList.remove('on');
+      mapperBtn.textContent = 'Mapper';
+      sizePicker.classList.remove('show');
+      mapperCircle.classList.remove('active');
+      overlayEl.innerHTML = '';
+      overlayEl.classList.remove('show');
+      log('Mapper closed');
+    }
+
+    mapperBtn.addEventListener('click', () => {
+      if (mapperActive) {
+        closeMapper();
+      } else {
+        sizePicker.classList.toggle('show');
+      }
+    });
+
+    sizePicker.querySelectorAll('button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const size = parseInt(btn.dataset.size, 10);
+        openMapper(size);
+      });
+    });
+
+    // Drag the hollow circle
+    mapperCircle.addEventListener('pointerdown', e => {
+      e.preventDefault();
+      e.stopPropagation();
+      mapperDragging = true;
+      mapperCircle.classList.add('dragging');
+      mapperOffX = e.clientX - mapperX;
+      mapperOffY = e.clientY - mapperY;
+      mapperCircle.setPointerCapture(e.pointerId);
+      controls.enabled = false;
+    });
+    mapperCircle.addEventListener('pointermove', e => {
+      if (!mapperDragging) return;
+      mapperX = e.clientX - mapperOffX;
+      mapperY = e.clientY - mapperOffY;
+      placeMapperCircle();
+      updateMapperLabels();
+    });
+    mapperCircle.addEventListener('pointerup', e => {
+      if (!mapperDragging) return;
+      mapperDragging = false;
+      mapperCircle.classList.remove('dragging');
+      controls.enabled = true;
+      try { mapperCircle.releasePointerCapture(e.pointerId); } catch (_) {}
+    });
+
+    // ---------- old full overlay (kept as optional) ----------
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
-      if (!showNumbers) return;
-      const maxLabels = 400;
+      if (!showNumbers || mapperActive) return;
+      const maxLabels = 80;
       const step = units.length > maxLabels ? Math.ceil(units.length / maxLabels) : 1;
       for (let i = 0; i < units.length; i += step) {
         const u = units[i];
@@ -470,6 +625,7 @@
     document.getElementById('term-close').addEventListener('click', closeTerminal);
 
     document.getElementById('overlay-btn').addEventListener('click', () => {
+      if (mapperActive) closeMapper();
       showNumbers = !showNumbers;
       const btn = document.getElementById('overlay-btn');
       btn.classList.toggle('on', showNumbers);
@@ -492,7 +648,15 @@
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
-      if (showNumbers) rebuildNumberOverlay();
+      // only refresh mapper labels when camera is moving or circle is being dragged
+      if (mapperActive && (controls.enabled === false || mapperDragging)) {
+        // already updated on drag
+      } else if (mapperActive) {
+        // light refresh when orbiting
+        updateMapperLabels();
+      } else if (showNumbers) {
+        rebuildNumberOverlay();
+      }
     }
     animate();
 
@@ -500,7 +664,10 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      if (showNumbers) rebuildNumberOverlay();
+      if (mapperActive) {
+        placeMapperCircle();
+        updateMapperLabels();
+      } else if (showNumbers) rebuildNumberOverlay();
     });
 
     createSolidSquare();
