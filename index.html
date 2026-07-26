@@ -181,7 +181,7 @@
   <div id="number-overlay"></div>
   <div id="mapper-probe"></div>
   <div id="mapper-readout">
-    <div class="readout-label" id="readout-label">layer 0 · outside</div>
+    <div class="readout-label" id="readout-label">layer 0 · near outside</div>
     <button id="layer-btn">next layer →</button>
   </div>
   <button id="overlay-btn">unit #s</button>
@@ -199,10 +199,8 @@
       <h2>Type the math</h2>
       <p class="help">
         One solid square of clay.<br>
-        Divided into <strong>5832 units</strong> (at least 5000).<br>
-        Each unit is fraction <code>1/5832</code> of the whole square.<br>
-        Select any units · any azimuth + elevation + distance · Run.<br>
-        Pure math moves create any 3D form.
+        Divided into <strong>5832 units</strong>. Each unit is fraction <code>1/5832</code>.<br>
+        Select units · azimuth + elevation + distance · Run.
       </p>
       <label>select units (numbers)</label>
       <textarea id="sel" placeholder="0, 1, 5, 100-200"></textarea>
@@ -221,11 +219,12 @@
       </div>
       <div id="log">ready</div>
       <p class="help" style="margin-top:12px">
-        <strong>Unit lengths</strong>: <code>1</code> = one unit · <code>2</code> = two · <code>0.5</code> = half<br>
-        <code>pos += dir(azimuth, elevation) × (distance × unit length)</code><br>
-        <strong>Mapper</strong>: drag the probe. Big circle shows one depth layer at a time.<br>
-        Layer = how many fractions sit in front (occlusion). Bright green = outside (0 in front).<br>
-        Pull a unit out so nothing is in front → it becomes bright green. Button steps to the next deeper layer.
+        <strong>Unit lengths</strong>: 1 = one unit · 0.5 = half<br>
+        <strong>Mapper layers</strong> depend on where the probe sits:<br>
+        · Layer 0 = near outside (the face under the probe)<br>
+        · Middle layers = inside<br>
+        · Last layer = far outside (opposite face)<br>
+        Pull a unit out so it becomes the near face → it moves to layer 0 (bright green).
       </p>
     </div>
   </div>
@@ -242,8 +241,9 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // MathClay · Mapper: occlusion-depth layers (0 = outside).
-    // Pull a fraction out → fewer in front → brighter green. One layer shown at a time.
+    // Layers = depth slices along the view through the probe.
+    // Near face = outside · middle = inside · far face = opposite outside.
+    // Depends on where the probe is and current unit positions (updates after sculpt).
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -312,19 +312,12 @@
     let probeDragging = false;
     let probeOffX = 0, probeOffY = 0;
 
-    // Current occlusion layer shown in the readout (0 = outside)
     let currentLayer = 0;
     let maxLayer = 0;
 
-    // Bright green = outside (0 in front) → darker for each fraction in front
-    const LAYER_GREENS = [
-      '#39ff14',
-      '#22c55e',
-      '#15803d',
-      '#166534',
-      '#14532d',
-      '#0a3d1f'
-    ];
+    // Near outside = bright · inside = darker · far outside = bright again
+    const GREEN_OUTSIDE = '#39ff14';
+    const GREEN_INSIDE = ['#22c55e', '#15803d', '#166534', '#14532d', '#0a3d1f'];
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -372,11 +365,7 @@
       const count = units.length;
       const boxSize = cell * 0.98;
       const geo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-      const mat = new THREE.MeshStandardMaterial({
-        roughness: 0.55,
-        metalness: 0.08,
-        flatShading: true
-      });
+      const mat = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.08, flatShading: true });
       mesh = new THREE.InstancedMesh(geo, mat, count);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
 
@@ -386,7 +375,6 @@
         dummy.position.set(u.x, u.y, u.z);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
-
         if (selected.has(u.id)) {
           colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
         } else {
@@ -407,7 +395,6 @@
         dummy.position.set(u.x, u.y, u.z);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
-
         if (selected.has(u.id)) {
           colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
         } else {
@@ -474,7 +461,7 @@
           u.z += dir.z * scale;
         }
         syncVisual();
-        log(`ok · moved ${valid.length} units (fraction ${(valid.length * FRACTION).toFixed(4)}) · az=${az} el=${el} dist=${dist} unit(s)`, 'ok');
+        log(`ok · moved ${valid.length} units · az=${az} el=${el} dist=${dist} unit(s)`, 'ok');
       } catch (e) {
         log(e.message, 'err');
       }
@@ -555,32 +542,11 @@
     function placeReadout() {
       const margin = 16;
       const w = window.innerWidth;
-      let rx, ry;
-      if (probeX > w * 0.55) {
-        rx = margin + READOUT_SIZE / 2;
-      } else {
-        rx = w - margin - READOUT_SIZE / 2;
-      }
-      ry = margin + READOUT_SIZE / 2 + 40;
+      let rx = probeX > w * 0.55 ? margin + READOUT_SIZE / 2 : w - margin - READOUT_SIZE / 2;
+      let ry = margin + READOUT_SIZE / 2 + 40;
       readoutEl.style.left = (rx - READOUT_SIZE / 2) + 'px';
       readoutEl.style.top = (ry - READOUT_SIZE / 2) + 'px';
       return { rx, ry };
-    }
-
-    // Occlusion depth = how many other units are roughly in front (closer to camera,
-    // similar screen position). 0 = true outside. Updates after every sculpt.
-    function occlusionDepth(target, allProjected, camDist) {
-      const thresh = 14; // screen-pixel radius to count as "in front of same spot"
-      const t2 = thresh * thresh;
-      let count = 0;
-      for (const o of allProjected) {
-        if (o.id === target.id) continue;
-        if (o.dist >= camDist - 1e-6) continue; // only closer to camera
-        const dx = o.sx - target.sx;
-        const dy = o.sy - target.sy;
-        if (dx * dx + dy * dy <= t2) count++;
-      }
-      return count;
     }
 
     function updateMapperReadout() {
@@ -594,8 +560,8 @@
       const pr2 = pr * pr;
       const cam = camera.position;
 
-      // Project all units once (for occlusion counts)
-      const projected = [];
+      // Units under the probe, with depth along the view (distance from camera)
+      const inside = [];
       for (let i = 0; i < units.length; i++) {
         const u = units[i];
         const v = new THREE.Vector3(u.x, u.y, u.z);
@@ -603,18 +569,9 @@
         if (v.z > 1) continue;
         const sx = (v.x * 0.5 + 0.5) * window.innerWidth;
         const sy = (-v.y * 0.5 + 0.5) * window.innerHeight;
-        const dist = Math.hypot(u.x - cam.x, u.y - cam.y, u.z - cam.z);
-        projected.push({ id: u.id, sx, sy, dist, selected: selected.has(u.id) });
-      }
-
-      // Units under the probe + their occlusion depth
-      const inside = [];
-      for (const p of projected) {
-        const dx = p.sx - px;
-        const dy = p.sy - py;
-        if (dx * dx + dy * dy > pr2) continue;
-        const depth = occlusionDepth(p, projected, p.dist);
-        inside.push({ ...p, depth });
+        if ((sx - px) ** 2 + (sy - py) ** 2 > pr2) continue;
+        const depth = Math.hypot(u.x - cam.x, u.y - cam.y, u.z - cam.z);
+        inside.push({ id: u.id, sx, sy, depth, selected: selected.has(u.id) });
       }
 
       if (inside.length === 0) {
@@ -623,13 +580,21 @@
         return;
       }
 
+      // Slice into layers ~1 cell thick from near → far (depends on where probe sits)
+      let minD = Infinity, maxD = -Infinity;
+      for (const it of inside) {
+        if (it.depth < minD) minD = it.depth;
+        if (it.depth > maxD) maxD = it.depth;
+      }
+      const slice = Math.max(cell * 0.9, 0.01);
+      for (const it of inside) {
+        it.layer = Math.floor((it.depth - minD) / slice);
+      }
       maxLayer = 0;
-      for (const it of inside) if (it.depth > maxLayer) maxLayer = it.depth;
+      for (const it of inside) if (it.layer > maxLayer) maxLayer = it.layer;
       if (currentLayer > maxLayer) currentLayer = 0;
 
-      // Only the current occlusion layer
-      const layerItems = inside.filter(it => it.depth === currentLayer);
-
+      const layerItems = inside.filter(it => it.layer === currentLayer);
       layerItems.sort((a, b) => {
         const rowA = Math.floor(a.sy / 8);
         const rowB = Math.floor(b.sy / 8);
@@ -637,20 +602,27 @@
         return a.sx - b.sx;
       });
 
-      const greenIdx = Math.min(currentLayer, LAYER_GREENS.length - 1);
-      const green = LAYER_GREENS[greenIdx];
-      const textColor = greenIdx >= 3 ? '#e8ffe8' : '#0a0a0a';
+      // Near outside + far outside = bright green; middle = darker inside greens
+      const isNearOutside = currentLayer === 0;
+      const isFarOutside = currentLayer === maxLayer && maxLayer > 0;
+      const isOutside = isNearOutside || isFarOutside;
+      let green, textColor;
+      if (isOutside) {
+        green = GREEN_OUTSIDE;
+        textColor = '#0a0a0a';
+      } else {
+        const idx = Math.min(currentLayer - 1, GREEN_INSIDE.length - 1);
+        green = GREEN_INSIDE[Math.max(0, idx)];
+        textColor = idx >= 2 ? '#e8ffe8' : '#0a0a0a';
+      }
 
-      readoutLabel.textContent =
-        currentLayer === 0
-          ? 'layer 0 · outside'
-          : `layer ${currentLayer} · ${currentLayer} in front`;
+      if (isNearOutside) readoutLabel.textContent = 'layer 0 · near outside';
+      else if (isFarOutside) readoutLabel.textContent = `layer ${currentLayer} · far outside`;
+      else readoutLabel.textContent = `layer ${currentLayer} · inside`;
 
       layerBtn.classList.add('show');
       layerBtn.textContent =
-        currentLayer >= maxLayer
-          ? '↻ back to outside'
-          : `next layer → (${currentLayer + 1})`;
+        currentLayer >= maxLayer ? '↻ back to near outside' : `next layer → (${currentLayer + 1})`;
 
       const { rx, ry } = placeReadout();
       const maxShow = Math.min(layerItems.length, 80);
@@ -664,7 +636,6 @@
         const ny = (item.sy - py) / pr;
         const lx = rx + nx * rr;
         const ly = ry + ny * rr;
-
         const span = document.createElement('div');
         span.className = 'rid' + (item.selected ? ' sel' : '');
         span.textContent = item.id;
@@ -691,7 +662,7 @@
       overlayEl.innerHTML = '';
       overlayEl.classList.remove('show');
       updateMapperReadout();
-      log('Mapper on · layer 0 = outside · next layer steps deeper · sculpt then colors update');
+      log('Mapper · layer 0 = near outside · middle = inside · last = far outside · depends on probe side');
     }
 
     function closeMapper() {
@@ -702,14 +673,12 @@
       probeEl.classList.remove('active');
       readoutEl.classList.remove('active');
       layerBtn.classList.remove('show');
-      const old = readoutEl.querySelectorAll('.rid');
-      old.forEach(n => n.remove());
+      readoutEl.querySelectorAll('.rid').forEach(n => n.remove());
       log('Mapper closed');
     }
 
     mapperBtn.addEventListener('click', () => {
-      if (mapperActive) closeMapper();
-      else openMapper();
+      if (mapperActive) closeMapper(); else openMapper();
     });
 
     layerBtn.addEventListener('click', e => {
@@ -729,7 +698,7 @@
       probeOffY = e.clientY - probeY;
       probeEl.setPointerCapture(e.pointerId);
       controls.enabled = false;
-      currentLayer = 0; // reset to outside when moving probe
+      currentLayer = 0;
     });
     probeEl.addEventListener('pointermove', e => {
       if (!probeDragging) return;
@@ -810,10 +779,8 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      if (mapperActive) {
-        placeProbe();
-        updateMapperReadout();
-      } else if (showNumbers) rebuildNumberOverlay();
+      if (mapperActive) { placeProbe(); updateMapperReadout(); }
+      else if (showNumbers) rebuildNumberOverlay();
     });
 
     createSolidSquare();
