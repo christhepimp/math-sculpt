@@ -1,78 +1,88 @@
-# MathClay Engine
+# MathClay
 
-**Mathematical digital clay. No meshes. No topology.**
+**Solid mathematical clay made of fractions.**
 
-The model is made of particles.  
-Each particle has an ID, a position (X, Y, Z), and a color.  
-Packed tightly, they form solid clay.
+A square block of digital clay is divided into **5,832 units** (18³).  
+Each unit is exactly the fraction `1/5832` of the whole square.  
+You control every unit with pure math.
 
-## The only sculpt operation
-
-```
-New Position = Current Position + Direction × Distance
-```
-
-1. Select particles (brush)
-2. Choose a direction
-3. Choose a distance
-4. Move them
-
-That is the entire core of sculpting.
-
-## Philosophy
-
-- No polygon meshes
-- No vertices / edges / faces
-- No UV maps
-- No edge loops or topology
-
-You only push and pull digital clay.
-
-## Current prototype (v1)
-
-Live after enabling GitHub Pages:
-
-**https://christhepimp.github.io/math-sculpt/**
-
-What works now:
-
-- Dense particle cube (configurable density)
-- Brush selects particles in a radius
-- Direction: Up / Down / Left / Right / Forward / Back, or Out / In from center
-- Distance + falloff
-- Only affected particles are moved
-- Per-particle color + simple paint
-- Orbit camera
-
-## Limits of the browser prototype
-
-- Practical particle counts are in the tens of thousands (not 20 million)
-- Rendering is point sprites, not a reconstructed smooth surface yet
-- No advanced surface extraction or lighting on a continuous skin
-
-20 million particles with smooth surface reconstruction is a large engine problem (memory, spatial indexing, GPU compute, surface extraction). The current version proves the **core idea** and keeps the math intentionally simple.
-
-## Roadmap toward the full vision
-
-- Spatial acceleration (only test particles near the brush)
-- Higher particle counts via better data structures
-- Optional particle shapes (sphere / cube / rounded)
-- Screen-space or splat-based smooth surface appearance
-- Procedural color & math-driven gradients
-- Undo stack
-- Export particle cloud / simple mesh approximation
-
-## Spec summary
-
-| Concept        | MathClay                          |
-|----------------|-----------------------------------|
-| Building block | Particle (id, position, color)    |
-| Solid form     | Dense packing of particles        |
-| Sculpt         | Position += Direction × Distance  |
-| Detail         | More particles = higher precision |
-| Color          | Stored per particle               |
-| Interface      | Simple enough for a beginner      |
+**Live demo:** [https://christhepimp.github.io/math-sculpt/](https://christhepimp.github.io/math-sculpt/)
 
 ---
 
-MathClay — push clay with math.
+## The core idea
+
+```
+pos += dir(azimuth, elevation) × (distance / 500)
+```
+
+1. Select any units by number (or range, or by tapping)
+2. Type any azimuth angle (0–360°)
+3. Type any elevation angle (−90–90°)
+4. Type any distance
+5. Run
+
+That single operation is enough to push, pull, stretch, and reshape the solid square into **any 3D form**.
+
+---
+
+## What you see
+
+- A true **solid cube** rendered with InstancedMesh boxes (no gaps)
+- Each of the 5,832 fractions is a real little cube that touches its neighbors
+- Selected units turn pink so you always know what the math will move
+- Orbit / zoom / pan with one or two fingers
+
+---
+
+## Pure math terminal
+
+Everything is driven by typed numbers:
+
+- Select units: `0, 1, 5, 100-200` or tap the clay
+- Azimuth + elevation define an exact 3D direction
+- Distance scales how far those fractions travel
+- Run as many times as you want — the design space is unlimited
+
+No brushes limited to preset directions. No locked tools.  
+Just math applied to fractions of a solid square.
+
+---
+
+## Philosophy
+
+| Concept        | MathClay                              |
+|----------------|---------------------------------------|
+| Building block | Unit / fraction (id, position, color) |
+| Solid form     | Dense packing of 5,832 cubes          |
+| Sculpt         | `pos += dir × distance`               |
+| Control        | Pure typed math (any angle + distance)|
+| Detail         | More units = higher precision         |
+| Interface      | Simple terminal anyone can use        |
+
+You are not editing polygons or topology.  
+You are moving the actual fractions that make up the clay.
+
+---
+
+## Current status
+
+- Solid InstancedMesh cube (no sparse points)
+- Full math terminal (any direction, any distance)
+- Click / tap to add nearby units to selection
+- Unit number overlay
+- Reset to perfect solid square
+- Works on desktop and mobile browsers via GitHub Pages
+
+---
+
+## Roadmap
+
+- Higher unit counts with spatial acceleration
+- Undo stack
+- Export of the unit cloud / simple mesh
+- Optional smoother surface appearance while keeping the fraction model underneath
+
+---
+
+**MathClay** — a solid square of fractions you sculpt with pure math.
