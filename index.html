@@ -98,11 +98,12 @@
     }
     #number-overlay.show { display: block; }
     .pnum {
-      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 10px;
-      color: #fff; background: rgba(14,165,233,0.75);
-      border: 1px solid rgba(125,211,252,0.6); border-radius: 4px; padding: 2px 4px; white-space: nowrap;
+      position: absolute; transform: translate(-50%, -50%); font-family: monospace; font-size: 6px;
+      color: #fff; background: rgba(14,165,233,0.82);
+      border: 1px solid rgba(125,211,252,0.5); border-radius: 2px; padding: 0 2px; white-space: nowrap;
+      line-height: 1.2;
     }
-    .pnum.sel { background: rgba(244,114,182,0.85); border-color: #f9a8d4; font-weight: 600; }
+    .pnum.sel { background: rgba(244,114,182,0.9); border-color: #f9a8d4; font-weight: 600; }
 
     /* Mapper UI */
     #size-picker {
@@ -182,7 +183,7 @@
         <code>0.5</code> = move half a unit<br>
         <code>pos += dir(azimuth, elevation) × (distance × unit length)</code><br>
         Tap the square to add nearby unit numbers into select.<br>
-        Use <strong>Mapper</strong> to drag a hollow circle — numbers inside are spread out clearly so you can read every ID.
+        Use <strong>Mapper</strong> to drag a hollow circle — tiny numbers inside are spread so each ID is readable.
       </p>
     </div>
   </div>
@@ -200,7 +201,7 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // Solid square of fractions · InstancedMesh cubes · pure math control of every unit
-    // Distance in unit lengths · Mapper spreads numbers clearly inside the circle
+    // Distance in unit lengths · Mapper uses tiny spread numbers for clarity
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -495,8 +496,7 @@
       mapperCircle.style.top = (mapperY - mapperSize / 2) + 'px';
     }
 
-    // Collect units inside the circle, then spread their numbers in a clear readable grid
-    // so each ID is easy to see (the circle is just the filter region, not the label layout).
+    // Collect units inside the circle, then spread tiny numbers in a tight readable grid
     function updateMapperLabels() {
       overlayEl.innerHTML = '';
       if (!mapperActive) return;
@@ -507,7 +507,6 @@
       const cy = mapperY;
       const r2 = r * r;
 
-      // 1. Find every unit whose screen position is inside the hollow circle
       const inside = [];
       for (let i = 0; i < units.length; i++) {
         const u = units[i];
@@ -524,16 +523,14 @@
 
       if (inside.length === 0) return;
 
-      // 2. Sort by id so the list is predictable
       inside.sort((a, b) => a.id - b.id);
 
-      // 3. Lay the numbers out in a clean grid centered on the circle
-      //    (spread out so they never overlap — the circle only decides *which* numbers appear)
-      const maxShow = Math.min(inside.length, 100);
-      const cols = Math.ceil(Math.sqrt(maxShow));
+      // Tiny grid so many IDs fit without becoming a blob
+      const maxShow = Math.min(inside.length, 150);
+      const cols = Math.ceil(Math.sqrt(maxShow * 1.4));
       const rows = Math.ceil(maxShow / cols);
-      const cellW = 36;
-      const cellH = 18;
+      const cellW = 22;
+      const cellH = 11;
       const gridW = cols * cellW;
       const gridH = rows * cellH;
       const startX = cx - gridW / 2 + cellW / 2;
@@ -567,7 +564,7 @@
       document.getElementById('overlay-btn').classList.remove('on');
       document.getElementById('overlay-btn').textContent = 'unit #s';
       updateMapperLabels();
-      log('Mapper on · drag the hollow circle · numbers inside are spread out clearly');
+      log('Mapper on · drag the hollow circle · tiny numbers are spread so each ID is clear');
     }
 
     function closeMapper() {
@@ -596,7 +593,6 @@
       });
     });
 
-    // Drag the hollow circle
     mapperCircle.addEventListener('pointerdown', e => {
       e.preventDefault();
       e.stopPropagation();
@@ -622,7 +618,6 @@
       try { mapperCircle.releasePointerCapture(e.pointerId); } catch (_) {}
     });
 
-    // ---------- old full overlay (kept as optional) ----------
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
       if (!showNumbers || mapperActive) return;
