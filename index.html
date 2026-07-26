@@ -131,8 +131,8 @@
       <input type="text" id="az" value="0" placeholder="0" />
       <label>elevation angle (degrees −90–90)</label>
       <input type="text" id="el" value="0" placeholder="0" />
-      <label>distance (0–1000)</label>
-      <input type="text" id="dist" value="50" placeholder="50" />
+      <label>distance (unit lengths)</label>
+      <input type="text" id="dist" value="1" placeholder="1" />
       <div class="row">
         <button class="go" id="run">Run math</button>
         <button class="dim" id="clear">Clear select</button>
@@ -142,7 +142,11 @@
       </div>
       <div id="log">ready</div>
       <p class="help" style="margin-top:12px">
-        <code>pos += dir(azimuth, elevation) × (distance / 500)</code><br>
+        <strong>Unit lengths</strong> (the measure for distance):<br>
+        <code>1</code> = move one unit<br>
+        <code>2</code> = move two units<br>
+        <code>0.5</code> = move half a unit<br>
+        <code>pos += dir(azimuth, elevation) × (distance × unit length)</code><br>
         Tap the square to add nearby unit numbers into select.
       </p>
     </div>
@@ -161,6 +165,7 @@
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
     // Solid square of fractions · InstancedMesh cubes · pure math control of every unit
+    // Distance is measured in unit lengths: 1 = one unit, 0.5 = half a unit, etc.
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -214,7 +219,7 @@
     const SIDE = 18;
     const TOTAL = SIDE * SIDE * SIDE;
     const FRACTION = 1 / TOTAL;
-    let cell = claySize / SIDE;
+    let cell = claySize / SIDE;   // one unit length
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -350,10 +355,11 @@
         if (valid.length === 0) throw new Error('no valid unit numbers in select');
         const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
-        const dist = parseNumber(document.getElementById('dist'), 'distance', 0, 1000);
+        // Distance is now in unit lengths: 1 = one unit, 0.5 = half a unit, etc.
+        const dist = parseNumber(document.getElementById('dist'), 'distance', -100, 100);
         selected = new Set(valid);
         const dir = dirFromAngles(az, el);
-        const scale = dist / 500;
+        const scale = dist * cell;   // unit lengths → world units
         for (const u of units) {
           if (!selected.has(u.id)) continue;
           u.x += dir.x * scale;
@@ -361,7 +367,7 @@
           u.z += dir.z * scale;
         }
         syncVisual();
-        log(`ok · moved ${valid.length} units (fraction ${(valid.length * FRACTION).toFixed(4)}) · az=${az} el=${el} dist=${dist}`, 'ok');
+        log(`ok · moved ${valid.length} units (fraction ${(valid.length * FRACTION).toFixed(4)}) · az=${az} el=${el} dist=${dist} unit(s)`, 'ok');
       } catch (e) {
         log(e.message, 'err');
       }
