@@ -220,12 +220,12 @@
       position: absolute;
       transform: translate(-50%, -50%);
       font-family: monospace;
-      font-size: 8px;
-      color: rgba(255,255,255,0.75);
-      background: rgba(14,165,233,0.28);
-      border: 1px solid rgba(125,211,252,0.3);
+      font-size: 9px;
+      color: rgba(255,255,255,0.8);
+      background: rgba(14,165,233,0.32);
+      border: 1px solid rgba(125,211,252,0.35);
       border-radius: 3px;
-      padding: 0 2px;
+      padding: 1px 3px;
       white-space: nowrap;
     }
     .pnum.sel {
@@ -253,12 +253,12 @@
     <div id="term-body">
       <h2>Type the math</h2>
       <p class="help">
-        The square is one solid piece of clay.<br>
-        It is divided into numbered <strong>units</strong> — each unit is a fixed % of the whole square.<br>
-        Select units by number · type angles + distance · Run.
+        One solid square of clay.<br>
+        Divided into <strong>100 units</strong> — each unit is fraction <code>0.01</code> of the whole square.<br>
+        Select by number · type angles + distance · Run.
       </p>
 
-      <label>select units (numbers)</label>
+      <label>select units (numbers 0–99)</label>
       <textarea id="sel" placeholder="0, 1, 5, 10-25"></textarea>
 
       <label>azimuth angle (degrees 0–360)</label>
@@ -300,12 +300,9 @@
     import * as THREE from 'three';
     import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
 
-    // ═══════════════════════════════════════════════════════════
-    // MathClay
-    // One solid square of clay.
-    // Divided into addressable UNITS — each unit is a % of the whole.
-    // Not loose particles. Units fill the square with no gaps.
-    // ═══════════════════════════════════════════════════════════
+    // One solid square.
+    // 100 units · each unit = fraction 0.01 of the whole.
+    // Not particles — addressable fractions of the clay.
 
     const container = document.getElementById('canvas-container');
     const overlayEl = document.getElementById('number-overlay');
@@ -351,18 +348,22 @@
     ground.position.y = -1.35;
     scene.add(ground);
 
-    // Units of the solid square (not particles)
-    let units = []; // {id, x,y,z, r,g,b, percent}
+    let units = [];
     let selected = new Set();
     let pointsObj = null;
     let pointsGeo = null;
     let showNumbers = false;
     const claySize = 2.0;
-    const clickBrush = 0.25;
+    const clickBrush = 0.35;
 
-    // ~5000 units: 17^3 = 4913 → each unit ≈ 0.0204% of the square
-    const SIDE = 17;
-    let cellSize = claySize / SIDE;
+    // Exactly 100 units → each fraction = 0.01 of the square
+    // Grid 5 × 5 × 4 = 100
+    const NX = 5, NY = 5, NZ = 4;
+    const TOTAL = NX * NY * NZ; // 100
+    const FRACTION = 1 / TOTAL;  // 0.01
+    let cellX = claySize / NX;
+    let cellY = claySize / NY;
+    let cellZ = claySize / NZ;
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -372,39 +373,37 @@
     function createSolidSquare() {
       units = [];
       selected.clear();
-      const n = SIDE;
-      cellSize = claySize / n;
-      // Fill the cube volume: n×n×n cells, each is 100/n³ percent of the whole
-      const total = n * n * n;
-      const percentEach = 100 / total;
+      cellX = claySize / NX;
+      cellY = claySize / NY;
+      cellZ = claySize / NZ;
       const half = claySize * 0.5;
-      // Centers of each cell (cells touch face-to-face, fill the square)
-      const origin = -half + cellSize * 0.5;
+      const ox = -half + cellX * 0.5;
+      const oy = -half + cellY * 0.5;
+      const oz = -half + cellZ * 0.5;
 
       let id = 0;
-      for (let iz = 0; iz < n; iz++) {
-        for (let iy = 0; iy < n; iy++) {
-          for (let ix = 0; ix < n; ix++) {
+      for (let iz = 0; iz < NZ; iz++) {
+        for (let iy = 0; iy < NY; iy++) {
+          for (let ix = 0; ix < NX; ix++) {
             units.push({
               id: id++,
-              x: origin + ix * cellSize,
-              y: origin + iy * cellSize,
-              z: origin + iz * cellSize,
+              x: ox + ix * cellX,
+              y: oy + iy * cellY,
+              z: oz + iz * cellZ,
               r: 0.76 + Math.random() * 0.03,
               g: 0.60 + Math.random() * 0.025,
               b: 0.44 + Math.random() * 0.025,
-              percent: percentEach
+              fraction: FRACTION
             });
           }
         }
       }
 
       rebuildVisual();
-      const pct = percentEach.toFixed(4);
       document.getElementById('stats').innerHTML =
-        `units: ${total.toLocaleString()} · each = ${pct}% of square<br>ids 0–${total - 1}`;
+        `units: ${TOTAL} · each = fraction ${FRACTION} of square<br>ids 0–${TOTAL - 1}`;
       document.getElementById('sel').value = '';
-      log(`solid square · ${total} units · each ${pct}% of the whole`);
+      log(`solid square · ${TOTAL} units · each fraction ${FRACTION}`);
       if (showNumbers) rebuildNumberOverlay();
     }
 
@@ -430,8 +429,8 @@
       pointsGeo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
       pointsGeo.setAttribute('color', new THREE.BufferAttribute(col, 3));
 
-      // Cell visual size = cell spacing so units fill the square (touching)
-      const size = cellSize * 1.12;
+      // Size so neighboring units touch / fill the square
+      const size = Math.min(cellX, cellY, cellZ) * 1.15;
       pointsObj = new THREE.Points(pointsGeo, new THREE.PointsMaterial({
         size,
         vertexColors: true,
@@ -518,8 +517,8 @@
         }
 
         syncVisual();
-        const pct = (valid.length * (100 / units.length)).toFixed(2);
-        log(`ok · moved ${valid.length} units (${pct}% of square) · az=${az} el=${el} dist=${dist}`, 'ok');
+        const frac = (valid.length * FRACTION).toFixed(2);
+        log(`ok · moved ${valid.length} units (fraction ${frac} of square) · az=${az} el=${el} dist=${dist}`, 'ok');
       } catch (e) {
         log(e.message, 'err');
       }
@@ -589,15 +588,13 @@
       box.value = sorted.join(', ');
       selected = new Set(sorted.filter(id => id >= 0 && id < units.length));
       syncVisual();
-      log(`select +${found.length} units · total ${selected.size}`);
+      log(`select +${found.length} units · total ${selected.size} · fraction ${(selected.size * FRACTION).toFixed(2)}`);
     });
 
     function rebuildNumberOverlay() {
       overlayEl.innerHTML = '';
       if (!showNumbers) return;
-      const maxLabels = 500;
-      const step = units.length > maxLabels ? Math.ceil(units.length / maxLabels) : 1;
-      for (let i = 0; i < units.length; i += step) {
+      for (let i = 0; i < units.length; i++) {
         const u = units[i];
         const v = new THREE.Vector3(u.x, u.y, u.z);
         v.project(camera);
