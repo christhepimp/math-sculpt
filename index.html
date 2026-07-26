@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Math Sculpt — Precision Clay</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: #0f0f12;
+      color: #e8e8ec;
+      overflow: hidden;
+      height: 100vh;
+    }
+    #canvas-container {
+      position: absolute;
+      inset: 0;
+    }
+    #ui {
+      position: absolute;
+      top: 16px;
+      left: 16px;
+      width: 340px;
+      background: rgba(18, 18, 24, 0.92);
+      border: 1px solid #2a2a35;
+      border-radius: 12px;
+      padding: 18px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 8px 32px rgba(0,0,0,0.4);
+      max-height: calc(100vh - 32px);
+      overflow-y: auto;
+      z-index: 10;
+    }
+    h1 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin-bottom: 4px;
+      letter-spacing: -0.02em;
+    }
+    .subtitle {
+      font-size: 0.78rem;
+      color: #888;
+      margin-bottom: 16px;
+    }
+    label {
+      display: block;
+      font-size: 0.75rem;
+      color: #aaa;
+      margin-bottom: 6px;
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    textarea {
+      width: 100%;
+      height: 90px;
+      background: #1a1a22;
+      border: 1px solid #333;
+      border-radius: 8px;
+      color: #7dd3fc;
+      font-family: 'Cascadia Code', 'Fira Code', monospace;
+      font-size: 0.82rem;
+      padding: 10px;
+      resize: vertical;
+      outline: none;
+    }
+    textarea:focus { border-color: #38bdf8; }
+    .row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+    button {
+      flex: 1;
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: #e2e8f0;
+      padding: 9px 12px;
+      border-radius: 8px;
+      font-size: 0.8rem;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    button:hover {
+      background: #334155;
+      border-color: #475569;
+    }
+    button.primary {
+      background: #0ea5e9;
+      border-color: #0284c7;
+      color: #fff;
+      font-weight: 500;
+    }
+    button.primary:hover {
+      background: #0284c7;
+    }
+    .presets {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-top: 10px;
+    }
+    .presets button {
+      font-size: 0.72rem;
+      padding: 7px;
+    }
+    .slider-group {
+      margin-top: 14px;
+    }
+    input[type="range"] {
+      width: 100%;
+      margin-top: 4px;
+      accent-color: #38bdf8;
+    }
+    .value {
+      float: right;
+      color: #7dd3fc;
+      font-family: monospace;
+      font-size: 0.8rem;
+    }
+    .hint {
+      font-size: 0.7rem;
+      color: #666;
+      margin-top: 10px;
+      line-height: 1.4;
+    }
+    code {
+      background: #1a1a22;
+      padding: 1px 5px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      color: #a5b4fc;
+    }
+  </style>
+</head>
+<body>
+  <div id="canvas-container"></div>
+
+  <div id="ui">
+    <h1>Math Sculpt</h1>
+    <p class="subtitle">Start with a square clay box → sculpt with math</p>
+
+    <label>Displacement formula <span class="value" id="status">ready</span></label>
+    <textarea id="formula" spellcheck="false">Math.sin(x * 3) * Math.cos(z * 3) * 0.25</textarea>
+
+    <div class="row">
+      <button class="primary" id="apply">Apply Formula</button>
+      <button id="reset">Reset Clay</button>
+    </div>
+
+    <label style="margin-top:14px">Quick presets</label>
+    <div class="presets">
+      <button data-f="Math.sin(x*4)*0.2">Sine Wave</button>
+      <button data-f="Math.sin(x*3)*Math.cos(z*3)*0.3">Ripple</button>
+      <button data-f="(Math.sin(x*5)+Math.sin(z*5))*0.15">Grid</button>
+      <button data-f="Math.sqrt(x*x+z*z)*0.15">Cone</button>
+      <button data-f="Math.sin(Math.sqrt(x*x+z*z)*6)*0.2">Radial</button>
+      <button data-f="(Math.random()-0.5)*0.4">Noise</button>
+      <button data-f="Math.abs(x)*0.3 - 0.15">V Groove</button>
+      <button data-f="Math.pow(Math.abs(x),1.5)*Math.sign(x)*0.2">Sharp</button>
+    </div>
+
+    <div class="slider-group">
+      <label>Subdivision <span class="value" id="sub-val">32</span></label>
+      <input type="range" id="subdiv" min="4" max="64" value="32" step="4" />
+    </div>
+
+    <div class="slider-group">
+      <label>Strength <span class="value" id="str-val">1.00</span></label>
+      <input type="range" id="strength" min="0" max="3" value="1" step="0.05" />
+    </div>
+
+    <div class="slider-group">
+      <label>Box size <span class="value" id="size-val">2.00</span></label>
+      <input type="range" id="size" min="0.5" max="4" value="2" step="0.1" />
+    </div>
+
+    <p class="hint">
+      Available variables: <code>x</code> <code>y</code> <code>z</code> (vertex position)<br>
+      Also: <code>Math</code>, <code>t</code> (time in seconds)<br>
+      Formula returns the <strong>Y displacement</strong>.
+    </p>
+  </div>
+
+  <script type="importmap">
+  {
+    "imports": {
+      "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+      "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+    }
+  }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+
+    // ── Scene setup ──────────────────────────────────────────────
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0f0f12);
+
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(3.5, 2.8, 4.2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.enableDamping = true;
+    controls.dampingFactor = 0.08;
+    controls.target.set(0, 0, 0);
+
+    // Lights
+    const amb = new THREE.AmbientLight(0xffffff, 0.45);
+    scene.add(amb);
+
+    const dir = new THREE.DirectionalLight(0xffffff, 1.1);
+    dir.position.set(4, 8, 5);
+    dir.castShadow = true;
+    dir.shadow.mapSize.set(1024, 1024);
+    scene.add(dir);
+
+    const fill = new THREE.DirectionalLight(0xa5b4fc, 0.35);
+    fill.position.set(-3, 2, -4);
+    scene.add(fill);
+
+    // Ground plane (subtle)
+    const ground = new THREE.Mesh(
+      new THREE.PlaneGeometry(20, 20),
+      new THREE.MeshStandardMaterial({ color: 0x16161c, roughness: 0.95, metalness: 0.1 })
+    );
+    ground.rotation.x = -Math.PI / 2;
+    ground.position.y = -1.2;
+    ground.receiveShadow = true;
+    scene.add(ground);
+
+    // ── Clay box ─────────────────────────────────────────────────
+    let mesh, geometry;
+    let originalPositions = null;
+
+    function createClay(subdiv = 32, size = 2) {
+      if (mesh) {
+        scene.remove(mesh);
+        geometry.dispose();
+        mesh.material.dispose();
+      }
+
+      geometry = new THREE.BoxGeometry(size, size, size, subdiv, subdiv, subdiv);
+      originalPositions = new Float32Array(geometry.attributes.position.array);
+
+      const material = new THREE.MeshStandardMaterial({
+        color: 0xc4a484,          // warm clay
+        roughness: 0.85,
+        metalness: 0.05,
+        flatShading: false,
+        side: THREE.DoubleSide
+      });
+
+      mesh = new THREE.Mesh(geometry, material);
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      mesh.position.y = 0;
+      scene.add(mesh);
+    }
+
+    createClay();
+
+    // ── Math sculpting ───────────────────────────────────────────
+    const formulaEl = document.getElementById('formula');
+    const statusEl = document.getElementById('status');
+
+    function applyFormula() {
+      const code = formulaEl.value.trim();
+      if (!code) return;
+
+      const strength = parseFloat(document.getElementById('strength').value);
+      const t = performance.now() * 0.001;
+
+      let fn;
+      try {
+        // Create a safe-ish function from the formula
+        fn = new Function('x', 'y', 'z', 't', 'Math',
+          `\"use strict\"; return (${code});`);
+      } catch (e) {
+        statusEl.textContent = 'syntax error';
+        statusEl.style.color = '#f87171';
+        return;
+      }
+
+      const pos = geometry.attributes.position;
+      const arr = pos.array;
+
+      try {
+        for (let i = 0; i < arr.length; i += 3) {
+          const ox = originalPositions[i];
+          const oy = originalPositions[i + 1];
+          const oz = originalPositions[i + 2];
+
+          const dx = fn(ox, oy, oz, t, Math);
+          if (typeof dx !== 'number' || Number.isNaN(dx)) {
+            throw new Error('formula must return a number');
+          }
+
+          // Displace along the original normal-ish direction (mostly Y for top, but keep general)
+          // For a box we displace primarily in Y for classic "sculpt" feel,
+          // but we also allow full vector if user wants later.
+          arr[i]     = ox;
+          arr[i + 1] = oy + dx * strength;
+          arr[i + 2] = oz;
+        }
+
+        pos.needsUpdate = true;
+        geometry.computeVertexNormals();
+        statusEl.textContent = 'applied';
+        statusEl.style.color = '#4ade80';
+      } catch (e) {
+        statusEl.textContent = e.message.slice(0, 28);
+        statusEl.style.color = '#f87171';
+      }
+    }
+
+    function resetClay() {
+      const pos = geometry.attributes.position;
+      pos.array.set(originalPositions);
+      pos.needsUpdate = true;
+      geometry.computeVertexNormals();
+      statusEl.textContent = 'reset';
+      statusEl.style.color = '#94a3b8';
+    }
+
+    // ── UI wiring ────────────────────────────────────────────────
+    document.getElementById('apply').addEventListener('click', applyFormula);
+    document.getElementById('reset').addEventListener('click', resetClay);
+
+    document.querySelectorAll('.presets button').forEach(btn => {
+      btn.addEventListener('click', () => {
+        formulaEl.value = btn.dataset.f;
+        applyFormula();
+      });
+    });
+
+    const subdivSlider = document.getElementById('subdiv');
+    const sizeSlider = document.getElementById('size');
+    const strengthSlider = document.getElementById('strength');
+
+    subdivSlider.addEventListener('input', () => {
+      document.getElementById('sub-val').textContent = subdivSlider.value;
+    });
+    subdivSlider.addEventListener('change', () => {
+      createClay(+subdivSlider.value, +sizeSlider.value);
+      applyFormula();
+    });
+
+    sizeSlider.addEventListener('input', () => {
+      document.getElementById('size-val').textContent = (+sizeSlider.value).toFixed(2);
+    });
+    sizeSlider.addEventListener('change', () => {
+      createClay(+subdivSlider.value, +sizeSlider.value);
+      applyFormula();
+    });
+
+    strengthSlider.addEventListener('input', () => {
+      document.getElementById('str-val').textContent = (+strengthSlider.value).toFixed(2);
+      applyFormula();
+    });
+
+    // Live update while typing (debounced)
+    let debounce;
+    formulaEl.addEventListener('input', () => {
+      clearTimeout(debounce);
+      debounce = setTimeout(applyFormula, 350);
+    });
+
+    // ── Animation loop ───────────────────────────────────────────
+    function animate() {
+      requestAnimationFrame(animate);
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    // Resize
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    // Initial apply
+    applyFormula();
+  </script>
+</body>
+</html>
