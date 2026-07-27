@@ -12,28 +12,34 @@ You control every unit with pure math.
 
 ## The core idea
 
+Azimuth + elevation give a direction.  
+Distance grows or shrinks the selected units **along that direction from the origin**.
+
 ```
-// Direction from angles
-dir = (cos(el)·sin(az), sin(el), cos(el)·cos(az))
+dir = direction from (azimuth, elevation)
 
-// Grow / shrink along that direction from the origin
-// (perpendicular components stay the same; outer cells move farther)
-s = pos · dir
-pos = pos - s·dir + (s × (1 + distance × unit_length)) · dir
+for each selected unit:
+  s = position · dir          // how far it currently is along the direction
+  new_s = s × (1 + distance × cell)
+  position = position − s·dir + new_s·dir
 ```
 
-**Unit lengths** (the measure for distance):
+- Perpendicular components stay the same
+- Outer units move farther out; inner ones move less
+- Positive distance expands, negative contracts
 
-- `1` ≈ one unit of growth along the chosen angle
-- `2` ≈ two units of growth
-- `0.5` ≈ half a unit
-- Negative values contract toward the origin
+**Unit lengths** (what “distance” means):
 
-1. Select any units (tap, mini-grid, or d-pad)
-2. Type any azimuth angle (0–360°)
-3. Type any elevation angle (−90–90°)
-4. Type distance in unit lengths
-5. Run — the selected cells grow or shrink along the straight line of that angle
+- `1` ≈ one cell of growth along the angle
+- `2` ≈ two cells
+- `0.5` ≈ half a cell
+- Negative values pull toward the origin
+
+1. Select units (tap the clay, or use the mini-grid + d-pad)
+2. Type azimuth (0–360°)
+3. Type elevation (−90–90°)
+4. Type distance
+5. Run math
 
 ---
 
@@ -47,32 +53,45 @@ pos = pos - s·dir + (s × (1 + distance × unit_length)) · dir
 
 ---
 
-## Pure math terminal
+## Math terminal
 
-Everything is driven by typed numbers:
+Open the **MATH** panel on the right.
 
-- **Azimuth + elevation** define an exact 3D direction
-- **Distance** grows or shrinks selected cells along that direction from the origin
-- **RGB color** — select cell(s) on the mini-grid, set R/G/B (0–1), Apply
-- Mini-grid + layer slider + d-pad for precise cell selection
-- Click / tap the main clay to add units to selection
-- Reset to perfect solid square anytime
+### Sculpt
+- Azimuth, elevation, distance fields
+- **Run math** — grows/shrinks the current selection along the chosen angle
+- Clear select / Reset square
 
-No brushes limited to preset directions. No locked tools.  
-Just math applied to fractions of a solid square.
+### Clay color (RGB)
+- Select one or more cells on the **mini-grid** (or by tapping)
+- R, G, B fields (0–1) auto-fill with the current cell’s color when you move the cursor
+- Live color swatch
+- **Apply color to selected** — paints the clay inside those grid cells
+
+### Grid select
+- Mini 3D view of the current layer
+- Axis buttons (X / Y / Z) + layer slider
+- D-pad + SELECT button (or tap a cell on the mini view)
+- Cursor position and selection count shown live
+
+### API (for AI / external control)
+- Connect / Disconnect
+- Live view snapshot
+- Paste JSON commands that use the **exact same** azimuth + elevation + distance + color math
 
 ---
 
 ## Philosophy
 
-| Concept        | MathClay                                      |
-|----------------|-----------------------------------------------|
-| Building block | Unit / fraction (id, position, color)         |
-| Solid form     | Dense packing of 5,832 cubes                  |
-| Sculpt         | Scale parallel component from origin along dir |
-| Control        | Pure typed math (any angle + distance + RGB)  |
-| Detail         | More units = higher precision                 |
-| Interface      | Simple terminal + mini-grid anyone can use    |
+| Concept        | MathClay                                              |
+|----------------|-------------------------------------------------------|
+| Building block | Unit / fraction (id, position, color)                 |
+| Solid form     | Dense packing of 5,832 cubes                          |
+| Sculpt         | Scale the parallel component from the origin along dir |
+| Color          | RGB (0–1) applied to selected units                   |
+| Control        | Typed math + mini-grid selection                      |
+| Detail         | More units = higher precision                         |
+| Interface      | Terminal + mini-grid anyone can use                   |
 
 You are not editing polygons or topology.  
 You are moving and coloring the actual fractions that make up the clay.
@@ -82,13 +101,13 @@ You are moving and coloring the actual fractions that make up the clay.
 ## Current status
 
 - Solid InstancedMesh cube (no sparse points)
-- Full math terminal (any direction + grow/shrink distance from origin)
-- RGB color controls for selected cells (via mini-grid or multi-select)
+- Grow / shrink along any angle from the origin (not rigid travel)
+- RGB color controls driven by mini-grid selection
 - Thinner reference grid
-- Mini-grid + d-pad + layer slider for precise selection
-- Click / tap to add nearby units to selection
+- Mini-grid + layer slider + d-pad for precise cell picking
+- Click / tap the main view to add units to selection
 - Reset to perfect solid square
-- API surface for AI / external commands (same math)
+- API surface that uses the identical math (sculpt + color + batch)
 - Works on desktop and mobile browsers via GitHub Pages
 
 ---
