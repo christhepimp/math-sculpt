@@ -39,7 +39,7 @@
       padding: 6px 10px; border-radius: 8px; pointer-events: none;
     }
     #terminal {
-      position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 78vh;
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 82vh;
       background: rgba(10, 10, 16, 0.98); border-top: 1px solid #2a2a3a;
       border-radius: 16px 16px 0 0; transform: translateY(100%); transition: transform 0.28s ease;
       display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
@@ -128,6 +128,28 @@
       width: 100% !important;
       height: 100% !important;
     }
+    .axis-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 8px;
+    }
+    .axis-btn {
+      flex: 1;
+      padding: 8px 0;
+      border-radius: 8px;
+      border: 1px solid #2a5c3a;
+      background: #0d2818;
+      color: #6ee7b7;
+      font-size: 0.75rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    .axis-btn.active {
+      background: #14532d;
+      border-color: #39ff14;
+      color: #39ff14;
+      box-shadow: 0 0 10px rgba(57,255,20,0.25);
+    }
     .dpad-wrap {
       display: flex;
       flex-direction: column;
@@ -189,6 +211,7 @@
       margin: 0;
       flex-shrink: 0;
       font-size: 0.65rem;
+      min-width: 52px;
     }
     #layer-slider {
       flex: 1;
@@ -206,7 +229,7 @@
   <div id="canvas-container"></div>
   <button id="grid-btn">Unit grid</button>
   <div id="stats">units: —</div>
-  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan · open MATH → select cells (red) → Run math</div>
+  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan · MATH → X/Y/Z layers → select (red) → Run math</div>
   <button id="term-toggle">MATH</button>
 
   <div id="terminal">
@@ -218,7 +241,7 @@
       <h2>Sculpt the square</h2>
       <p class="help">
         Solid square · <strong>5832 fractions</strong> · each is exactly <code>1 unit length</code> from its neighbors.<br>
-        Select cells on the mini square (they turn <strong style="color:#ef4444">red</strong>), set direction + distance, then Run math.
+        Pick axis <strong>X / Y / Z</strong> to slice any direction (sides, top/bottom, front/back, through the middle). Selected cells turn <strong style="color:#ef4444">red</strong>.
       </p>
 
       <label>azimuth angle (degrees 0–360)</label>
@@ -236,16 +259,25 @@
       </div>
 
       <div id="grid-nav">
-        <h3>Mini square · same shape as the clay box</h3>
-        <div id="grid-info">Layer Z: <strong>0</strong> · Cursor (X,Y,Z): <strong>0,0,0</strong> · Selected: <strong>0</strong></div>
+        <h3>Mini square · slice any side</h3>
+        <div id="grid-info">Axis <strong>Z</strong> · Layer <strong>0</strong> · Cursor <strong>0,0,0</strong> · Selected: <strong>0</strong></div>
+
+        <div class="axis-row">
+          <button type="button" class="axis-btn" id="axis-x" data-axis="x">X · left–right</button>
+          <button type="button" class="axis-btn" id="axis-y" data-axis="y">Y · bottom–top</button>
+          <button type="button" class="axis-btn active" id="axis-z" data-axis="z">Z · front–back</button>
+        </div>
+
         <div id="mini-canvas-wrap">
           <canvas id="mini-canvas"></canvas>
         </div>
+
         <div class="layer-row">
-          <label>Layer Z</label>
+          <label id="layer-label">Layer Z</label>
           <input type="range" id="layer-slider" min="0" max="17" value="0" />
           <span id="layer-val">0</span>
         </div>
+
         <div class="dpad-wrap">
           <div class="dpad-row">
             <button class="dpad-btn" id="dpad-up" type="button">▲</button>
@@ -260,7 +292,7 @@
           </div>
         </div>
         <p class="help" style="margin-top:6px;margin-bottom:0">
-          Drag the mini square to rotate. Slider = Z layer. ▲▼◄► move cursor. SELECT or tap a cell → turns red. Then Run math.
+          <strong>X</strong> slices left↔right · <strong>Y</strong> bottom↔top · <strong>Z</strong> front↔back. Slider moves through that direction (including the middle). Drag mini square to rotate. SELECT / tap = red.
         </p>
       </div>
 
@@ -285,6 +317,7 @@
     const gridInfo = document.getElementById('grid-info');
     const layerSlider = document.getElementById('layer-slider');
     const layerVal = document.getElementById('layer-val');
+    const layerLabel = document.getElementById('layer-label');
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
@@ -418,8 +451,8 @@
 
     let idGrid = null;
     let cursorX = 0, cursorY = 0, cursorZ = 0;
+    let sliceAxis = 'z'; // 'x' | 'y' | 'z'
 
-    // Mini scene
     const miniWrap = document.getElementById('mini-canvas-wrap');
     const miniCanvas = document.getElementById('mini-canvas');
     const miniScene = new THREE.Scene();
@@ -463,8 +496,26 @@
       return Math.min(ix, iy, iz, SIDE - 1 - ix, SIDE - 1 - iy, SIDE - 1 - iz);
     }
 
-    // Bright red for selected
     const SEL_R = 1.0, SEL_G = 0.12, SEL_B = 0.1;
+
+    function layerIndex() {
+      if (sliceAxis === 'x') return cursorX;
+      if (sliceAxis === 'y') return cursorY;
+      return cursorZ;
+    }
+
+    function setLayerIndex(v) {
+      v = Math.max(0, Math.min(SIDE - 1, v));
+      if (sliceAxis === 'x') cursorX = v;
+      else if (sliceAxis === 'y') cursorY = v;
+      else cursorZ = v;
+    }
+
+    function unitsOnSlice() {
+      if (sliceAxis === 'x') return units.filter(u => u.ix === cursorX);
+      if (sliceAxis === 'y') return units.filter(u => u.iy === cursorY);
+      return units.filter(u => u.iz === cursorZ);
+    }
 
     function createSolidSquare() {
       units = [];
@@ -533,8 +584,11 @@
       }
 
       cursorX = 0; cursorY = 0; cursorZ = 0;
+      sliceAxis = 'z';
+      document.querySelectorAll('.axis-btn').forEach(b => b.classList.toggle('active', b.dataset.axis === 'z'));
       layerSlider.value = 0;
       layerVal.textContent = '0';
+      layerLabel.textContent = 'Layer Z';
       rebuildVisual();
       makeClayThinGrid();
       rebuildMini();
@@ -619,7 +673,7 @@
 
       const half = claySize * 0.5;
       const boxSize = cell * 0.92;
-      const layerUnits = units.filter(u => u.iz === cursorZ);
+      const layerUnits = unitsOnSlice();
       const count = layerUnits.length;
       if (count > 0) {
         const geo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
@@ -690,8 +744,6 @@
       return n;
     }
 
-    function unitByDisplayId(id) { return units.find(u => u.id === id); }
-
     function runMath() {
       try {
         if (selected.size === 0) throw new Error('no cells selected · use the mini square + SELECT first');
@@ -727,15 +779,43 @@
 
     function updateGridInfo() {
       const id = currentFractionId();
-      gridInfo.innerHTML = `Layer Z: <strong>${cursorZ}</strong> · Cursor (X,Y,Z): <strong>${cursorX},${cursorY},${cursorZ}</strong> · Selected: <strong>${selected.size}</strong>${id ? ` · #${id}` : ''}`;
-      layerSlider.value = cursorZ;
-      layerVal.textContent = String(cursorZ);
+      const axisName = sliceAxis.toUpperCase();
+      gridInfo.innerHTML = `Axis <strong>${axisName}</strong> · Layer <strong>${layerIndex()}</strong> · Cursor <strong>${cursorX},${cursorY},${cursorZ}</strong> · Selected: <strong>${selected.size}</strong>${id ? ` · #${id}` : ''}`;
+      layerSlider.value = layerIndex();
+      layerVal.textContent = String(layerIndex());
+      layerLabel.textContent = 'Layer ' + axisName;
     }
 
+    function setAxis(axis) {
+      sliceAxis = axis;
+      document.querySelectorAll('.axis-btn').forEach(b => b.classList.toggle('active', b.dataset.axis === axis));
+      updateGridInfo();
+      rebuildMini();
+      log(`slice axis ${axis.toUpperCase()} · left–right / bottom–top / front–back`);
+    }
+
+    document.getElementById('axis-x').addEventListener('click', () => setAxis('x'));
+    document.getElementById('axis-y').addEventListener('click', () => setAxis('y'));
+    document.getElementById('axis-z').addEventListener('click', () => setAxis('z'));
+
+    // D-pad: moves the two free axes (not the slice axis)
     function moveCursor(dx, dy, dz) {
-      cursorX = Math.max(0, Math.min(SIDE - 1, cursorX + dx));
-      cursorY = Math.max(0, Math.min(SIDE - 1, cursorY + dy));
-      cursorZ = Math.max(0, Math.min(SIDE - 1, cursorZ + dz));
+      // remap so ▲▼◄► always feel natural on the current slice plane
+      if (sliceAxis === 'z') {
+        // plane is XY
+        cursorX = Math.max(0, Math.min(SIDE - 1, cursorX + dx));
+        cursorY = Math.max(0, Math.min(SIDE - 1, cursorY + dy));
+      } else if (sliceAxis === 'y') {
+        // plane is XZ
+        cursorX = Math.max(0, Math.min(SIDE - 1, cursorX + dx));
+        cursorZ = Math.max(0, Math.min(SIDE - 1, cursorZ + dy));
+      } else {
+        // plane is YZ
+        cursorZ = Math.max(0, Math.min(SIDE - 1, cursorZ + dx));
+        cursorY = Math.max(0, Math.min(SIDE - 1, cursorY + dy));
+      }
+      // allow explicit layer nudge via dz if needed
+      if (dz !== 0) setLayerIndex(layerIndex() + dz);
       updateGridInfo();
       rebuildMini();
     }
@@ -764,7 +844,7 @@
     document.getElementById('dpad-select').addEventListener('click', selectCurrent);
 
     layerSlider.addEventListener('input', () => {
-      cursorZ = parseInt(layerSlider.value, 10);
+      setLayerIndex(parseInt(layerSlider.value, 10));
       updateGridInfo();
       rebuildMini();
     });
@@ -779,8 +859,7 @@
       miniRay.setFromCamera(miniMouse, miniCam);
       const o = miniRay.ray.origin, d = miniRay.ray.direction;
       let best = null, bestD = Infinity;
-      const candidates = units.filter(u => u.iz === cursorZ);
-      const pool = candidates.length ? candidates : units;
+      const pool = unitsOnSlice();
       for (const u of pool) {
         const ox = u.x - o.x, oy = u.y - o.y, oz = u.z - o.z;
         const t = ox * d.x + oy * d.y + oz * d.z;
@@ -824,7 +903,6 @@
       else if (e.key === 'PageDown') { e.preventDefault(); moveCursor(0, 0, -1); }
     });
 
-    // Main view click still adds to selection
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
