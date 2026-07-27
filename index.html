@@ -200,178 +200,24 @@
     }
     document.getElementById('apply-color').addEventListener('click', applyColor);
 
-    const scene = new THREE.Scene();
-    scene.background = new THREE.Color(0x1a1c20);
-    scene.fog = new THREE.FogExp2(0x1a1c20, 0.028);
-
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 200);
+    const scene = new THREE.Scene(); scene.background = new THREE.Color(0x07070a);
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 100);
     camera.position.set(2.8, 2.2, 3.4);
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance', preserveDrawingBuffer: true });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
-    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.05;
-    renderer.shadowMap.enabled = true; renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping; renderer.toneMappingExposure = 1.1;
     container.appendChild(renderer.domElement);
     const controls = new OrbitControls(camera, renderer.domElement);
     controls.enableDamping = true; controls.dampingFactor = 0.08;
     controls.enablePan = true; controls.enableZoom = true; controls.enableRotate = true;
-    controls.minDistance = 0.8; controls.maxDistance = 40;
+    controls.minDistance = 0.8; controls.maxDistance = 20;
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
-
-    // —— Warehouse / factory environment ——
-    function buildWarehouse() {
-      const room = 28, wallH = 9, floorY = -1.35;
-      const group = new THREE.Group();
-
-      // Concrete floor
-      const floorMat = new THREE.MeshStandardMaterial({ color: 0x3a3d42, roughness: 0.92, metalness: 0.08 });
-      const floor = new THREE.Mesh(new THREE.PlaneGeometry(room, room), floorMat);
-      floor.rotation.x = -Math.PI / 2; floor.position.y = floorY; floor.receiveShadow = true;
-      group.add(floor);
-
-      // Floor panel seams (grid lines)
-      const seamMat = new THREE.LineBasicMaterial({ color: 0x2a2c30, transparent: true, opacity: 0.7 });
-      const seamPos = [];
-      const half = room / 2, step = 2;
-      for (let x = -half; x <= half; x += step) {
-        seamPos.push(x, floorY + 0.002, -half, x, floorY + 0.002, half);
-      }
-      for (let z = -half; z <= half; z += step) {
-        seamPos.push(-half, floorY + 0.002, z, half, floorY + 0.002, z);
-      }
-      const seamGeo = new THREE.BufferGeometry();
-      seamGeo.setAttribute('position', new THREE.Float32BufferAttribute(seamPos, 3));
-      group.add(new THREE.LineSegments(seamGeo, seamMat));
-
-      // Yellow caution lanes around the work area
-      const laneMat = new THREE.MeshStandardMaterial({ color: 0xc9a227, roughness: 0.7, metalness: 0.1, emissive: 0x3a2e08, emissiveIntensity: 0.15 });
-      function lane(w, d, x, z) {
-        const m = new THREE.Mesh(new THREE.BoxGeometry(w, 0.012, d), laneMat);
-        m.position.set(x, floorY + 0.006, z); m.receiveShadow = true; group.add(m);
-      }
-      const work = 4.5;
-      lane(work + 0.9, 0.12, 0, -work / 2 - 0.15);
-      lane(work + 0.9, 0.12, 0, work / 2 + 0.15);
-      lane(0.12, work + 0.9, -work / 2 - 0.15, 0);
-      lane(0.12, work + 0.9, work / 2 + 0.15, 0);
-
-      // Walls (3 sides — open toward +Z for camera feel)
-      const wallMat = new THREE.MeshStandardMaterial({ color: 0x4a4e55, roughness: 0.88, metalness: 0.15 });
-      const metalMat = new THREE.MeshStandardMaterial({ color: 0x5a6068, roughness: 0.55, metalness: 0.55 });
-
-      // Back wall (-Z)
-      const back = new THREE.Mesh(new THREE.BoxGeometry(room, wallH, 0.25), wallMat);
-      back.position.set(0, floorY + wallH / 2, -half); back.receiveShadow = true; back.castShadow = true;
-      group.add(back);
-      // Left wall
-      const left = new THREE.Mesh(new THREE.BoxGeometry(0.25, wallH, room), wallMat);
-      left.position.set(-half, floorY + wallH / 2, 0); left.receiveShadow = true; left.castShadow = true;
-      group.add(left);
-      // Right wall
-      const right = new THREE.Mesh(new THREE.BoxGeometry(0.25, wallH, room), wallMat);
-      right.position.set(half, floorY + wallH / 2, 0); right.receiveShadow = true; right.castShadow = true;
-      group.add(right);
-
-      // Horizontal wall panel lines
-      const panelMat = new THREE.MeshStandardMaterial({ color: 0x35383e, roughness: 0.9, metalness: 0.2 });
-      for (let y = 1.2; y < wallH - 0.5; y += 1.4) {
-        const stripB = new THREE.Mesh(new THREE.BoxGeometry(room - 0.3, 0.06, 0.08), panelMat);
-        stripB.position.set(0, floorY + y, -half + 0.14); group.add(stripB);
-        const stripL = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, room - 0.3), panelMat);
-        stripL.position.set(-half + 0.14, floorY + y, 0); group.add(stripL);
-        const stripR = new THREE.Mesh(new THREE.BoxGeometry(0.08, 0.06, room - 0.3), panelMat);
-        stripR.position.set(half - 0.14, floorY + y, 0); group.add(stripR);
-      }
-
-      // Ceiling / roof deck
-      const ceilMat = new THREE.MeshStandardMaterial({ color: 0x2e3238, roughness: 0.85, metalness: 0.25 });
-      const ceil = new THREE.Mesh(new THREE.PlaneGeometry(room, room), ceilMat);
-      ceil.rotation.x = Math.PI / 2; ceil.position.y = floorY + wallH; ceil.receiveShadow = true;
-      group.add(ceil);
-
-      // Roof truss beams (I-beam style)
-      const beamMat = new THREE.MeshStandardMaterial({ color: 0x6b7280, roughness: 0.4, metalness: 0.7 });
-      for (let i = -4; i <= 4; i++) {
-        const z = i * 3;
-        // main beam across X
-        const beam = new THREE.Mesh(new THREE.BoxGeometry(room - 0.5, 0.28, 0.18), beamMat);
-        beam.position.set(0, floorY + wallH - 0.35, z); beam.castShadow = true; group.add(beam);
-        // vertical web pieces look
-        const web = new THREE.Mesh(new THREE.BoxGeometry(room - 0.5, 0.12, 0.08), beamMat);
-        web.position.set(0, floorY + wallH - 0.55, z); group.add(web);
-      }
-      // cross beams along Z
-      for (let i = -4; i <= 4; i++) {
-        const x = i * 3;
-        const beam = new THREE.Mesh(new THREE.BoxGeometry(0.18, 0.22, room - 0.5), beamMat);
-        beam.position.set(x, floorY + wallH - 0.4, 0); beam.castShadow = true; group.add(beam);
-      }
-
-      // Support pillars
-      const pillarMat = new THREE.MeshStandardMaterial({ color: 0x555a62, roughness: 0.5, metalness: 0.45 });
-      const pillarPositions = [
-        [-8, -8], [8, -8], [-8, 8], [8, 8],
-        [-8, 0], [8, 0], [0, -8], [0, 8],
-        [-4, -8], [4, -8], [-4, 8], [4, 8]
-      ];
-      for (const [px, pz] of pillarPositions) {
-        const p = new THREE.Mesh(new THREE.BoxGeometry(0.35, wallH - 0.4, 0.35), pillarMat);
-        p.position.set(px, floorY + (wallH - 0.4) / 2, pz); p.castShadow = true; p.receiveShadow = true;
-        group.add(p);
-        // base plate
-        const base = new THREE.Mesh(new THREE.BoxGeometry(0.7, 0.12, 0.7), metalMat);
-        base.position.set(px, floorY + 0.06, pz); group.add(base);
-      }
-
-      // Overhead fluorescent-style light fixtures
-      const fixtureMat = new THREE.MeshStandardMaterial({ color: 0x8a9098, roughness: 0.35, metalness: 0.6 });
-      const tubeMat = new THREE.MeshStandardMaterial({ color: 0xf5f0d8, roughness: 0.3, metalness: 0, emissive: 0xf5f0d8, emissiveIntensity: 0.85 });
-      for (let i = -3; i <= 3; i++) {
-        for (let j = -2; j <= 2; j++) {
-          const fx = i * 3.5, fz = j * 4;
-          const housing = new THREE.Mesh(new THREE.BoxGeometry(2.4, 0.12, 0.35), fixtureMat);
-          housing.position.set(fx, floorY + wallH - 0.85, fz); group.add(housing);
-          const tube = new THREE.Mesh(new THREE.BoxGeometry(2.2, 0.06, 0.18), tubeMat);
-          tube.position.set(fx, floorY + wallH - 0.92, fz); group.add(tube);
-          // soft point light under each fixture
-          const pl = new THREE.PointLight(0xfff4e0, 0.55, 12, 1.6);
-          pl.position.set(fx, floorY + wallH - 1.1, fz);
-          group.add(pl);
-        }
-      }
-
-      // Distant crates / pallets along the walls
-      const crateMat = new THREE.MeshStandardMaterial({ color: 0x6b5344, roughness: 0.85, metalness: 0.05 });
-      const crateMat2 = new THREE.MeshStandardMaterial({ color: 0x4a5560, roughness: 0.6, metalness: 0.3 });
-      function crate(x, z, sx, sy, sz, mat) {
-        const c = new THREE.Mesh(new THREE.BoxGeometry(sx, sy, sz), mat || crateMat);
-        c.position.set(x, floorY + sy / 2, z); c.castShadow = true; c.receiveShadow = true; group.add(c);
-      }
-      crate(-11, -10, 1.8, 1.2, 1.5);
-      crate(-11, -8.2, 1.6, 0.9, 1.4);
-      crate(-9.2, -10.5, 1.2, 1.5, 1.2);
-      crate(11, -9, 2, 1.4, 1.6, crateMat2);
-      crate(10.5, -6.8, 1.5, 1.0, 1.3, crateMat2);
-      crate(-11, 9, 1.7, 1.1, 1.5);
-      crate(11, 8.5, 1.8, 1.3, 1.4, crateMat2);
-      crate(9, 10, 1.4, 0.8, 1.2);
-
-      // Ambient + key lights tuned for warehouse
-      group.add(new THREE.AmbientLight(0xc8cdd4, 0.32));
-      const key = new THREE.DirectionalLight(0xfff0dd, 0.55);
-      key.position.set(6, 14, 5); key.castShadow = true;
-      key.shadow.mapSize.set(1024, 1024);
-      key.shadow.camera.near = 1; key.shadow.camera.far = 40;
-      key.shadow.camera.left = -12; key.shadow.camera.right = 12;
-      key.shadow.camera.top = 12; key.shadow.camera.bottom = -12;
-      group.add(key);
-      const fill = new THREE.DirectionalLight(0xa0b0c8, 0.22);
-      fill.position.set(-5, 6, -4); group.add(fill);
-
-      scene.add(group);
-      return group;
-    }
-    buildWarehouse();
+    scene.add(new THREE.AmbientLight(0xffffff, 0.55));
+    const key = new THREE.DirectionalLight(0xfff5e6, 1.15); key.position.set(4, 7, 3); scene.add(key);
+    scene.add(new THREE.DirectionalLight(0xa5b4fc, 0.35).translateX(-3).translateY(2).translateZ(-4));
+    const ground = new THREE.Mesh(new THREE.PlaneGeometry(20, 20), new THREE.MeshStandardMaterial({ color: 0x0c0c12, roughness: 0.95, metalness: 0.05 }));
+    ground.rotation.x = -Math.PI / 2; ground.position.y = -1.35; scene.add(ground);
 
     let clayGridGroup = null, units = [], selected = new Set(), mesh = null;
     const dummy = new THREE.Object3D();
@@ -479,7 +325,6 @@
       const count = units.length, boxSize = cell * 0.98;
       mesh = new THREE.InstancedMesh(new THREE.BoxGeometry(boxSize, boxSize, boxSize), new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.08, flatShading: true }), count);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
-      mesh.castShadow = true; mesh.receiveShadow = true;
       const colors = new Float32Array(count * 3);
       for (let i = 0; i < count; i++) {
         const u = units[i];
