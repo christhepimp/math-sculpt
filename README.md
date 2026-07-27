@@ -13,22 +13,27 @@ You control every unit with pure math.
 ## The core idea
 
 ```
-pos += dir(azimuth, elevation) × (distance × unit length)
+// Direction from angles
+dir = (cos(el)·sin(az), sin(el), cos(el)·cos(az))
+
+// Grow / shrink along that direction from the origin
+// (perpendicular components stay the same; outer cells move farther)
+s = pos · dir
+pos = pos - s·dir + (s × (1 + distance × unit_length)) · dir
 ```
 
 **Unit lengths** (the measure for distance):
 
-- `1` = move one unit
-- `2` = move two units
-- `0.5` = move half a unit
+- `1` ≈ one unit of growth along the chosen angle
+- `2` ≈ two units of growth
+- `0.5` ≈ half a unit
+- Negative values contract toward the origin
 
-1. Select any units by number (or range, or by tapping)
+1. Select any units (tap, mini-grid, or d-pad)
 2. Type any azimuth angle (0–360°)
 3. Type any elevation angle (−90–90°)
 4. Type distance in unit lengths
-5. Run
-
-That single operation is enough to push, pull, stretch, and reshape the solid square into **any 3D form**.
+5. Run — the selected cells grow or shrink along the straight line of that angle
 
 ---
 
@@ -36,7 +41,8 @@ That single operation is enough to push, pull, stretch, and reshape the solid sq
 
 - A true **solid cube** rendered with InstancedMesh boxes (no gaps)
 - Each of the 5,832 fractions is a real little cube that touches its neighbors
-- Selected units turn pink so you always know what the math will move
+- Selected units turn pink so you always know what the math will affect
+- Thin green reference grid (half previous visual weight)
 - Orbit / zoom / pan with one or two fingers
 
 ---
@@ -45,10 +51,12 @@ That single operation is enough to push, pull, stretch, and reshape the solid sq
 
 Everything is driven by typed numbers:
 
-- Select units: `0, 1, 5, 100-200` or tap the clay
-- Azimuth + elevation define an exact 3D direction
-- Distance is in **unit lengths** (1 = one unit, 0.5 = half a unit, …)
-- Run as many times as you want — the design space is unlimited
+- **Azimuth + elevation** define an exact 3D direction
+- **Distance** grows or shrinks selected cells along that direction from the origin
+- **RGB color** — select cell(s) on the mini-grid, set R/G/B (0–1), Apply
+- Mini-grid + layer slider + d-pad for precise cell selection
+- Click / tap the main clay to add units to selection
+- Reset to perfect solid square anytime
 
 No brushes limited to preset directions. No locked tools.  
 Just math applied to fractions of a solid square.
@@ -57,27 +65,30 @@ Just math applied to fractions of a solid square.
 
 ## Philosophy
 
-| Concept        | MathClay                              |
-|----------------|---------------------------------------|
-| Building block | Unit / fraction (id, position, color) |
-| Solid form     | Dense packing of 5,832 cubes          |
-| Sculpt         | `pos += dir × (distance × unit length)` |
-| Control        | Pure typed math (any angle + distance)|
-| Detail         | More units = higher precision         |
-| Interface      | Simple terminal anyone can use        |
+| Concept        | MathClay                                      |
+|----------------|-----------------------------------------------|
+| Building block | Unit / fraction (id, position, color)         |
+| Solid form     | Dense packing of 5,832 cubes                  |
+| Sculpt         | Scale parallel component from origin along dir |
+| Control        | Pure typed math (any angle + distance + RGB)  |
+| Detail         | More units = higher precision                 |
+| Interface      | Simple terminal + mini-grid anyone can use    |
 
 You are not editing polygons or topology.  
-You are moving the actual fractions that make up the clay.
+You are moving and coloring the actual fractions that make up the clay.
 
 ---
 
 ## Current status
 
 - Solid InstancedMesh cube (no sparse points)
-- Full math terminal (any direction, distance in unit lengths)
+- Full math terminal (any direction + grow/shrink distance from origin)
+- RGB color controls for selected cells (via mini-grid or multi-select)
+- Thinner reference grid
+- Mini-grid + d-pad + layer slider for precise selection
 - Click / tap to add nearby units to selection
-- Unit number overlay
 - Reset to perfect solid square
+- API surface for AI / external commands (same math)
 - Works on desktop and mobile browsers via GitHub Pages
 
 ---
