@@ -27,13 +27,18 @@
       font-family: monospace; font-size: 0.68rem; color: #7dd3fc;
       background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px; line-height: 1.45;
     }
+    #api-dot {
+      display: inline-block; width: 8px; height: 8px; border-radius: 50%;
+      background: #555; margin-right: 6px; vertical-align: middle;
+    }
+    #api-dot.on { background: #4ade80; box-shadow: 0 0 8px #4ade80; }
     #hint-view {
       position: absolute; left: 12px; bottom: 16px; z-index: 20;
       font-size: 0.65rem; color: #555; background: rgba(0,0,0,0.4);
       padding: 6px 10px; border-radius: 8px; pointer-events: none;
     }
     #terminal {
-      position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 82vh;
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 85vh;
       background: rgba(10, 10, 16, 0.98); border-top: 1px solid #2a2a3a;
       border-radius: 16px 16px 0 0; transform: translateY(100%); transition: transform 0.28s ease;
       display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
@@ -62,11 +67,12 @@
       display: block; font-size: 0.62rem; color: #888; text-transform: uppercase;
       letter-spacing: 0.06em; margin: 10px 0 4px; font-family: 'Segoe UI', system-ui, sans-serif;
     }
-    input[type="text"] {
+    input[type="text"], textarea {
       width: 100%; background: #14141c; border: 1px solid #333; border-radius: 8px;
       color: #7dd3fc; font-family: inherit; font-size: 0.82rem; padding: 10px 12px; outline: none;
     }
-    input[type="text"]:focus { border-color: #38bdf8; }
+    input[type="text"]:focus, textarea:focus { border-color: #38bdf8; }
+    textarea { min-height: 72px; resize: vertical; }
     .row { display: flex; gap: 8px; margin-top: 10px; }
     button.go {
       flex: 1; background: #0ea5e9; border: 1px solid #0284c7; color: #fff;
@@ -78,6 +84,11 @@
       padding: 11px; border-radius: 8px; font-size: 0.78rem; cursor: pointer;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
+    button.ai-on {
+      flex: 1; background: #14532d; border: 1px solid #39ff14; color: #39ff14;
+      padding: 11px; border-radius: 8px; font-size: 0.78rem; cursor: pointer;
+      font-family: 'Segoe UI', system-ui, sans-serif;
+    }
     #log {
       margin-top: 12px; padding: 8px 10px; background: #0c0c12; border: 1px solid #222;
       border-radius: 8px; font-size: 0.72rem; color: #94a3b8; min-height: 36px; white-space: pre-wrap;
@@ -85,19 +96,21 @@
     #log.err { color: #f87171; }
     #log.ok { color: #4ade80; }
 
-    #grid-nav {
+    #grid-nav, #api-panel {
       margin-top: 12px;
       padding: 12px;
       background: #0c0c12;
       border: 1px solid #1f3a2a;
       border-radius: 12px;
     }
-    #grid-nav h3 {
+    #api-panel { border-color: #1e3a5f; }
+    #grid-nav h3, #api-panel h3 {
       font-size: 0.78rem;
       color: #39ff14;
       margin-bottom: 6px;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
+    #api-panel h3 { color: #38bdf8; }
     #grid-info {
       font-size: 0.68rem;
       color: #a7f3d0;
@@ -105,6 +118,12 @@
       line-height: 1.4;
     }
     #grid-info strong { color: #39ff14; }
+    #api-status {
+      font-size: 0.68rem;
+      color: #94a3b8;
+      margin-bottom: 8px;
+    }
+    #api-status.on { color: #4ade80; }
     #mini-canvas-wrap {
       position: relative;
       width: 100%;
@@ -221,8 +240,8 @@
 </head>
 <body>
   <div id="canvas-container"></div>
-  <div id="stats">cells: —</div>
-  <div id="hint-view">rotate · zoom · MATH → select on grid (red) → set angles → Run math</div>
+  <div id="stats"><span id="api-dot"></span>cells: —</div>
+  <div id="hint-view">rotate · zoom · MATH → select → Run math · AI can sculpt when API is connected</div>
   <button id="term-toggle">MATH</button>
 
   <div id="terminal">
@@ -235,7 +254,6 @@
       <p class="help">
         Select cells on the mini grid (they turn <strong style="color:#ef4444">red</strong>).
         Set azimuth / elevation / distance, then <strong>Run math</strong>.
-        The mini always matches the real square.
       </p>
 
       <label>azimuth (0–360)</label>
@@ -250,6 +268,25 @@
       </div>
       <div class="row">
         <button class="dim" id="reset">Reset square</button>
+      </div>
+
+      <div id="api-panel">
+        <h3>API · AI sculpt</h3>
+        <div id="api-status">Status: <strong>disconnected</strong> · AI cannot sculpt until you connect</div>
+        <div class="row" style="margin-top:6px">
+          <button type="button" class="dim" id="api-connect">Connect API</button>
+          <button type="button" class="dim" id="api-disconnect">Disconnect</button>
+        </div>
+        <label style="margin-top:12px">AI / API command (JSON)</label>
+        <textarea id="api-cmd" placeholder='{"op":"sculpt","ids":[1,2,3],"az":45,"el":20,"dist":2}'></textarea>
+        <div class="row">
+          <button type="button" class="go" id="api-run">Run command</button>
+        </div>
+        <p class="help" style="margin-top:8px;margin-bottom:0">
+          When <strong>connected</strong>, AI (or any script) can call <code>window.MathClay</code> or send <code>postMessage</code>.
+          Ops: <code>sculpt</code>, <code>select</code>, <code>clear</code>, <code>reset</code>, <code>state</code>.
+          Also select by grid: <code>{"op":"sculpt","coords":[[0,0,0],[1,0,0]],"az":90,"el":0,"dist":3}</code>
+        </p>
       </div>
 
       <div id="grid-nav">
@@ -286,8 +323,7 @@
           </div>
         </div>
         <p class="help" style="margin-top:6px;margin-bottom:0">
-          Mini shows the <strong>real</strong> square (moves when you sculpt).
-          Use X/Y/Z + layer + D-pad or tap to pick cells. Red = selected.
+          Mini shows the <strong>real</strong> square. X/Y/Z + layer + D-pad or tap → red = selected.
         </p>
       </div>
 
@@ -313,6 +349,24 @@
     const layerSlider = document.getElementById('layer-slider');
     const layerVal = document.getElementById('layer-val');
     const layerLabel = document.getElementById('layer-label');
+    const apiStatus = document.getElementById('api-status');
+    const apiDot = document.getElementById('api-dot');
+
+    let apiConnected = false;
+
+    function setApiConnected(on) {
+      apiConnected = !!on;
+      apiDot.classList.toggle('on', apiConnected);
+      apiStatus.classList.toggle('on', apiConnected);
+      apiStatus.innerHTML = apiConnected
+        ? 'Status: <strong>connected</strong> · AI can sculpt via MathClay API / postMessage / Run command'
+        : 'Status: <strong>disconnected</strong> · AI cannot sculpt until you connect';
+      document.getElementById('api-connect').className = apiConnected ? 'ai-on' : 'dim';
+      log(apiConnected ? 'API connected · AI sculpt enabled' : 'API disconnected', apiConnected ? 'ok' : '');
+    }
+
+    document.getElementById('api-connect').addEventListener('click', () => setApiConnected(true));
+    document.getElementById('api-disconnect').addEventListener('click', () => setApiConnected(false));
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
@@ -537,7 +591,7 @@
       makeClayThinGrid();
       rebuildMini();
       updateGridInfo();
-      document.getElementById('stats').textContent = `cells: ${TOTAL}`;
+      document.getElementById('stats').innerHTML = `<span id="api-dot" class="${apiConnected ? 'on' : ''}"></span>cells: ${TOTAL}`;
       log(`square ready · ${TOTAL} cells`);
     }
 
@@ -596,7 +650,6 @@
       rebuildMini();
     }
 
-    // Mini always shows ALL cells at current positions (matches the big square)
     function rebuildMini() {
       if (miniMesh) {
         miniScene.remove(miniMesh);
@@ -635,7 +688,6 @@
           } else if (onFocusSlice(u)) {
             colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
           } else {
-            // dim cells not on the focus layer so the slice is readable
             colors[i*3] = u.r * 0.35; colors[i*3+1] = u.g * 0.35; colors[i*3+2] = u.b * 0.35;
           }
         }
@@ -696,26 +748,34 @@
       return n;
     }
 
+    function applySculpt(az, el, dist, idsOptional) {
+      if (idsOptional && idsOptional.length) {
+        selected = new Set(idsOptional.map(Number).filter(n => n >= 1 && n <= TOTAL));
+      }
+      if (selected.size === 0) throw new Error('no cells selected');
+      const dir = dirFromAngles(az, el);
+      const scale = dist * cell;
+      let moved = 0;
+      for (const u of units) {
+        if (!selected.has(u.id)) continue;
+        u.x += dir.x * scale;
+        u.y += dir.y * scale;
+        u.z += dir.z * scale;
+        moved++;
+      }
+      rebuildVisual();
+      rebuildMini();
+      updateGridInfo();
+      return moved;
+    }
+
     function runMath() {
       try {
         if (selected.size === 0) throw new Error('no cells selected · pick some on the mini grid first');
         const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
         const dist = parseNumber(document.getElementById('dist'), 'distance', -1000, 1000);
-        const dir = dirFromAngles(az, el);
-        // distance is in cell sizes so 1 = one grid step
-        const scale = dist * cell;
-        let moved = 0;
-        for (const u of units) {
-          if (!selected.has(u.id)) continue;
-          u.x += dir.x * scale;
-          u.y += dir.y * scale;
-          u.z += dir.z * scale;
-          moved++;
-        }
-        // Force full rebuild so the move is unmistakable on both views
-        rebuildVisual();
-        rebuildMini();
+        const moved = applySculpt(az, el, dist);
         log(`ok · moved ${moved} cells · az=${az} el=${el} dist=${dist}`, 'ok');
       } catch (e) { log(e.message, 'err'); }
     }
@@ -726,6 +786,105 @@
       updateGridInfo();
       log('selection cleared');
     }
+
+    function idsFromCoords(coords) {
+      const out = [];
+      for (const c of coords) {
+        const ix = c[0], iy = c[1], iz = c[2];
+        if (ix < 0 || iy < 0 || iz < 0 || ix >= SIDE || iy >= SIDE || iz >= SIDE) continue;
+        const id = idGrid[iz]?.[iy]?.[ix];
+        if (id) out.push(id);
+      }
+      return out;
+    }
+
+    function apiExecute(cmd) {
+      if (!apiConnected) throw new Error('API disconnected · press Connect API first');
+      const op = (cmd.op || cmd.action || 'sculpt').toLowerCase();
+
+      if (op === 'state' || op === 'getstate') {
+        return {
+          ok: true,
+          side: SIDE,
+          total: TOTAL,
+          selected: [...selected],
+          cells: units.map(u => ({ id: u.id, ix: u.ix, iy: u.iy, iz: u.iz, x: u.x, y: u.y, z: u.z }))
+        };
+      }
+      if (op === 'clear') {
+        clearSelect();
+        return { ok: true, selected: 0 };
+      }
+      if (op === 'reset') {
+        createSolidSquare();
+        return { ok: true, reset: true };
+      }
+      if (op === 'select') {
+        let ids = cmd.ids || cmd.select || [];
+        if (cmd.coords) ids = idsFromCoords(cmd.coords);
+        ids.forEach(id => selected.add(Number(id)));
+        syncVisual();
+        updateGridInfo();
+        return { ok: true, selected: selected.size };
+      }
+      if (op === 'sculpt' || op === 'run' || op === 'math') {
+        let ids = cmd.ids || cmd.select || null;
+        if (cmd.coords) ids = idsFromCoords(cmd.coords);
+        const az = Number(cmd.az ?? cmd.azimuth ?? 0);
+        const el = Number(cmd.el ?? cmd.elevation ?? 0);
+        const dist = Number(cmd.dist ?? cmd.distance ?? 1);
+        if (Number.isNaN(az) || Number.isNaN(el) || Number.isNaN(dist)) throw new Error('az, el, dist must be numbers');
+        const moved = applySculpt(az, el, dist, ids);
+        log(`AI sculpt · moved ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
+        return { ok: true, moved, az, el, dist, selected: selected.size };
+      }
+      throw new Error('unknown op · use sculpt | select | clear | reset | state');
+    }
+
+    document.getElementById('api-run').addEventListener('click', () => {
+      try {
+        const raw = document.getElementById('api-cmd').value.trim();
+        if (!raw) throw new Error('empty command');
+        const cmd = JSON.parse(raw);
+        const result = apiExecute(cmd);
+        log('API ok · ' + JSON.stringify(result), 'ok');
+      } catch (e) {
+        log('API · ' + e.message, 'err');
+      }
+    });
+
+    // postMessage bridge for external AI / iframes / extensions
+    window.addEventListener('message', (ev) => {
+      const data = ev.data;
+      if (!data || data.type !== 'mathclay') return;
+      try {
+        if (data.connect === true) setApiConnected(true);
+        if (data.connect === false) setApiConnected(false);
+        if (data.cmd) {
+          const result = apiExecute(data.cmd);
+          if (ev.source) ev.source.postMessage({ type: 'mathclay-result', result }, '*');
+        }
+      } catch (e) {
+        if (ev.source) ev.source.postMessage({ type: 'mathclay-result', error: e.message }, '*');
+        log('API · ' + e.message, 'err');
+      }
+    });
+
+    // Public API for AI / console / agents
+    window.MathClay = {
+      connect() { setApiConnected(true); return { ok: true, connected: true }; },
+      disconnect() { setApiConnected(false); return { ok: true, connected: false }; },
+      isConnected() { return apiConnected; },
+      execute(cmd) { return apiExecute(cmd); },
+      sculpt(az, el, dist, ids) { return apiExecute({ op: 'sculpt', az, el, dist, ids }); },
+      select(ids) { return apiExecute({ op: 'select', ids }); },
+      selectCoords(coords) { return apiExecute({ op: 'select', coords }); },
+      clear() { return apiExecute({ op: 'clear' }); },
+      reset() { return apiExecute({ op: 'reset' }); },
+      state() { return apiExecute({ op: 'state' }); },
+      side: SIDE,
+      total: TOTAL
+    };
 
     function currentFractionId() {
       if (!idGrid) return null;
@@ -807,7 +966,6 @@
       miniRay.setFromCamera(miniMouse, miniCam);
       const o = miniRay.ray.origin, d = miniRay.ray.direction;
       let best = null, bestD = Infinity;
-      // Prefer cells on the focus slice, then fall back to any
       const preferred = units.filter(onFocusSlice);
       const pools = preferred.length ? [preferred, units] : [units];
       for (const pool of pools) {
@@ -846,7 +1004,7 @@
 
     window.addEventListener('keydown', e => {
       if (!document.getElementById('terminal').classList.contains('open')) return;
-      if (e.target.tagName === 'INPUT') return;
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
       if (e.key === 'ArrowUp') { e.preventDefault(); moveCursor(0, 1, 0); }
       else if (e.key === 'ArrowDown') { e.preventDefault(); moveCursor(0, -1, 0); }
       else if (e.key === 'ArrowLeft') { e.preventDefault(); moveCursor(-1, 0, 0); }
@@ -856,7 +1014,6 @@
       else if (e.key === 'PageDown') { e.preventDefault(); moveCursor(0, 0, -1); }
     });
 
-    // Main view click still adds to selection
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
