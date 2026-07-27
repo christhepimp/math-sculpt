@@ -60,13 +60,14 @@
 <body>
   <div id="canvas-container"></div>
   <div id="stats"><span id="api-dot"></span>cells: —</div>
-  <div id="hint-view">MATH · same math for you and AI: azimuth + elevation + distance</div>
+  <div id="hint-view">MATH · same math for you and AI: azimuth + elevation + distance (grow from origin along angle)</div>
   <button id="term-toggle">MATH</button>
   <div id="terminal">
     <div id="term-header"><span>Math terminal</span><button id="term-close">✕</button></div>
     <div id="term-body">
       <h2>Sculpt</h2>
-      <p class="help">Math is only <strong>azimuth</strong> + <strong>elevation</strong> + <strong>distance</strong> (same for manual and AI).</p>
+      <p class="help">Math is only <strong>azimuth</strong> + <strong>elevation</strong> + <strong>distance</strong> (same for manual and AI).<br>
+      Distance <strong>grows / shrinks</strong> selected cells along the chosen angle from the origin (outer cells move farther, perpendicular stays the same).</p>
       <label>azimuth (0–360)</label><input type="text" id="az" value="45" />
       <label>elevation (−90–90)</label><input type="text" id="el" value="20" />
       <label>distance</label><input type="text" id="dist" value="2" />
@@ -335,6 +336,8 @@
     }
 
     // THE math: azimuth + elevation + distance (same for UI and AI)
+    // Distance grows/shrinks the parallel component from the ORIGIN along the chosen direction.
+    // Perpendicular components stay unchanged. Outer cells move farther; positive dist expands, negative contracts.
     function dirFromAngles(azDeg, elDeg) {
       const az = azDeg * Math.PI / 180, el = elDeg * Math.PI / 180;
       return { x: Math.cos(el) * Math.sin(az), y: Math.sin(el), z: Math.cos(el) * Math.cos(az) };
@@ -348,11 +351,21 @@
     function applySculpt(az, el, dist, idsOptional) {
       if (idsOptional && idsOptional.length) selected = new Set(idsOptional.map(Number).filter(n => n >= 1 && n <= TOTAL));
       if (selected.size === 0) throw new Error('no cells selected');
-      const dir = dirFromAngles(az, el), scale = dist * cell;
+      const dir = dirFromAngles(az, el);
+      // factor > 1 expands away from origin along dir; factor < 1 contracts toward origin
+      // dist is in "cell" units so a value of ~1–5 feels natural
+      const factor = 1 + dist * cell;
       let moved = 0;
       for (const u of units) {
         if (!selected.has(u.id)) continue;
-        u.x += dir.x * scale; u.y += dir.y * scale; u.z += dir.z * scale; moved++;
+        // scalar projection onto the unit direction
+        const s = u.x * dir.x + u.y * dir.y + u.z * dir.z;
+        const newS = s * factor;
+        // keep perpendicular, replace parallel component
+        u.x = u.x - s * dir.x + newS * dir.x;
+        u.y = u.y - s * dir.y + newS * dir.y;
+        u.z = u.z - s * dir.z + newS * dir.z;
+        moved++;
       }
       rebuildVisual(); rebuildMini(); updateGridInfo();
       return moved;
@@ -364,7 +377,7 @@
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
         const dist = parseNumber(document.getElementById('dist'), 'distance', -1000, 1000);
         const moved = applySculpt(az, el, dist);
-        log(`ok · moved ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
+        log(`ok · grew ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
         if (apiConnected) refreshLiveView();
       } catch (e) { log(e.message, 'err'); }
     }
@@ -457,7 +470,7 @@
         }
         rebuildVisual(); rebuildMini(); updateGridInfo();
         const image = captureSnapshot(480); livePreview.src = image;
-        log(`ok · ${steps.length} steps · moved ${totalMoved} (azimuth + elevation + distance)`, 'ok');
+        log(`ok · ${steps.length} steps · grew ${totalMoved} (azimuth + elevation + distance)`, 'ok');
         return { ok: true, name: cmd.name || '', steps: results.length, totalMoved, results, image };
       }
 
@@ -468,7 +481,7 @@
         if (Number.isNaN(az) || Number.isNaN(el) || Number.isNaN(dist)) throw new Error('azimuth, elevation, distance must be numbers');
         const moved = applySculpt(az, el, dist, ids);
         const image = captureSnapshot(480); livePreview.src = image;
-        log(`ok · moved ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
+        log(`ok · grew ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
         return { ok: true, moved, azimuth: az, elevation: el, distance: dist, image };
       }
       throw new Error('unknown command');
