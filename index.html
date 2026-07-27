@@ -141,107 +141,43 @@
       width: 100% !important;
       height: 100% !important;
     }
-    .axis-row {
-      display: flex;
-      gap: 6px;
-      margin-bottom: 8px;
-    }
+    .axis-row { display: flex; gap: 6px; margin-bottom: 8px; }
     .axis-btn {
-      flex: 1;
-      padding: 8px 0;
-      border-radius: 8px;
-      border: 1px solid #2a5c3a;
-      background: #0d2818;
-      color: #6ee7b7;
-      font-size: 0.75rem;
-      font-weight: 600;
-      cursor: pointer;
+      flex: 1; padding: 8px 0; border-radius: 8px; border: 1px solid #2a5c3a;
+      background: #0d2818; color: #6ee7b7; font-size: 0.75rem; font-weight: 600; cursor: pointer;
     }
     .axis-btn.active {
-      background: #14532d;
-      border-color: #39ff14;
-      color: #39ff14;
+      background: #14532d; border-color: #39ff14; color: #39ff14;
       box-shadow: 0 0 10px rgba(57,255,20,0.25);
     }
-    .dpad-wrap {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 4px;
-      margin: 8px 0;
-    }
-    .dpad-row {
-      display: flex;
-      gap: 6px;
-      align-items: center;
-      justify-content: center;
-    }
+    .dpad-wrap { display: flex; flex-direction: column; align-items: center; gap: 4px; margin: 8px 0; }
+    .dpad-row { display: flex; gap: 6px; align-items: center; justify-content: center; }
     .dpad-btn {
-      width: 48px;
-      height: 48px;
-      border-radius: 12px;
-      border: 2px solid #1a5c3a;
-      background: #0d2818;
-      color: #39ff14;
-      font-size: 1.2rem;
-      font-weight: 700;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      user-select: none;
-      -webkit-user-select: none;
-      touch-action: manipulation;
+      width: 48px; height: 48px; border-radius: 12px; border: 2px solid #1a5c3a;
+      background: #0d2818; color: #39ff14; font-size: 1.2rem; font-weight: 700; cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none; -webkit-user-select: none; touch-action: manipulation;
     }
     .dpad-btn:active {
-      background: #14532d;
-      border-color: #39ff14;
+      background: #14532d; border-color: #39ff14;
       box-shadow: 0 0 12px rgba(57, 255, 20, 0.4);
     }
     .dpad-select {
-      width: 70px;
-      height: 42px;
-      border-radius: 10px;
-      border: 2px solid #ef4444;
-      background: #3f1212;
-      color: #fca5a5;
-      font-size: 0.7rem;
-      font-weight: 700;
-      letter-spacing: 0.06em;
-      cursor: pointer;
+      width: 70px; height: 42px; border-radius: 10px; border: 2px solid #ef4444;
+      background: #3f1212; color: #fca5a5; font-size: 0.7rem; font-weight: 700;
+      letter-spacing: 0.06em; cursor: pointer;
     }
-    .dpad-select:active {
-      background: #ef4444;
-      color: #fff;
-    }
-    .layer-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      margin-top: 8px;
-    }
-    .layer-row label {
-      margin: 0;
-      flex-shrink: 0;
-      font-size: 0.65rem;
-      min-width: 52px;
-    }
-    #layer-slider {
-      flex: 1;
-      accent-color: #39ff14;
-    }
-    #layer-val {
-      min-width: 28px;
-      text-align: center;
-      color: #39ff14;
-      font-size: 0.8rem;
-    }
+    .dpad-select:active { background: #ef4444; color: #fff; }
+    .layer-row { display: flex; gap: 8px; align-items: center; margin-top: 8px; }
+    .layer-row label { margin: 0; flex-shrink: 0; font-size: 0.65rem; min-width: 52px; }
+    #layer-slider { flex: 1; accent-color: #39ff14; }
+    #layer-val { min-width: 28px; text-align: center; color: #39ff14; font-size: 0.8rem; }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="stats"><span id="api-dot"></span>cells: —</div>
-  <div id="hint-view">rotate · zoom · MATH → select → Run math · AI can sculpt when API is connected</div>
+  <div id="hint-view">rotate · zoom · MATH → select → Run math · AI batch uses same math</div>
   <button id="term-toggle">MATH</button>
 
   <div id="terminal">
@@ -252,8 +188,8 @@
     <div id="term-body">
       <h2>Sculpt</h2>
       <p class="help">
-        Select cells on the mini grid (they turn <strong style="color:#ef4444">red</strong>).
-        Set azimuth / elevation / distance, then <strong>Run math</strong>.
+        Select cells (red) → set az / el / distance → <strong>Run math</strong>.
+        AI uses <strong>the same math</strong> and can run many moves in one batch.
       </p>
 
       <label>azimuth (0–360)</label>
@@ -272,59 +208,47 @@
 
       <div id="api-panel">
         <h3>API · AI sculpt</h3>
-        <div id="api-status">Status: <strong>disconnected</strong> · AI cannot sculpt until you connect</div>
+        <div id="api-status">Status: <strong>disconnected</strong> · connect so AI can see + sculpt</div>
         <div class="row" style="margin-top:6px">
           <button type="button" class="dim" id="api-connect">Connect API</button>
           <button type="button" class="dim" id="api-disconnect">Disconnect</button>
         </div>
         <label style="margin-top:12px">AI / API command (JSON)</label>
-        <textarea id="api-cmd" placeholder='{"op":"sculpt","ids":[1,2,3],"az":45,"el":20,"dist":2}'></textarea>
+        <textarea id="api-cmd" placeholder='{"op":"batch","steps":[{"ids":[1,2],"az":45,"el":20,"dist":2},{"coords":[[0,0,0]],"az":90,"el":0,"dist":1}]}'></textarea>
         <div class="row">
           <button type="button" class="go" id="api-run">Run command</button>
         </div>
         <p class="help" style="margin-top:8px;margin-bottom:0">
-          When <strong>connected</strong>, AI (or any script) can call <code>window.MathClay</code> or send <code>postMessage</code>.
-          Ops: <code>sculpt</code>, <code>select</code>, <code>clear</code>, <code>reset</code>, <code>state</code>.
-          Also select by grid: <code>{"op":"sculpt","coords":[[0,0,0],[1,0,0]],"az":90,"el":0,"dist":3}</code>
+          <strong>Live view for AI:</strong> <code>{"op":"state"}</code> returns every cell’s live position.<br>
+          <strong>One move:</strong> <code>{"op":"sculpt","ids":[1,2],"az":45,"el":20,"dist":2}</code><br>
+          <strong>Many at once:</strong> <code>{"op":"batch","steps":[...]}</code> — all use the same az/el/dist math, applied together, then the square redraws once.
         </p>
       </div>
 
       <div id="grid-nav">
         <h3>Grid select · same as the real square</h3>
         <div id="grid-info">Axis <strong>Z</strong> · Layer <strong>0</strong> · Cursor <strong>0,0,0</strong> · Selected: <strong>0</strong></div>
-
         <div class="axis-row">
           <button type="button" class="axis-btn" id="axis-x" data-axis="x">X · left–right</button>
           <button type="button" class="axis-btn" id="axis-y" data-axis="y">Y · bottom–top</button>
           <button type="button" class="axis-btn active" id="axis-z" data-axis="z">Z · front–back</button>
         </div>
-
-        <div id="mini-canvas-wrap">
-          <canvas id="mini-canvas"></canvas>
-        </div>
-
+        <div id="mini-canvas-wrap"><canvas id="mini-canvas"></canvas></div>
         <div class="layer-row">
           <label id="layer-label">Layer Z</label>
           <input type="range" id="layer-slider" min="0" max="17" value="0" />
           <span id="layer-val">0</span>
         </div>
-
         <div class="dpad-wrap">
-          <div class="dpad-row">
-            <button class="dpad-btn" id="dpad-up" type="button">▲</button>
-          </div>
+          <div class="dpad-row"><button class="dpad-btn" id="dpad-up" type="button">▲</button></div>
           <div class="dpad-row">
             <button class="dpad-btn" id="dpad-left" type="button">◄</button>
             <button class="dpad-select" id="dpad-select" type="button">SELECT</button>
             <button class="dpad-btn" id="dpad-right" type="button">►</button>
           </div>
-          <div class="dpad-row">
-            <button class="dpad-btn" id="dpad-down" type="button">▼</button>
-          </div>
+          <div class="dpad-row"><button class="dpad-btn" id="dpad-down" type="button">▼</button></div>
         </div>
-        <p class="help" style="margin-top:6px;margin-bottom:0">
-          Mini shows the <strong>real</strong> square. X/Y/Z + layer + D-pad or tap → red = selected.
-        </p>
+        <p class="help" style="margin-top:6px;margin-bottom:0">Mini = real square. Tap or D-pad → red = selected.</p>
       </div>
 
       <div id="log">ready</div>
@@ -350,19 +274,19 @@
     const layerVal = document.getElementById('layer-val');
     const layerLabel = document.getElementById('layer-label');
     const apiStatus = document.getElementById('api-status');
-    const apiDot = document.getElementById('api-dot');
 
     let apiConnected = false;
 
     function setApiConnected(on) {
       apiConnected = !!on;
-      apiDot.classList.toggle('on', apiConnected);
+      const dot = document.getElementById('api-dot');
+      if (dot) dot.classList.toggle('on', apiConnected);
       apiStatus.classList.toggle('on', apiConnected);
       apiStatus.innerHTML = apiConnected
-        ? 'Status: <strong>connected</strong> · AI can sculpt via MathClay API / postMessage / Run command'
-        : 'Status: <strong>disconnected</strong> · AI cannot sculpt until you connect';
+        ? 'Status: <strong>connected</strong> · AI has live state + can batch-sculpt with your math'
+        : 'Status: <strong>disconnected</strong> · connect so AI can see + sculpt';
       document.getElementById('api-connect').className = apiConnected ? 'ai-on' : 'dim';
-      log(apiConnected ? 'API connected · AI sculpt enabled' : 'API disconnected', apiConnected ? 'ok' : '');
+      log(apiConnected ? 'API connected' : 'API disconnected', apiConnected ? 'ok' : '');
     }
 
     document.getElementById('api-connect').addEventListener('click', () => setApiConnected(true));
@@ -370,10 +294,8 @@
 
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
-
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 100);
     camera.position.set(2.8, 2.2, 3.4);
-
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
     renderer.setSize(window.innerWidth, window.innerHeight);
     renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
@@ -385,8 +307,6 @@
     controls.enableDamping = true;
     controls.dampingFactor = 0.08;
     controls.enablePan = true;
-    controls.enableZoom = true;
-    controls.enableRotate = true;
     controls.minDistance = 0.8;
     controls.maxDistance = 20;
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
@@ -406,14 +326,23 @@
     scene.add(ground);
 
     let clayGridGroup = null;
+    let units = [];
+    let selected = new Set();
+    let mesh = null;
+    let dummy = new THREE.Object3D();
+    const claySize = 2.0;
+    const clickBrush = 0.22;
+    const SIDE = 18;
+    const TOTAL = SIDE * SIDE * SIDE;
+    let cell = claySize / SIDE;
+    let idGrid = null;
+    let cursorX = 0, cursorY = 0, cursorZ = 0;
+    let sliceAxis = 'z';
 
     function makeClayThinGrid() {
       if (clayGridGroup) {
         scene.remove(clayGridGroup);
-        clayGridGroup.traverse(o => {
-          if (o.geometry) o.geometry.dispose();
-          if (o.material) o.material.dispose();
-        });
+        clayGridGroup.traverse(o => { o.geometry?.dispose(); o.material?.dispose(); });
         clayGridGroup = null;
       }
       const half = claySize * 0.5;
@@ -432,25 +361,9 @@
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-      const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.35, depthWrite: false });
-      clayGridGroup = new THREE.LineSegments(geo, mat);
+      clayGridGroup = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.35, depthWrite: false }));
       scene.add(clayGridGroup);
     }
-
-    let units = [];
-    let selected = new Set();
-    let mesh = null;
-    let dummy = new THREE.Object3D();
-    const claySize = 2.0;
-    const clickBrush = 0.22;
-
-    const SIDE = 18;
-    const TOTAL = SIDE * SIDE * SIDE;
-    let cell = claySize / SIDE;
-
-    let idGrid = null;
-    let cursorX = 0, cursorY = 0, cursorZ = 0;
-    let sliceAxis = 'z';
 
     const miniWrap = document.getElementById('mini-canvas-wrap');
     const miniCanvas = document.getElementById('mini-canvas');
@@ -468,18 +381,13 @@
     miniControls.maxDistance = 8;
     miniControls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
     miniScene.add(new THREE.AmbientLight(0xffffff, 0.7));
-    const mKey = new THREE.DirectionalLight(0xffffff, 0.9);
-    mKey.position.set(3, 5, 2);
-    miniScene.add(mKey);
+    miniScene.add(new THREE.DirectionalLight(0xffffff, 0.9).translateX(3).translateY(5).translateZ(2));
 
-    let miniMesh = null;
-    let miniGrid = null;
-    let miniCursorMesh = null;
+    let miniMesh = null, miniGrid = null, miniCursorMesh = null;
     const miniDummy = new THREE.Object3D();
 
     function resizeMini() {
-      const w = miniWrap.clientWidth;
-      const h = miniWrap.clientHeight;
+      const w = miniWrap.clientWidth, h = miniWrap.clientHeight;
       if (w < 10 || h < 10) return;
       miniCam.aspect = w / h;
       miniCam.updateProjectionMatrix();
@@ -502,18 +410,27 @@
       if (sliceAxis === 'y') return cursorY;
       return cursorZ;
     }
-
     function setLayerIndex(v) {
       v = Math.max(0, Math.min(SIDE - 1, v));
       if (sliceAxis === 'x') cursorX = v;
       else if (sliceAxis === 'y') cursorY = v;
       else cursorZ = v;
     }
-
     function onFocusSlice(u) {
       if (sliceAxis === 'x') return u.ix === cursorX;
       if (sliceAxis === 'y') return u.iy === cursorY;
       return u.iz === cursorZ;
+    }
+
+    // SAME math the UI uses
+    function dirFromAngles(azDeg, elDeg) {
+      const az = azDeg * Math.PI / 180;
+      const el = elDeg * Math.PI / 180;
+      return {
+        x: Math.cos(el) * Math.sin(az),
+        y: Math.sin(el),
+        z: Math.cos(el) * Math.cos(az)
+      };
     }
 
     function createSolidSquare() {
@@ -523,14 +440,11 @@
       const half = claySize * 0.5;
       const origin = -half + cell * 0.5;
       idGrid = [];
-
       const grid = [];
       for (let iz = 0; iz < SIDE; iz++) {
-        grid[iz] = [];
-        idGrid[iz] = [];
+        grid[iz] = []; idGrid[iz] = [];
         for (let iy = 0; iy < SIDE; iy++) {
-          grid[iz][iy] = [];
-          idGrid[iz][iy] = [];
+          grid[iz][iy] = []; idGrid[iz][iy] = [];
           for (let ix = 0; ix < SIDE; ix++) {
             grid[iz][iy][ix] = {
               ix, iy, iz,
@@ -546,13 +460,11 @@
           }
         }
       }
-
       const visited = new Set();
       const key = (ix, iy, iz) => ix + ',' + iy + ',' + iz;
       let displayNum = 1;
       const maxShell = Math.floor((SIDE - 1) / 2);
       let currentShell = 0;
-
       function addCell(ix, iy, iz) {
         const k = key(ix, iy, iz);
         if (visited.has(k)) return;
@@ -560,15 +472,10 @@
         const c = grid[iz][iy][ix];
         if (c.shell !== currentShell) return;
         visited.add(k);
-        units.push({
-          id: displayNum, ix, iy, iz,
-          x: c.x, y: c.y, z: c.z, shell: c.shell,
-          r: c.r, g: c.g, b: c.b
-        });
+        units.push({ id: displayNum, ix, iy, iz, x: c.x, y: c.y, z: c.z, shell: c.shell, r: c.r, g: c.g, b: c.b });
         idGrid[iz][iy][ix] = displayNum;
         displayNum++;
       }
-
       for (let s = 0; s <= maxShell; s++) {
         currentShell = s;
         const lo = s, hi = SIDE - 1 - s;
@@ -580,31 +487,19 @@
         for (let z = lo + 1; z <= hi - 1; z++) for (let x = lo + 1; x <= hi - 1; x++) addCell(x, hi, z);
         for (let z = lo + 1; z <= hi - 1; z++) for (let x = lo + 1; x <= hi - 1; x++) addCell(x, lo, z);
       }
-
       cursorX = 0; cursorY = 0; cursorZ = 0;
       sliceAxis = 'z';
       document.querySelectorAll('.axis-btn').forEach(b => b.classList.toggle('active', b.dataset.axis === 'z'));
-      layerSlider.value = 0;
-      layerVal.textContent = '0';
-      layerLabel.textContent = 'Layer Z';
-      rebuildVisual();
-      makeClayThinGrid();
-      rebuildMini();
-      updateGridInfo();
+      layerSlider.value = 0; layerVal.textContent = '0'; layerLabel.textContent = 'Layer Z';
+      rebuildVisual(); makeClayThinGrid(); rebuildMini(); updateGridInfo();
       document.getElementById('stats').innerHTML = `<span id="api-dot" class="${apiConnected ? 'on' : ''}"></span>cells: ${TOTAL}`;
       log(`square ready · ${TOTAL} cells`);
     }
 
     function rebuildVisual() {
-      if (mesh) {
-        scene.remove(mesh);
-        mesh.geometry?.dispose();
-        mesh.material?.dispose();
-        mesh = null;
-      }
+      if (mesh) { scene.remove(mesh); mesh.geometry?.dispose(); mesh.material?.dispose(); mesh = null; }
       const count = units.length;
-      const boxSize = cell * 0.98;
-      const geo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+      const geo = new THREE.BoxGeometry(cell * 0.98, cell * 0.98, cell * 0.98);
       const mat = new THREE.MeshStandardMaterial({ roughness: 0.55, metalness: 0.08, flatShading: true });
       mesh = new THREE.InstancedMesh(geo, mat, count);
       mesh.instanceMatrix.setUsage(THREE.DynamicDrawUsage);
@@ -612,14 +507,10 @@
       for (let i = 0; i < count; i++) {
         const u = units[i];
         dummy.position.set(u.x, u.y, u.z);
-        dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
-        if (selected.has(u.id)) {
-          colors[i*3] = SEL_R; colors[i*3+1] = SEL_G; colors[i*3+2] = SEL_B;
-        } else {
-          colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
-        }
+        if (selected.has(u.id)) { colors[i*3]=SEL_R; colors[i*3+1]=SEL_G; colors[i*3+2]=SEL_B; }
+        else { colors[i*3]=u.r; colors[i*3+1]=u.g; colors[i*3+2]=u.b; }
       }
       mesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
       mesh.instanceMatrix.needsUpdate = true;
@@ -627,22 +518,16 @@
     }
 
     function syncVisual() {
-      if (!mesh || mesh.count !== units.length) {
-        rebuildVisual();
-      } else {
-        const count = units.length;
+      if (!mesh || mesh.count !== units.length) rebuildVisual();
+      else {
         const colors = mesh.instanceColor.array;
-        for (let i = 0; i < count; i++) {
+        for (let i = 0; i < units.length; i++) {
           const u = units[i];
           dummy.position.set(u.x, u.y, u.z);
-          dummy.scale.set(1, 1, 1);
           dummy.updateMatrix();
           mesh.setMatrixAt(i, dummy.matrix);
-          if (selected.has(u.id)) {
-            colors[i*3] = SEL_R; colors[i*3+1] = SEL_G; colors[i*3+2] = SEL_B;
-          } else {
-            colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
-          }
+          if (selected.has(u.id)) { colors[i*3]=SEL_R; colors[i*3+1]=SEL_G; colors[i*3+2]=SEL_B; }
+          else { colors[i*3]=u.r; colors[i*3+1]=u.g; colors[i*3+2]=u.b; }
         }
         mesh.instanceMatrix.needsUpdate = true;
         mesh.instanceColor.needsUpdate = true;
@@ -651,93 +536,55 @@
     }
 
     function rebuildMini() {
-      if (miniMesh) {
-        miniScene.remove(miniMesh);
-        miniMesh.geometry?.dispose();
-        miniMesh.material?.dispose();
-        miniMesh = null;
-      }
-      if (miniGrid) {
-        miniScene.remove(miniGrid);
-        miniGrid.geometry?.dispose();
-        miniGrid.material?.dispose();
-        miniGrid = null;
-      }
-      if (miniCursorMesh) {
-        miniScene.remove(miniCursorMesh);
-        miniCursorMesh.geometry?.dispose();
-        miniCursorMesh.material?.dispose();
-        miniCursorMesh = null;
-      }
-
+      if (miniMesh) { miniScene.remove(miniMesh); miniMesh.geometry?.dispose(); miniMesh.material?.dispose(); miniMesh = null; }
+      if (miniGrid) { miniScene.remove(miniGrid); miniGrid.geometry?.dispose(); miniGrid.material?.dispose(); miniGrid = null; }
+      if (miniCursorMesh) { miniScene.remove(miniCursorMesh); miniCursorMesh.geometry?.dispose(); miniCursorMesh.material?.dispose(); miniCursorMesh = null; }
       const half = claySize * 0.5;
-      const boxSize = cell * 0.92;
       const count = units.length;
       if (count > 0) {
-        const geo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
-        const mat = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05, flatShading: true });
-        miniMesh = new THREE.InstancedMesh(geo, mat, count);
+        const geo = new THREE.BoxGeometry(cell * 0.92, cell * 0.92, cell * 0.92);
+        miniMesh = new THREE.InstancedMesh(geo, new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05, flatShading: true }), count);
         const colors = new Float32Array(count * 3);
         for (let i = 0; i < count; i++) {
           const u = units[i];
           miniDummy.position.set(u.x, u.y, u.z);
           miniDummy.updateMatrix();
           miniMesh.setMatrixAt(i, miniDummy.matrix);
-          if (selected.has(u.id)) {
-            colors[i*3] = SEL_R; colors[i*3+1] = SEL_G; colors[i*3+2] = SEL_B;
-          } else if (onFocusSlice(u)) {
-            colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
-          } else {
-            colors[i*3] = u.r * 0.35; colors[i*3+1] = u.g * 0.35; colors[i*3+2] = u.b * 0.35;
-          }
+          if (selected.has(u.id)) { colors[i*3]=SEL_R; colors[i*3+1]=SEL_G; colors[i*3+2]=SEL_B; }
+          else if (onFocusSlice(u)) { colors[i*3]=u.r; colors[i*3+1]=u.g; colors[i*3+2]=u.b; }
+          else { colors[i*3]=u.r*0.35; colors[i*3+1]=u.g*0.35; colors[i*3+2]=u.b*0.35; }
         }
         miniMesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
         miniMesh.instanceMatrix.needsUpdate = true;
         miniScene.add(miniMesh);
       }
-
       const positions = [];
       for (let i = 0; i <= SIDE; i++) {
         const x = -half + i * cell;
-        positions.push(x, -half, -half, x, -half, half, x, half, -half, x, half, half, x, -half, -half, x, half, -half, x, -half, half, x, half, half);
+        positions.push(x,-half,-half,x,-half,half,x,half,-half,x,half,half,x,-half,-half,x,half,-half,x,-half,half,x,half,half);
       }
       for (let i = 0; i <= SIDE; i++) {
         const y = -half + i * cell;
-        positions.push(-half, y, -half, half, y, -half, -half, y, half, half, y, half, -half, y, -half, -half, y, half, half, y, -half, half, y, half);
+        positions.push(-half,y,-half,half,y,-half,-half,y,half,half,y,half,-half,y,-half,-half,y,half,half,y,-half,half,y,half);
       }
       for (let i = 0; i <= SIDE; i++) {
         const z = -half + i * cell;
-        positions.push(-half, -half, z, half, -half, z, -half, half, z, half, half, z, -half, -half, z, -half, half, z, half, -half, z, half, half, z);
+        positions.push(-half,-half,z,half,-half,z,-half,half,z,half,half,z,-half,-half,z,-half,half,z,half,-half,z,half,half,z);
       }
       const gGeo = new THREE.BufferGeometry();
       gGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
       miniGrid = new THREE.LineSegments(gGeo, new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.4, depthWrite: false }));
       miniScene.add(miniGrid);
-
       const u = units.find(x => x.ix === cursorX && x.iy === cursorY && x.iz === cursorZ);
       if (u) {
-        const cGeo = new THREE.BoxGeometry(cell * 1.08, cell * 1.08, cell * 1.08);
-        miniCursorMesh = new THREE.Mesh(cGeo, new THREE.MeshBasicMaterial({
-          color: 0x39ff14,
-          transparent: true,
-          opacity: 0.55,
-          depthWrite: false
-        }));
+        miniCursorMesh = new THREE.Mesh(
+          new THREE.BoxGeometry(cell * 1.08, cell * 1.08, cell * 1.08),
+          new THREE.MeshBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.55, depthWrite: false })
+        );
         miniCursorMesh.position.set(u.x, u.y, u.z);
         miniScene.add(miniCursorMesh);
       }
-
       resizeMini();
-    }
-
-    function dirFromAngles(azDeg, elDeg) {
-      const az = azDeg * Math.PI / 180;
-      const el = elDeg * Math.PI / 180;
-      return {
-        x: Math.cos(el) * Math.sin(az),
-        y: Math.sin(el),
-        z: Math.cos(el) * Math.cos(az)
-      };
     }
 
     function parseNumber(el, name, min, max) {
@@ -748,34 +595,40 @@
       return n;
     }
 
-    function applySculpt(az, el, dist, idsOptional) {
-      if (idsOptional && idsOptional.length) {
-        selected = new Set(idsOptional.map(Number).filter(n => n >= 1 && n <= TOTAL));
+    function idsFromCoords(coords) {
+      const out = [];
+      for (const c of coords) {
+        const ix = +c[0], iy = +c[1], iz = +c[2];
+        if (ix < 0 || iy < 0 || iz < 0 || ix >= SIDE || iy >= SIDE || iz >= SIDE) continue;
+        const id = idGrid[iz]?.[iy]?.[ix];
+        if (id) out.push(id);
       }
-      if (selected.size === 0) throw new Error('no cells selected');
+      return out;
+    }
+
+    // Core move — identical math for UI and AI
+    function moveCellsByMath(idSet, az, el, dist) {
       const dir = dirFromAngles(az, el);
       const scale = dist * cell;
       let moved = 0;
       for (const u of units) {
-        if (!selected.has(u.id)) continue;
+        if (!idSet.has(u.id)) continue;
         u.x += dir.x * scale;
         u.y += dir.y * scale;
         u.z += dir.z * scale;
         moved++;
       }
-      rebuildVisual();
-      rebuildMini();
-      updateGridInfo();
       return moved;
     }
 
     function runMath() {
       try {
-        if (selected.size === 0) throw new Error('no cells selected · pick some on the mini grid first');
+        if (selected.size === 0) throw new Error('no cells selected');
         const az = parseNumber(document.getElementById('az'), 'azimuth', 0, 360);
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
         const dist = parseNumber(document.getElementById('dist'), 'distance', -1000, 1000);
-        const moved = applySculpt(az, el, dist);
+        const moved = moveCellsByMath(selected, az, el, dist);
+        rebuildVisual(); rebuildMini(); updateGridInfo();
         log(`ok · moved ${moved} cells · az=${az} el=${el} dist=${dist}`, 'ok');
       } catch (e) { log(e.message, 'err'); }
     }
@@ -787,29 +640,35 @@
       log('selection cleared');
     }
 
-    function idsFromCoords(coords) {
-      const out = [];
-      for (const c of coords) {
-        const ix = c[0], iy = c[1], iz = c[2];
-        if (ix < 0 || iy < 0 || iz < 0 || ix >= SIDE || iy >= SIDE || iz >= SIDE) continue;
-        const id = idGrid[iz]?.[iy]?.[ix];
-        if (id) out.push(id);
-      }
-      return out;
+    function getLiveState() {
+      return {
+        ok: true,
+        live: true,
+        side: SIDE,
+        total: TOTAL,
+        cellSize: cell,
+        selected: [...selected],
+        // live positions of every cell — this is the AI's "view" of the sculpture
+        cells: units.map(u => ({
+          id: u.id,
+          ix: u.ix, iy: u.iy, iz: u.iz,
+          x: u.x, y: u.y, z: u.z
+        }))
+      };
+    }
+
+    function resolveIds(step) {
+      let ids = step.ids || step.select || [];
+      if (step.coords) ids = idsFromCoords(step.coords);
+      return ids.map(Number).filter(n => n >= 1 && n <= TOTAL);
     }
 
     function apiExecute(cmd) {
       if (!apiConnected) throw new Error('API disconnected · press Connect API first');
       const op = (cmd.op || cmd.action || 'sculpt').toLowerCase();
 
-      if (op === 'state' || op === 'getstate') {
-        return {
-          ok: true,
-          side: SIDE,
-          total: TOTAL,
-          selected: [...selected],
-          cells: units.map(u => ({ id: u.id, ix: u.ix, iy: u.iy, iz: u.iz, x: u.x, y: u.y, z: u.z }))
-        };
+      if (op === 'state' || op === 'getstate' || op === 'view' || op === 'live') {
+        return getLiveState();
       }
       if (op === 'clear') {
         clearSelect();
@@ -817,43 +676,69 @@
       }
       if (op === 'reset') {
         createSolidSquare();
-        return { ok: true, reset: true };
+        return { ok: true, reset: true, ...getLiveState() };
       }
       if (op === 'select') {
-        let ids = cmd.ids || cmd.select || [];
-        if (cmd.coords) ids = idsFromCoords(cmd.coords);
-        ids.forEach(id => selected.add(Number(id)));
-        syncVisual();
-        updateGridInfo();
+        resolveIds(cmd).forEach(id => selected.add(id));
+        syncVisual(); updateGridInfo();
         return { ok: true, selected: selected.size };
       }
+
+      // Many math moves at once — same formula as Run math, applied together, one redraw
+      if (op === 'batch' || op === 'multi') {
+        const steps = cmd.steps || cmd.moves || cmd.commands || [];
+        if (!Array.isArray(steps) || !steps.length) throw new Error('batch needs steps: [{ids|coords, az, el, dist}, ...]');
+        let totalMoved = 0;
+        const results = [];
+        for (const step of steps) {
+          const ids = resolveIds(step);
+          if (!ids.length) { results.push({ moved: 0, skip: 'no ids' }); continue; }
+          const az = Number(step.az ?? step.azimuth ?? 0);
+          const el = Number(step.el ?? step.elevation ?? 0);
+          const dist = Number(step.dist ?? step.distance ?? 1);
+          if ([az, el, dist].some(Number.isNaN)) throw new Error('each step needs numeric az, el, dist');
+          const idSet = new Set(ids);
+          const moved = moveCellsByMath(idSet, az, el, dist);
+          ids.forEach(id => selected.add(id));
+          totalMoved += moved;
+          results.push({ moved, az, el, dist });
+        }
+        rebuildVisual(); rebuildMini(); updateGridInfo();
+        log(`AI batch · ${steps.length} steps · moved ${totalMoved} cell-ops`, 'ok');
+        return { ok: true, steps: results.length, totalMoved, results, live: getLiveState() };
+      }
+
       if (op === 'sculpt' || op === 'run' || op === 'math') {
-        let ids = cmd.ids || cmd.select || null;
-        if (cmd.coords) ids = idsFromCoords(cmd.coords);
+        const ids = resolveIds(cmd);
         const az = Number(cmd.az ?? cmd.azimuth ?? 0);
         const el = Number(cmd.el ?? cmd.elevation ?? 0);
         const dist = Number(cmd.dist ?? cmd.distance ?? 1);
-        if (Number.isNaN(az) || Number.isNaN(el) || Number.isNaN(dist)) throw new Error('az, el, dist must be numbers');
-        const moved = applySculpt(az, el, dist, ids);
+        if ([az, el, dist].some(Number.isNaN)) throw new Error('az, el, dist must be numbers');
+        const idSet = ids.length ? new Set(ids) : selected;
+        if (!idSet.size) throw new Error('no cells selected');
+        const moved = moveCellsByMath(idSet, az, el, dist);
+        if (ids.length) ids.forEach(id => selected.add(id));
+        rebuildVisual(); rebuildMini(); updateGridInfo();
         log(`AI sculpt · moved ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
-        return { ok: true, moved, az, el, dist, selected: selected.size };
+        return { ok: true, moved, az, el, dist, live: getLiveState() };
       }
-      throw new Error('unknown op · use sculpt | select | clear | reset | state');
+
+      throw new Error('unknown op · use state | sculpt | batch | select | clear | reset');
     }
 
     document.getElementById('api-run').addEventListener('click', () => {
       try {
         const raw = document.getElementById('api-cmd').value.trim();
         if (!raw) throw new Error('empty command');
-        const cmd = JSON.parse(raw);
-        const result = apiExecute(cmd);
-        log('API ok · ' + JSON.stringify(result), 'ok');
-      } catch (e) {
-        log('API · ' + e.message, 'err');
-      }
+        const result = apiExecute(JSON.parse(raw));
+        // Don't dump full cell list into the small log
+        const slim = { ...result };
+        if (slim.live) slim.live = { total: slim.live.total, selected: slim.live.selected?.length ?? slim.selected };
+        if (slim.cells) delete slim.cells;
+        log('API ok · ' + JSON.stringify(slim), 'ok');
+      } catch (e) { log('API · ' + e.message, 'err'); }
     });
 
-    // postMessage bridge for external AI / iframes / extensions
     window.addEventListener('message', (ev) => {
       const data = ev.data;
       if (!data || data.type !== 'mathclay') return;
@@ -870,27 +755,26 @@
       }
     });
 
-    // Public API for AI / console / agents
     window.MathClay = {
-      connect() { setApiConnected(true); return { ok: true, connected: true }; },
-      disconnect() { setApiConnected(false); return { ok: true, connected: false }; },
+      connect() { setApiConnected(true); return { ok: true }; },
+      disconnect() { setApiConnected(false); return { ok: true }; },
       isConnected() { return apiConnected; },
       execute(cmd) { return apiExecute(cmd); },
+      state() { return apiExecute({ op: 'state' }); },
+      live() { return apiExecute({ op: 'state' }); },
       sculpt(az, el, dist, ids) { return apiExecute({ op: 'sculpt', az, el, dist, ids }); },
+      batch(steps) { return apiExecute({ op: 'batch', steps }); },
       select(ids) { return apiExecute({ op: 'select', ids }); },
       selectCoords(coords) { return apiExecute({ op: 'select', coords }); },
       clear() { return apiExecute({ op: 'clear' }); },
       reset() { return apiExecute({ op: 'reset' }); },
-      state() { return apiExecute({ op: 'state' }); },
       side: SIDE,
       total: TOTAL
     };
 
     function currentFractionId() {
-      if (!idGrid) return null;
-      return idGrid[cursorZ]?.[cursorY]?.[cursorX] || null;
+      return idGrid?.[cursorZ]?.[cursorY]?.[cursorX] || null;
     }
-
     function updateGridInfo() {
       const id = currentFractionId();
       const axisName = sliceAxis.toUpperCase();
@@ -899,14 +783,11 @@
       layerVal.textContent = String(layerIndex());
       layerLabel.textContent = 'Layer ' + axisName;
     }
-
     function setAxis(axis) {
       sliceAxis = axis;
       document.querySelectorAll('.axis-btn').forEach(b => b.classList.toggle('active', b.dataset.axis === axis));
-      updateGridInfo();
-      rebuildMini();
+      updateGridInfo(); rebuildMini();
     }
-
     document.getElementById('axis-x').addEventListener('click', () => setAxis('x'));
     document.getElementById('axis-y').addEventListener('click', () => setAxis('y'));
     document.getElementById('axis-z').addEventListener('click', () => setAxis('z'));
@@ -923,42 +804,27 @@
         cursorY = Math.max(0, Math.min(SIDE - 1, cursorY + dy));
       }
       if (dz !== 0) setLayerIndex(layerIndex() + dz);
-      updateGridInfo();
-      rebuildMini();
+      updateGridInfo(); rebuildMini();
     }
-
     function selectCurrent() {
       const id = currentFractionId();
-      if (!id) {
-        log('no cell at cursor', 'err');
-        return;
-      }
-      if (selected.has(id)) {
-        selected.delete(id);
-        log(`deselected · total ${selected.size}`);
-      } else {
-        selected.add(id);
-        log(`selected · total ${selected.size}`, 'ok');
-      }
-      syncVisual();
-      updateGridInfo();
+      if (!id) return log('no cell at cursor', 'err');
+      if (selected.has(id)) { selected.delete(id); log(`deselected · total ${selected.size}`); }
+      else { selected.add(id); log(`selected · total ${selected.size}`, 'ok'); }
+      syncVisual(); updateGridInfo();
     }
-
     document.getElementById('dpad-up').addEventListener('click', () => moveCursor(0, 1, 0));
     document.getElementById('dpad-down').addEventListener('click', () => moveCursor(0, -1, 0));
     document.getElementById('dpad-left').addEventListener('click', () => moveCursor(-1, 0, 0));
     document.getElementById('dpad-right').addEventListener('click', () => moveCursor(1, 0, 0));
     document.getElementById('dpad-select').addEventListener('click', selectCurrent);
-
     layerSlider.addEventListener('input', () => {
       setLayerIndex(parseInt(layerSlider.value, 10));
-      updateGridInfo();
-      rebuildMini();
+      updateGridInfo(); rebuildMini();
     });
 
     const miniRay = new THREE.Raycaster();
     const miniMouse = new THREE.Vector2();
-
     function pickMini(clientX, clientY) {
       const rect = miniCanvas.getBoundingClientRect();
       miniMouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
@@ -967,8 +833,7 @@
       const o = miniRay.ray.origin, d = miniRay.ray.direction;
       let best = null, bestD = Infinity;
       const preferred = units.filter(onFocusSlice);
-      const pools = preferred.length ? [preferred, units] : [units];
-      for (const pool of pools) {
+      for (const pool of (preferred.length ? [preferred, units] : [units])) {
         for (const u of pool) {
           const ox = u.x - o.x, oy = u.y - o.y, oz = u.z - o.z;
           const t = ox * d.x + oy * d.y + oz * d.z;
@@ -979,14 +844,10 @@
         }
         if (best && bestD <= cell * cell * 4) break;
       }
-      if (!best || bestD > cell * cell * 4) return null;
-      return best;
+      return (!best || bestD > cell * cell * 4) ? null : best;
     }
-
     let miniDown = false, miniDragged = false, mdx = 0, mdy = 0;
-    miniCanvas.addEventListener('pointerdown', e => {
-      miniDown = true; miniDragged = false; mdx = e.clientX; mdy = e.clientY;
-    });
+    miniCanvas.addEventListener('pointerdown', e => { miniDown = true; miniDragged = false; mdx = e.clientX; mdy = e.clientY; });
     miniCanvas.addEventListener('pointermove', e => {
       if (!miniDown) return;
       if (Math.abs(e.clientX - mdx) > 6 || Math.abs(e.clientY - mdy) > 6) miniDragged = true;
@@ -998,8 +859,7 @@
       const u = pickMini(e.clientX, e.clientY);
       if (!u) return;
       cursorX = u.ix; cursorY = u.iy; cursorZ = u.iz;
-      updateGridInfo();
-      selectCurrent();
+      updateGridInfo(); selectCurrent();
     });
 
     window.addEventListener('keydown', e => {
@@ -1016,7 +876,6 @@
 
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
-
     function nearestUnit(clientX, clientY) {
       mouse.x = (clientX / window.innerWidth) * 2 - 1;
       mouse.y = -(clientY / window.innerHeight) * 2 + 1;
@@ -1031,10 +890,8 @@
         const d2 = (u.x - cx) ** 2 + (u.y - cy) ** 2 + (u.z - cz) ** 2;
         if (d2 < bestD) { bestD = d2; best = u; }
       }
-      if (!best || bestD > clickBrush * clickBrush * 16) return null;
-      return best;
+      return (!best || bestD > clickBrush * clickBrush * 16) ? null : best;
     }
-
     let down = false, dx0 = 0, dy0 = 0, dragged = false;
     renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
@@ -1049,15 +906,11 @@
       down = false;
       if (dragged || e.button !== 0) return;
       const term = document.getElementById('terminal');
-      if (term.classList.contains('open')) {
-        const r = term.getBoundingClientRect();
-        if (e.clientY >= r.top) return;
-      }
+      if (term.classList.contains('open') && e.clientY >= term.getBoundingClientRect().top) return;
       const best = nearestUnit(e.clientX, e.clientY);
       if (!best) return;
       selected.add(best.id);
-      syncVisual();
-      updateGridInfo();
+      syncVisual(); updateGridInfo();
       log(`selected · total ${selected.size}`);
     });
 
@@ -1070,11 +923,8 @@
       setTimeout(resizeMini, 300);
     }
     function closeTerminal() { terminal.classList.remove('open'); termToggle.textContent = 'MATH'; }
-    termToggle.addEventListener('click', () => {
-      if (terminal.classList.contains('open')) closeTerminal(); else openTerminal();
-    });
+    termToggle.addEventListener('click', () => terminal.classList.contains('open') ? closeTerminal() : openTerminal());
     document.getElementById('term-close').addEventListener('click', closeTerminal);
-
     document.getElementById('run').addEventListener('click', runMath);
     document.getElementById('clear').addEventListener('click', clearSelect);
     document.getElementById('reset').addEventListener('click', createSolidSquare);
@@ -1092,17 +942,13 @@
       }
     }
     animate();
-
     window.addEventListener('resize', () => {
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
       resizeMini();
     });
-
-    const ro = new ResizeObserver(() => resizeMini());
-    ro.observe(miniWrap);
-
+    new ResizeObserver(() => resizeMini()).observe(miniWrap);
     createSolidSquare();
   </script>
 </body>
