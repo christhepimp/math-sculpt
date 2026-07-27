@@ -28,8 +28,14 @@
       padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;
     }
     #grid-btn.on { background: #f472b6; }
-    #stats {
+    #nums-btn {
       position: absolute; left: 12px; top: 56px; z-index: 25;
+      background: rgba(14, 165, 233, 0.9); border: none; color: #fff;
+      padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;
+    }
+    #nums-btn.on { background: #39ff14; color: #000; }
+    #stats {
+      position: absolute; left: 12px; top: 100px; z-index: 25;
       font-family: monospace; font-size: 0.68rem; color: #7dd3fc;
       background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px; line-height: 1.45;
     }
@@ -228,8 +234,9 @@
 <body>
   <div id="canvas-container"></div>
   <button id="grid-btn">Unit grid</button>
+  <button id="nums-btn">Numbers</button>
   <div id="stats">units: —</div>
-  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan · MATH → X/Y/Z layers → select (red) → Run math</div>
+  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan · MATH → X/Y/Z layers → select (red) → Run math · Numbers = microscopic labels (zoom extreme close)</div>
   <button id="term-toggle">MATH</button>
 
   <div id="terminal">
@@ -241,7 +248,8 @@
       <h2>Sculpt the square</h2>
       <p class="help">
         Solid square · <strong>5832 fractions</strong> · each is exactly <code>1 unit length</code> from its neighbors.<br>
-        Pick axis <strong>X / Y / Z</strong> to slice any direction (sides, top/bottom, front/back, through the middle). Selected cells turn <strong style="color:#ef4444">red</strong>.
+        Pick axis <strong>X / Y / Z</strong> to slice any direction (sides, top/bottom, front/back, through the middle). Selected cells turn <strong style="color:#ef4444">red</strong>.<br>
+        Numbers layer: each fraction carries its own microscopic number at its exact location. Numbers stay locked to the fraction no matter how you sculpt. Only visible when zoomed extremely close.
       </p>
 
       <label>azimuth angle (degrees 0–360)</label>
@@ -322,7 +330,7 @@
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
 
-    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 100);
+    const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.01, 100);
     camera.position.set(2.8, 2.2, 3.4);
 
     const renderer = new THREE.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
@@ -338,7 +346,7 @@
     controls.enablePan = true;
     controls.enableZoom = true;
     controls.enableRotate = true;
-    controls.minDistance = 0.8;
+    controls.minDistance = 0.02;
     controls.maxDistance = 20;
     controls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
 
@@ -451,7 +459,94 @@
 
     let idGrid = null;
     let cursorX = 0, cursorY = 0, cursorZ = 0;
-    let sliceAxis = 'z'; // 'x' | 'y' | 'z'
+    let sliceAxis = 'z';
+
+    // Microscopic number labels – locked to each fraction
+    let numberGroup = null;
+    let numbersOn = false;
+    const NUMBER_SCALE = 0.004; // microscopic – only readable on extreme zoom
+
+    function makeNumberTexture(num) {
+      const canvas = document.createElement('canvas');
+      canvas.width = 64;
+      canvas.height = 32;
+      const ctx = canvas.getContext('2d');
+      ctx.clearRect(0, 0, 64, 32);
+      ctx.font = 'bold 22px monospace';
+      ctx.fillStyle = '#39ff14';
+      ctx.textAlign = 'center';
+      ctx.textBaseline = 'middle';
+      ctx.fillText(String(num), 32, 16);
+      const tex = new THREE.CanvasTexture(canvas);
+      tex.needsUpdate = true;
+      return tex;
+    }
+
+    function clearNumberLabels() {
+      if (!numberGroup) return;
+      scene.remove(numberGroup);
+      numberGroup.traverse(o => {
+        if (o.material) {
+          if (o.material.map) o.material.map.dispose();
+          o.material.dispose();
+        }
+        if (o.geometry) o.geometry.dispose();
+      });
+      numberGroup = null;
+    }
+
+    function buildNumberLabels() {
+      clearNumberLabels();
+      if (!numbersOn || units.length === 0) return;
+      numberGroup = new THREE.Group();
+      const matCache = new Map();
+      for (const u of units) {
+        let mat = matCache.get(u.id);
+        if (!mat) {
+          const tex = makeNumberTexture(u.id);
+          mat = new THREE.SpriteMaterial({
+            map: tex,
+            transparent: true,
+            depthTest: true,
+            depthWrite: false,
+            sizeAttenuation: true
+          });
+          matCache.set(u.id, mat);
+        }
+        const sprite = new THREE.Sprite(mat);
+        sprite.scale.set(NUMBER_SCALE * 2, NUMBER_SCALE, 1);
+        sprite.position.set(u.x, u.y, u.z);
+        sprite.userData.unitId = u.id;
+        numberGroup.add(sprite);
+      }
+      scene.add(numberGroup);
+    }
+
+    function syncNumberPositions() {
+      if (!numberGroup || !numbersOn) return;
+      const byId = new Map();
+      for (const u of units) byId.set(u.id, u);
+      numberGroup.children.forEach(sprite => {
+        const u = byId.get(sprite.userData.unitId);
+        if (u) sprite.position.set(u.x, u.y, u.z);
+      });
+    }
+
+    function setNumbersVisible(on) {
+      numbersOn = on;
+      const btn = document.getElementById('nums-btn');
+      if (on) {
+        btn.classList.add('on');
+        btn.textContent = 'Numbers ON';
+        buildNumberLabels();
+        log('numbers layer ON · microscopic · zoom extremely close to read');
+      } else {
+        btn.classList.remove('on');
+        btn.textContent = 'Numbers';
+        clearNumberLabels();
+        log('numbers layer OFF');
+      }
+    }
 
     const miniWrap = document.getElementById('mini-canvas-wrap');
     const miniCanvas = document.getElementById('mini-canvas');
@@ -571,6 +666,7 @@
         displayNum++;
       }
 
+      // Number order: shells outward, left-to-right / top-to-bottom style within each shell face
       for (let s = 0; s <= maxShell; s++) {
         currentShell = s;
         const lo = s, hi = SIDE - 1 - s;
@@ -591,11 +687,12 @@
       layerLabel.textContent = 'Layer Z';
       rebuildVisual();
       makeClayThinGrid();
+      if (numbersOn) buildNumberLabels();
       rebuildMini();
       updateGridInfo();
       if (gridOn) setGridVisible(true);
       document.getElementById('stats').innerHTML =
-        `units: ${TOTAL.toLocaleString()} · unit length = ${cell.toFixed(6)}<br>numbers 1–${TOTAL}`;
+        `units: ${TOTAL.toLocaleString()} · unit length = ${cell.toFixed(6)}<br>numbers 1–${TOTAL} (microscopic layer)`;
       log(`solid square · ${TOTAL} fractions · unit length ${cell.toFixed(6)}`);
     }
 
@@ -648,6 +745,7 @@
       }
       mesh.instanceMatrix.needsUpdate = true;
       mesh.instanceColor.needsUpdate = true;
+      syncNumberPositions();
       rebuildMini();
     }
 
@@ -778,9 +876,9 @@
     }
 
     function updateGridInfo() {
-      const id = currentFractionId();
+      // No visible number/location overlay – numbers live only as microscopic labels on the clay
       const axisName = sliceAxis.toUpperCase();
-      gridInfo.innerHTML = `Axis <strong>${axisName}</strong> · Layer <strong>${layerIndex()}</strong> · Cursor <strong>${cursorX},${cursorY},${cursorZ}</strong> · Selected: <strong>${selected.size}</strong>${id ? ` · #${id}` : ''}`;
+      gridInfo.innerHTML = `Axis <strong>${axisName}</strong> · Layer <strong>${layerIndex()}</strong> · Cursor <strong>${cursorX},${cursorY},${cursorZ}</strong> · Selected: <strong>${selected.size}</strong>`;
       layerSlider.value = layerIndex();
       layerVal.textContent = String(layerIndex());
       layerLabel.textContent = 'Layer ' + axisName;
@@ -798,23 +896,17 @@
     document.getElementById('axis-y').addEventListener('click', () => setAxis('y'));
     document.getElementById('axis-z').addEventListener('click', () => setAxis('z'));
 
-    // D-pad: moves the two free axes (not the slice axis)
     function moveCursor(dx, dy, dz) {
-      // remap so ▲▼◄► always feel natural on the current slice plane
       if (sliceAxis === 'z') {
-        // plane is XY
         cursorX = Math.max(0, Math.min(SIDE - 1, cursorX + dx));
         cursorY = Math.max(0, Math.min(SIDE - 1, cursorY + dy));
       } else if (sliceAxis === 'y') {
-        // plane is XZ
         cursorX = Math.max(0, Math.min(SIDE - 1, cursorX + dx));
         cursorZ = Math.max(0, Math.min(SIDE - 1, cursorZ + dy));
       } else {
-        // plane is YZ
         cursorZ = Math.max(0, Math.min(SIDE - 1, cursorZ + dx));
         cursorY = Math.max(0, Math.min(SIDE - 1, cursorY + dy));
       }
-      // allow explicit layer nudge via dz if needed
       if (dz !== 0) setLayerIndex(layerIndex() + dz);
       updateGridInfo();
       rebuildMini();
@@ -828,10 +920,10 @@
       }
       if (selected.has(id)) {
         selected.delete(id);
-        log(`deselected #${id} · total ${selected.size}`);
+        log(`deselected · total ${selected.size}`);
       } else {
         selected.add(id);
-        log(`selected #${id} · total ${selected.size}`, 'ok');
+        log(`selected · total ${selected.size}`, 'ok');
       }
       syncVisual();
       updateGridInfo();
@@ -997,6 +1089,10 @@
         btn.textContent = 'Unit grid';
         log('unit grid off');
       }
+    });
+
+    document.getElementById('nums-btn').addEventListener('click', () => {
+      setNumbersVisible(!numbersOn);
     });
 
     document.getElementById('run').addEventListener('click', runMath);
