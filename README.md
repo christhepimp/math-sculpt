@@ -1,54 +1,46 @@
 # MathClay
 
-**Solid mathematical clay made of fractions.**
+**Solid mathematical clay you sculpt with a grid and pure math.**
 
-A square block of digital clay is divided into **5,832 units** (18³).  
-Each unit is exactly the fraction `1/5832` of the whole square.  
-You control every unit with pure math.
+Start with a solid square block.  
+The grid lets you make **micro adjustments** and **major adjustments** to any part of it.  
+Every change is driven by typed math: azimuth, elevation, distance, and RGB color.
 
 **Live demo:** [https://christhepimp.github.io/math-sculpt/](https://christhepimp.github.io/math-sculpt/)
 
 ---
 
-## The core idea
+## How it works
 
-Azimuth + elevation give a direction.  
-Distance grows or shrinks the selected units **along that direction from the origin**.
+1. Use the **grid** (mini view + d-pad + layer slider, or tap the clay) to select the cells you want to change.
+2. Type an **azimuth** (0–360°) and **elevation** (−90–90°) to set the exact 3D direction.
+3. Type a **distance** — this grows or shrinks the selected cells along that direction from the origin.
+4. Optionally set **RGB** (0–1) to recolor the clay inside those grid cells.
+5. Run.
+
+Small distance values = micro adjustments.  
+Larger distance values = major adjustments.  
+The grid is how you choose *where* the math is applied.
 
 ```
 dir = direction from (azimuth, elevation)
 
-for each selected unit:
-  s = position · dir          // how far it currently is along the direction
+for each selected cell:
+  s = position · dir
   new_s = s × (1 + distance × cell)
   position = position − s·dir + new_s·dir
 ```
 
-- Perpendicular components stay the same
-- Outer units move farther out; inner ones move less
-- Positive distance expands, negative contracts
-
-**Unit lengths** (what “distance” means):
-
-- `1` ≈ one cell of growth along the angle
-- `2` ≈ two cells
-- `0.5` ≈ half a cell
-- Negative values pull toward the origin
-
-1. Select units (tap the clay, or use the mini-grid + d-pad)
-2. Type azimuth (0–360°)
-3. Type elevation (−90–90°)
-4. Type distance
-5. Run math
+Perpendicular components stay the same. Outer cells move farther; positive distance expands, negative contracts.
 
 ---
 
 ## What you see
 
-- A true **solid cube** rendered with InstancedMesh boxes (no gaps)
-- Each of the 5,832 fractions is a real little cube that touches its neighbors
-- Selected units turn pink so you always know what the math will affect
-- Thin green reference grid (half previous visual weight)
+- A true solid cube rendered with InstancedMesh boxes (no gaps)
+- 18×18×18 grid of cells (5,832 total)
+- Selected cells turn pink so you always know what the math will affect
+- Thin green reference grid
 - Orbit / zoom / pan with one or two fingers
 
 ---
@@ -58,67 +50,67 @@ for each selected unit:
 Open the **MATH** panel on the right.
 
 ### Sculpt
-- Azimuth, elevation, distance fields
+- Azimuth, elevation, distance
 - **Run math** — grows/shrinks the current selection along the chosen angle
 - Clear select / Reset square
 
 ### Clay color (RGB)
-- Select one or more cells on the **mini-grid** (or by tapping)
-- R, G, B fields (0–1) auto-fill with the current cell’s color when you move the cursor
+- Select cell(s) on the mini-grid
+- R, G, B fields (0–1) auto-fill from the current cell
 - Live color swatch
-- **Apply color to selected** — paints the clay inside those grid cells
+- **Apply color to selected**
 
-### Grid select
+### Grid select (micro & major targeting)
 - Mini 3D view of the current layer
 - Axis buttons (X / Y / Z) + layer slider
-- D-pad + SELECT button (or tap a cell on the mini view)
+- D-pad + SELECT (or tap a cell)
 - Cursor position and selection count shown live
 
-### API (for AI / external control)
+### API
 - Connect / Disconnect
 - Live view snapshot
-- Paste JSON commands that use the **exact same** azimuth + elevation + distance + color math
+- Paste JSON commands that use the exact same math (sculpt + color + batch)
 
 ---
 
 ## Philosophy
 
-| Concept        | MathClay                                              |
-|----------------|-------------------------------------------------------|
-| Building block | Unit / fraction (id, position, color)                 |
-| Solid form     | Dense packing of 5,832 cubes                          |
-| Sculpt         | Scale the parallel component from the origin along dir |
-| Color          | RGB (0–1) applied to selected units                   |
-| Control        | Typed math + mini-grid selection                      |
-| Detail         | More units = higher precision                         |
-| Interface      | Terminal + mini-grid anyone can use                   |
+| Concept     | MathClay                                              |
+|-------------|-------------------------------------------------------|
+| Starting point | Solid square block                                 |
+| Targeting   | Grid for precise selection (micro or major areas)     |
+| Sculpt      | Scale along any angle from the origin                 |
+| Color       | RGB applied to selected cells                         |
+| Control     | Typed math + grid selection                           |
+| Interface   | Terminal + mini-grid                                  |
 
 You are not editing polygons or topology.  
-You are moving and coloring the actual fractions that make up the clay.
+You are using the grid to choose cells, then applying pure math to move and color them.
 
 ---
 
 ## Current status
 
-- Solid InstancedMesh cube (no sparse points)
-- Grow / shrink along any angle from the origin (not rigid travel)
-- RGB color controls driven by mini-grid selection
+- Solid InstancedMesh cube
+- Grow / shrink along any angle from the origin
+- Grid-driven selection for micro and major adjustments
+- RGB color controls tied to mini-grid selection
 - Thinner reference grid
-- Mini-grid + layer slider + d-pad for precise cell picking
-- Click / tap the main view to add units to selection
+- Mini-grid + layer slider + d-pad
+- Click / tap the main view to add cells to selection
 - Reset to perfect solid square
-- API surface that uses the identical math (sculpt + color + batch)
-- Works on desktop and mobile browsers via GitHub Pages
+- API that uses the identical math
+- Works on desktop and mobile via GitHub Pages
 
 ---
 
 ## Roadmap
 
-- Higher unit counts with spatial acceleration
+- Higher cell counts with spatial acceleration
 - Undo stack
-- Export of the unit cloud / simple mesh
-- Optional smoother surface appearance while keeping the fraction model underneath
+- Export of the cell cloud / simple mesh
+- Optional smoother surface appearance while keeping the grid model underneath
 
 ---
 
-**MathClay** — a solid square of fractions you sculpt with pure math.
+**MathClay** — solid clay, grid targeting, pure math.
