@@ -22,78 +22,24 @@
       cursor: pointer; box-shadow: -4px 0 16px rgba(0,0,0,0.4); writing-mode: vertical-rl;
     }
     #term-toggle:hover { background: #0284c7; }
-    #pin-btn, #stick-btn, #grid-btn, #layer-btn {
-      position: absolute; left: 12px; z-index: 25;
+    #grid-btn {
+      position: absolute; left: 12px; top: 12px; z-index: 25;
       background: rgba(14, 165, 233, 0.9); border: none; color: #fff;
       padding: 10px 14px; border-radius: 10px; font-size: 0.78rem; font-weight: 500; cursor: pointer;
     }
-    #pin-btn { top: 12px; }
-    #stick-btn { top: 56px; }
-    #grid-btn { top: 100px; }
-    #layer-btn { top: 144px; }
-    #pin-btn.on, #stick-btn.on, #grid-btn.on, #layer-btn.on { background: #f472b6; }
+    #grid-btn.on { background: #f472b6; }
     #stats {
-      position: absolute; left: 12px; top: 188px; z-index: 25;
+      position: absolute; left: 12px; top: 56px; z-index: 25;
       font-family: monospace; font-size: 0.68rem; color: #7dd3fc;
       background: rgba(0,0,0,0.5); padding: 6px 10px; border-radius: 6px; line-height: 1.45;
     }
-    #layer-hud {
-      position: absolute; left: 12px; top: 244px; z-index: 25;
-      font-family: monospace; font-size: 0.62rem; color: #a7f3d0;
-      background: rgba(0,0,0,0.55); padding: 8px 10px; border-radius: 8px; line-height: 1.5;
-      max-height: 32vh; overflow-y: auto; max-width: 220px;
-      border: 1px solid rgba(52, 211, 153, 0.25);
-      display: none;
-    }
-    #layer-hud.show { display: block; }
-    #layer-hud strong { color: #6ee7b7; }
-    #layer-hud .layer-row {
-      cursor: pointer; padding: 2px 4px; border-radius: 4px; margin: 1px 0;
-    }
-    #layer-hud .layer-row:hover { background: rgba(52, 211, 153, 0.15); }
-    #layer-hud .layer-row.off { opacity: 0.35; text-decoration: line-through; }
     #hint-view {
       position: absolute; left: 12px; bottom: 16px; z-index: 20;
       font-size: 0.65rem; color: #555; background: rgba(0,0,0,0.4);
       padding: 6px 10px; border-radius: 8px; pointer-events: none;
     }
-    #pin-info {
-      position: absolute; left: 50%; bottom: 56px; transform: translateX(-50%);
-      z-index: 25; font-family: monospace; font-size: 0.85rem; color: #fecaca;
-      background: rgba(0,0,0,0.75); padding: 10px 16px; border-radius: 10px;
-      display: none; border: 1px solid rgba(248, 113, 113, 0.5);
-    }
-    #pin-info.show { display: block; }
-    #pin-info strong { color: #f87171; font-size: 1.1rem; }
-    #stick-ruler {
-      position: absolute; z-index: 22;
-      height: 28px; width: 220px;
-      background: rgba(20, 20, 28, 0.92);
-      border: 2px solid #f87171; border-radius: 6px;
-      cursor: grab; display: none; pointer-events: auto;
-      box-shadow: 0 4px 20px rgba(0,0,0,0.5); overflow: visible;
-    }
-    #stick-ruler.show { display: block; }
-    #stick-ruler.dragging { cursor: grabbing; border-color: #ef4444; }
-    #stick-ruler .ticks {
-      position: absolute; inset: 0; display: flex; align-items: flex-end;
-      padding: 0 4px 4px; pointer-events: none;
-    }
-    #stick-ruler .tick {
-      width: 3px; height: 12px; background: #ef4444;
-      box-shadow: 0 0 6px #f87171, 0 0 12px #ef4444;
-      border-radius: 1px; flex-shrink: 0;
-    }
-    #stick-ruler .tick.major {
-      height: 18px; background: #fca5a5;
-      box-shadow: 0 0 8px #f87171, 0 0 16px #ef4444;
-    }
-    #stick-ruler .stick-label {
-      position: absolute; top: -18px; left: 50%; transform: translateX(-50%);
-      font-size: 0.58rem; color: #fca5a5; white-space: nowrap; pointer-events: none;
-    }
     #terminal {
-      position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 70vh;
+      position: absolute; left: 0; right: 0; bottom: 0; z-index: 40; max-height: 78vh;
       background: rgba(10, 10, 16, 0.98); border-top: 1px solid #2a2a3a;
       border-radius: 16px 16px 0 0; transform: translateY(100%); transition: transform 0.28s ease;
       display: flex; flex-direction: column; box-shadow: 0 -8px 40px rgba(0,0,0,0.55);
@@ -127,7 +73,7 @@
       color: #7dd3fc; font-family: inherit; font-size: 0.82rem; padding: 10px 12px; outline: none; resize: vertical;
     }
     textarea:focus, input[type="text"]:focus { border-color: #38bdf8; }
-    textarea { min-height: 52px; }
+    textarea { min-height: 48px; }
     .row { display: flex; gap: 8px; margin-top: 10px; }
     button.go {
       flex: 1; background: #0ea5e9; border: 1px solid #0284c7; color: #fff;
@@ -146,9 +92,9 @@
     #log.err { color: #f87171; }
     #log.ok { color: #4ade80; }
 
-    /* Grid navigator (terminal) */
+    /* Rotatable mini square (same shape as the clay box) */
     #grid-nav {
-      margin-top: 14px;
+      margin-top: 12px;
       padding: 12px;
       background: #0c0c12;
       border: 1px solid #1f3a2a;
@@ -157,22 +103,39 @@
     #grid-nav h3 {
       font-size: 0.78rem;
       color: #39ff14;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
       font-family: 'Segoe UI', system-ui, sans-serif;
     }
     #grid-info {
-      font-size: 0.7rem;
+      font-size: 0.68rem;
       color: #a7f3d0;
-      margin-bottom: 10px;
+      margin-bottom: 8px;
       line-height: 1.4;
     }
     #grid-info strong { color: #39ff14; }
+    #mini-canvas-wrap {
+      position: relative;
+      width: 100%;
+      max-width: 320px;
+      margin: 0 auto 10px;
+      aspect-ratio: 1;
+      background: #07070a;
+      border: 1px solid #2a5c3a;
+      border-radius: 10px;
+      overflow: hidden;
+      touch-action: none;
+    }
+    #mini-canvas-wrap canvas {
+      display: block;
+      width: 100% !important;
+      height: 100% !important;
+    }
     .dpad-wrap {
       display: flex;
       flex-direction: column;
       align-items: center;
       gap: 4px;
-      margin: 10px 0;
+      margin: 8px 0;
     }
     .dpad-row {
       display: flex;
@@ -181,13 +144,13 @@
       justify-content: center;
     }
     .dpad-btn {
-      width: 52px;
-      height: 52px;
+      width: 48px;
+      height: 48px;
       border-radius: 12px;
       border: 2px solid #1a5c3a;
       background: #0d2818;
       color: #39ff14;
-      font-size: 1.3rem;
+      font-size: 1.2rem;
       font-weight: 700;
       cursor: pointer;
       display: flex;
@@ -197,19 +160,19 @@
       -webkit-user-select: none;
       touch-action: manipulation;
     }
-    .dpad-btn:active, .dpad-btn.active {
+    .dpad-btn:active {
       background: #14532d;
       border-color: #39ff14;
       box-shadow: 0 0 12px rgba(57, 255, 20, 0.4);
     }
     .dpad-select {
-      width: 72px;
-      height: 44px;
+      width: 70px;
+      height: 42px;
       border-radius: 10px;
       border: 2px solid #39ff14;
       background: #14532d;
       color: #39ff14;
-      font-size: 0.72rem;
+      font-size: 0.7rem;
       font-weight: 700;
       letter-spacing: 0.06em;
       cursor: pointer;
@@ -218,48 +181,34 @@
       background: #39ff14;
       color: #0a0a0a;
     }
-    #mini-grid {
-      display: grid;
-      grid-template-columns: repeat(18, 1fr);
-      gap: 1px;
-      background: #1a3a2a;
-      border: 1px solid #2a5c3a;
-      border-radius: 4px;
-      overflow: hidden;
-      max-width: 100%;
-      aspect-ratio: 1;
-      margin: 8px 0;
+    .layer-row {
+      display: flex;
+      gap: 8px;
+      align-items: center;
+      margin-top: 8px;
     }
-    #mini-grid .cell {
-      background: #0c1a12;
-      min-height: 0;
+    .layer-row label {
+      margin: 0;
+      flex-shrink: 0;
+      font-size: 0.65rem;
     }
-    #mini-grid .cell.cursor {
-      background: #39ff14;
-      box-shadow: inset 0 0 0 1px #fff;
+    #layer-slider {
+      flex: 1;
+      accent-color: #39ff14;
     }
-    #mini-grid .cell.selected {
-      background: #f472b6;
-    }
-    #mini-grid .cell.cursor.selected {
-      background: #fde68a;
+    #layer-val {
+      min-width: 28px;
+      text-align: center;
+      color: #39ff14;
+      font-size: 0.8rem;
     }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
-  <div id="stick-ruler">
-    <div class="stick-label">1 unit length between red ticks</div>
-    <div class="ticks" id="stick-ticks"></div>
-  </div>
-  <button id="pin-btn">Pin ruler</button>
-  <button id="stick-btn">Stick ruler</button>
   <button id="grid-btn">Unit grid</button>
-  <button id="layer-btn">Layers</button>
   <div id="stats">units: —</div>
-  <div id="layer-hud">layers…</div>
-  <div id="pin-info"></div>
-  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan · green thin grid = unit cells</div>
+  <div id="hint-view">1 finger: rotate · 2 fingers: zoom / pan · open MATH for grid select</div>
   <button id="term-toggle">MATH</button>
 
   <div id="terminal">
@@ -271,10 +220,10 @@
       <h2>Type the math</h2>
       <p class="help">
         Solid square · <strong>5832 fractions</strong> · each is exactly <code>1 unit length</code> from its neighbors.<br>
-        Thin green grid on the box matches the unit cells. Use the D-pad below to pick cells, then Run math.
+        Thin green grid on the box = unit cells. Mini square below is the same shape — rotate it, set layer, SELECT cells, then Run math.
       </p>
       <label>select units (numbers)</label>
-      <textarea id="sel" placeholder="1, 2, 5, 100-200 or use D-pad below"></textarea>
+      <textarea id="sel" placeholder="1, 2, 5, 100-200 or use mini square + SELECT"></textarea>
       <label>azimuth angle (degrees 0–360)</label>
       <input type="text" id="az" value="0" placeholder="0" />
       <label>elevation angle (degrees −90–90)</label>
@@ -289,11 +238,17 @@
         <button class="dim" id="reset">Reset solid square</button>
       </div>
 
-      <!-- Grid navigator matching the 3D green grid -->
       <div id="grid-nav">
-        <h3>Grid select · matches the green grid on the box</h3>
+        <h3>Mini square · same shape as the clay box</h3>
         <div id="grid-info">Layer Z: <strong>0</strong> · Cursor (X,Y,Z): <strong>0,0,0</strong> · Fraction <strong>#—</strong></div>
-        <div id="mini-grid"></div>
+        <div id="mini-canvas-wrap">
+          <canvas id="mini-canvas"></canvas>
+        </div>
+        <div class="layer-row">
+          <label>Layer Z</label>
+          <input type="range" id="layer-slider" min="0" max="17" value="0" />
+          <span id="layer-val">0</span>
+        </div>
         <div class="dpad-wrap">
           <div class="dpad-row">
             <button class="dpad-btn" id="dpad-up" type="button">▲</button>
@@ -307,19 +262,12 @@
             <button class="dpad-btn" id="dpad-down" type="button">▼</button>
           </div>
         </div>
-        <div class="row">
-          <button class="dim" id="dpad-layer-up" type="button">Layer + (Z)</button>
-          <button class="dim" id="dpad-layer-down" type="button">Layer − (Z)</button>
-        </div>
-        <p class="help" style="margin-top:8px;margin-bottom:0">
-          ▲▼◄► move cursor on the current Z layer (same 18×18 as the green grid). SELECT adds that cell’s fraction number. Layer +/− changes Z. Clear select resets.
+        <p class="help" style="margin-top:6px;margin-bottom:0">
+          Drag the mini square to rotate (same as main view). Slider sets Z layer. ▲▼◄► move cursor on that layer. SELECT adds the cell. Tap a cell in the mini view to jump cursor + select.
         </p>
       </div>
 
       <div id="log">ready</div>
-      <p class="help" style="margin-top:12px">
-        <strong>Unit grid</strong> (left button): large floor/background grid. <strong>Green thin grid</strong> on the clay box is always the unit-cell pattern. Layers: hide/show shells.
-      </p>
     </div>
   </div>
 
@@ -337,13 +285,11 @@
 
     const container = document.getElementById('canvas-container');
     const logEl = document.getElementById('log');
-    const layerHud = document.getElementById('layer-hud');
-    const pinInfo = document.getElementById('pin-info');
-    const stickEl = document.getElementById('stick-ruler');
-    const stickTicks = document.getElementById('stick-ticks');
     const gridInfo = document.getElementById('grid-info');
-    const miniGrid = document.getElementById('mini-grid');
+    const layerSlider = document.getElementById('layer-slider');
+    const layerVal = document.getElementById('layer-val');
 
+    // ---- Main scene ----
     const scene = new THREE.Scene();
     scene.background = new THREE.Color(0x07070a);
 
@@ -381,7 +327,7 @@
     ground.position.y = -1.35;
     scene.add(ground);
 
-    // ---- Large unit grid (floor / background) ----
+    // Large unit grid (floor/background) — toggle
     let unitGridGroup = null;
     let gridOn = false;
     let gridColorMode = 'red';
@@ -431,7 +377,7 @@
       scene.add(unitGridGroup);
     }
 
-    // ---- Thin green unit-cell grid covering the clay box ----
+    // Thin green unit-cell grid covering the clay box
     let clayGridGroup = null;
 
     function makeClayThinGrid() {
@@ -445,38 +391,21 @@
       }
       const half = claySize * 0.5;
       const positions = [];
-      // X planes (constant x)
       for (let i = 0; i <= SIDE; i++) {
         const x = -half + i * cell;
-        positions.push(x, -half, -half, x, -half, half);
-        positions.push(x, half, -half, x, half, half);
-        positions.push(x, -half, -half, x, half, -half);
-        positions.push(x, -half, half, x, half, half);
+        positions.push(x, -half, -half, x, -half, half, x, half, -half, x, half, half, x, -half, -half, x, half, -half, x, -half, half, x, half, half);
       }
-      // Y planes
       for (let i = 0; i <= SIDE; i++) {
         const y = -half + i * cell;
-        positions.push(-half, y, -half, half, y, -half);
-        positions.push(-half, y, half, half, y, half);
-        positions.push(-half, y, -half, -half, y, half);
-        positions.push(half, y, -half, half, y, half);
+        positions.push(-half, y, -half, half, y, -half, -half, y, half, half, y, half, -half, y, -half, -half, y, half, half, y, -half, half, y, half);
       }
-      // Z planes
       for (let i = 0; i <= SIDE; i++) {
         const z = -half + i * cell;
-        positions.push(-half, -half, z, half, -half, z);
-        positions.push(-half, half, z, half, half, z);
-        positions.push(-half, -half, z, -half, half, z);
-        positions.push(half, -half, z, half, half, z);
+        positions.push(-half, -half, z, half, -half, z, -half, half, z, half, half, z, -half, -half, z, -half, half, z, half, -half, z, half, half, z);
       }
       const geo = new THREE.BufferGeometry();
       geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-      const mat = new THREE.LineBasicMaterial({
-        color: 0x39ff14,
-        transparent: true,
-        opacity: 0.35,
-        depthWrite: false
-      });
+      const mat = new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.35, depthWrite: false });
       clayGridGroup = new THREE.LineSegments(geo, mat);
       scene.add(clayGridGroup);
     }
@@ -485,14 +414,6 @@
     let selected = new Set();
     let mesh = null;
     let dummy = new THREE.Object3D();
-    let pinOn = false;
-    let pinnedId = null;
-    let stickOn = false;
-    let stickX = 80, stickY = 200;
-    let stickDragging = false;
-    let stickOffX = 0, stickOffY = 0;
-    let layerHudOn = false;
-    let hiddenLayers = new Set();
     const claySize = 2.0;
     const clickBrush = 0.22;
 
@@ -500,13 +421,44 @@
     const TOTAL = SIDE * SIDE * SIDE;
     const FRACTION = 1 / TOTAL;
     let cell = claySize / SIDE;
-    let layerStarts = [];
 
-    // Lookup: id at (ix,iy,iz)
-    let idGrid = null; // [iz][iy][ix] -> display id
-
-    // D-pad cursor
+    let idGrid = null;
     let cursorX = 0, cursorY = 0, cursorZ = 0;
+
+    // ---- Mini scene (rotatable square same shape) ----
+    const miniWrap = document.getElementById('mini-canvas-wrap');
+    const miniCanvas = document.getElementById('mini-canvas');
+    const miniScene = new THREE.Scene();
+    miniScene.background = new THREE.Color(0x07070a);
+    const miniCam = new THREE.PerspectiveCamera(45, 1, 0.1, 20);
+    miniCam.position.set(2.4, 2.0, 2.8);
+    const miniRenderer = new THREE.WebGLRenderer({ canvas: miniCanvas, antialias: true, alpha: false });
+    miniRenderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    const miniControls = new OrbitControls(miniCam, miniCanvas);
+    miniControls.enableDamping = true;
+    miniControls.dampingFactor = 0.1;
+    miniControls.enablePan = false;
+    miniControls.minDistance = 1.2;
+    miniControls.maxDistance = 8;
+    miniControls.touches = { ONE: THREE.TOUCH.ROTATE, TWO: THREE.TOUCH.DOLLY_PAN };
+    miniScene.add(new THREE.AmbientLight(0xffffff, 0.7));
+    const mKey = new THREE.DirectionalLight(0xffffff, 0.9);
+    mKey.position.set(3, 5, 2);
+    miniScene.add(mKey);
+
+    let miniMesh = null;
+    let miniGrid = null;
+    let miniCursorMesh = null;
+    const miniDummy = new THREE.Object3D();
+
+    function resizeMini() {
+      const w = miniWrap.clientWidth;
+      const h = miniWrap.clientHeight;
+      if (w < 10 || h < 10) return;
+      miniCam.aspect = w / h;
+      miniCam.updateProjectionMatrix();
+      miniRenderer.setSize(w, h, false);
+    }
 
     function log(msg, kind) {
       logEl.textContent = msg;
@@ -520,12 +472,9 @@
     function createSolidSquare() {
       units = [];
       selected.clear();
-      pinnedId = null;
-      hiddenLayers.clear();
       cell = claySize / SIDE;
       const half = claySize * 0.5;
       const origin = -half + cell * 0.5;
-      layerStarts = [];
       idGrid = [];
 
       const grid = [];
@@ -576,7 +525,6 @@
 
       for (let s = 0; s <= maxShell; s++) {
         currentShell = s;
-        layerStarts[s] = displayNum;
         const lo = s, hi = SIDE - 1 - s;
         if (lo === hi) { addCell(lo, lo, lo); continue; }
         for (let y = hi; y >= lo; y--) for (let x = lo; x <= hi; x++) addCell(x, y, lo);
@@ -588,53 +536,17 @@
       }
 
       cursorX = 0; cursorY = 0; cursorZ = 0;
+      layerSlider.value = 0;
+      layerVal.textContent = '0';
       rebuildVisual();
       makeClayThinGrid();
-      updateLayerHud();
-      updateGridNav();
+      rebuildMini();
+      updateGridInfo();
       if (gridOn) setGridVisible(true);
       document.getElementById('stats').innerHTML =
         `units: ${TOTAL.toLocaleString()} · unit length = ${cell.toFixed(6)}<br>numbers 1–${TOTAL}`;
       document.getElementById('sel').value = '';
-      log(`solid square · ${TOTAL} fractions · unit length ${cell.toFixed(6)} · thin green grid on box`);
-      rebuildStickTicks();
-    }
-
-    function updateLayerHud() {
-      const lines = ['<strong>layer starts</strong> <span style="color:#888">(tap to toggle)</span>'];
-      for (let s = 0; s < layerStarts.length; s++) {
-        const start = layerStarts[s];
-        const end = (s + 1 < layerStarts.length ? layerStarts[s + 1] : TOTAL + 1) - 1;
-        const label = s === 0 ? 'outside' : (s === layerStarts.length - 1 ? 'center' : 'inside');
-        const off = hiddenLayers.has(s) ? ' off' : '';
-        lines.push(`<div class="layer-row${off}" data-shell="${s}">L${s} ${label}: <strong>${start}</strong>–${end}</div>`);
-      }
-      lines.push(`<br>unit length: <strong>${cell.toFixed(6)}</strong>`);
-      layerHud.innerHTML = lines.join('');
-      layerHud.querySelectorAll('.layer-row').forEach(row => {
-        row.addEventListener('click', () => {
-          const shell = parseInt(row.dataset.shell, 10);
-          if (hiddenLayers.has(shell)) hiddenLayers.delete(shell);
-          else hiddenLayers.add(shell);
-          applyLayerVisibility();
-          updateLayerHud();
-          log(`layer L${shell} ${hiddenLayers.has(shell) ? 'hidden' : 'shown'}`);
-        });
-      });
-    }
-
-    function applyLayerVisibility() {
-      if (!mesh) return;
-      const count = units.length;
-      for (let i = 0; i < count; i++) {
-        const u = units[i];
-        const visible = !hiddenLayers.has(u.shell);
-        dummy.position.set(u.x, u.y, u.z);
-        dummy.scale.set(visible ? 1 : 0, visible ? 1 : 0, visible ? 1 : 0);
-        dummy.updateMatrix();
-        mesh.setMatrixAt(i, dummy.matrix);
-      }
-      mesh.instanceMatrix.needsUpdate = true;
+      log(`solid square · ${TOTAL} fractions · unit length ${cell.toFixed(6)}`);
     }
 
     function rebuildVisual() {
@@ -657,9 +569,7 @@
         dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
-        if (pinnedId === u.id) {
-          colors[i*3] = 1; colors[i*3+1] = 0.1; colors[i*3+2] = 0.1;
-        } else if (selected.has(u.id)) {
+        if (selected.has(u.id)) {
           colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
         } else {
           colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
@@ -676,14 +586,11 @@
       const colors = mesh.instanceColor.array;
       for (let i = 0; i < count; i++) {
         const u = units[i];
-        const visible = !hiddenLayers.has(u.shell);
         dummy.position.set(u.x, u.y, u.z);
-        dummy.scale.set(visible ? 1 : 0, visible ? 1 : 0, visible ? 1 : 0);
+        dummy.scale.set(1, 1, 1);
         dummy.updateMatrix();
         mesh.setMatrixAt(i, dummy.matrix);
-        if (pinnedId === u.id) {
-          colors[i*3] = 1; colors[i*3+1] = 0.1; colors[i*3+2] = 0.1;
-        } else if (selected.has(u.id)) {
+        if (selected.has(u.id)) {
           colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
         } else {
           colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
@@ -691,6 +598,91 @@
       }
       mesh.instanceMatrix.needsUpdate = true;
       mesh.instanceColor.needsUpdate = true;
+      rebuildMini();
+    }
+
+    function rebuildMini() {
+      // Clear previous mini objects
+      if (miniMesh) {
+        miniScene.remove(miniMesh);
+        miniMesh.geometry?.dispose();
+        miniMesh.material?.dispose();
+        miniMesh = null;
+      }
+      if (miniGrid) {
+        miniScene.remove(miniGrid);
+        miniGrid.geometry?.dispose();
+        miniGrid.material?.dispose();
+        miniGrid = null;
+      }
+      if (miniCursorMesh) {
+        miniScene.remove(miniCursorMesh);
+        miniCursorMesh.geometry?.dispose();
+        miniCursorMesh.material?.dispose();
+        miniCursorMesh = null;
+      }
+
+      const half = claySize * 0.5;
+      const boxSize = cell * 0.92;
+
+      // Only show units on current layer Z for clarity + performance, plus a faint full outline
+      const layerUnits = units.filter(u => u.iz === cursorZ);
+      const count = layerUnits.length;
+      if (count > 0) {
+        const geo = new THREE.BoxGeometry(boxSize, boxSize, boxSize);
+        const mat = new THREE.MeshStandardMaterial({ roughness: 0.5, metalness: 0.05, flatShading: true });
+        miniMesh = new THREE.InstancedMesh(geo, mat, count);
+        const colors = new Float32Array(count * 3);
+        for (let i = 0; i < count; i++) {
+          const u = layerUnits[i];
+          miniDummy.position.set(u.x, u.y, u.z);
+          miniDummy.updateMatrix();
+          miniMesh.setMatrixAt(i, miniDummy.matrix);
+          if (selected.has(u.id)) {
+            colors[i*3] = 0.95; colors[i*3+1] = 0.45; colors[i*3+2] = 0.75;
+          } else {
+            colors[i*3] = u.r; colors[i*3+1] = u.g; colors[i*3+2] = u.b;
+          }
+        }
+        miniMesh.instanceColor = new THREE.InstancedBufferAttribute(colors, 3);
+        miniMesh.instanceMatrix.needsUpdate = true;
+        miniScene.add(miniMesh);
+      }
+
+      // Thin green grid for the whole cube (same as main)
+      const positions = [];
+      for (let i = 0; i <= SIDE; i++) {
+        const x = -half + i * cell;
+        positions.push(x, -half, -half, x, -half, half, x, half, -half, x, half, half, x, -half, -half, x, half, -half, x, -half, half, x, half, half);
+      }
+      for (let i = 0; i <= SIDE; i++) {
+        const y = -half + i * cell;
+        positions.push(-half, y, -half, half, y, -half, -half, y, half, half, y, half, -half, y, -half, -half, y, half, half, y, -half, half, y, half);
+      }
+      for (let i = 0; i <= SIDE; i++) {
+        const z = -half + i * cell;
+        positions.push(-half, -half, z, half, -half, z, -half, half, z, half, half, z, -half, -half, z, -half, half, z, half, -half, z, half, half, z);
+      }
+      const gGeo = new THREE.BufferGeometry();
+      gGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
+      miniGrid = new THREE.LineSegments(gGeo, new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.4, depthWrite: false }));
+      miniScene.add(miniGrid);
+
+      // Cursor highlight
+      const u = units.find(x => x.ix === cursorX && x.iy === cursorY && x.iz === cursorZ);
+      if (u) {
+        const cGeo = new THREE.BoxGeometry(cell * 1.05, cell * 1.05, cell * 1.05);
+        miniCursorMesh = new THREE.Mesh(cGeo, new THREE.MeshBasicMaterial({
+          color: 0x39ff14,
+          transparent: true,
+          opacity: 0.55,
+          depthWrite: false
+        }));
+        miniCursorMesh.position.set(u.x, u.y, u.z);
+        miniScene.add(miniCursorMesh);
+      }
+
+      resizeMini();
     }
 
     function dirFromAngles(azDeg, elDeg) {
@@ -743,7 +735,7 @@
           u.x += dir.x * scale; u.y += dir.y * scale; u.z += dir.z * scale;
         }
         syncVisual();
-        log(`ok · moved ${valid.length} units · az=${az} el=${el} dist=${dist} unit length(s)`, 'ok');
+        log(`ok · moved ${valid.length} units · az=${az} el=${el} dist=${dist}`, 'ok');
       } catch (e) { log(e.message, 'err'); }
     }
 
@@ -751,39 +743,28 @@
       selected.clear();
       document.getElementById('sel').value = '';
       syncVisual();
-      updateGridNav();
+      updateGridInfo();
       log('selection cleared');
     }
 
-    // ---- Grid navigator (D-pad) ----
     function currentFractionId() {
       if (!idGrid) return null;
       return idGrid[cursorZ]?.[cursorY]?.[cursorX] || null;
     }
 
-    function updateGridNav() {
+    function updateGridInfo() {
       const id = currentFractionId();
       gridInfo.innerHTML = `Layer Z: <strong>${cursorZ}</strong> · Cursor (X,Y,Z): <strong>${cursorX},${cursorY},${cursorZ}</strong> · Fraction <strong>#${id ?? '—'}</strong>`;
-
-      // Rebuild mini grid for current Z layer
-      miniGrid.innerHTML = '';
-      for (let iy = SIDE - 1; iy >= 0; iy--) { // top of screen = high Y
-        for (let ix = 0; ix < SIDE; ix++) {
-          const cellEl = document.createElement('div');
-          cellEl.className = 'cell';
-          const cid = idGrid?.[cursorZ]?.[iy]?.[ix];
-          if (cid && selected.has(cid)) cellEl.classList.add('selected');
-          if (ix === cursorX && iy === cursorY) cellEl.classList.add('cursor');
-          miniGrid.appendChild(cellEl);
-        }
-      }
+      layerSlider.value = cursorZ;
+      layerVal.textContent = String(cursorZ);
     }
 
     function moveCursor(dx, dy, dz) {
       cursorX = Math.max(0, Math.min(SIDE - 1, cursorX + dx));
       cursorY = Math.max(0, Math.min(SIDE - 1, cursorY + dy));
       cursorZ = Math.max(0, Math.min(SIDE - 1, cursorZ + dz));
-      updateGridNav();
+      updateGridInfo();
+      rebuildMini();
     }
 
     function selectCurrent() {
@@ -799,7 +780,7 @@
       box.value = sorted.join(', ');
       selected = new Set(sorted.filter(n => unitByDisplayId(n)));
       syncVisual();
-      updateGridNav();
+      updateGridInfo();
       log(`selected fraction #${id} · total ${selected.size}`, 'ok');
     }
 
@@ -808,10 +789,59 @@
     document.getElementById('dpad-left').addEventListener('click', () => moveCursor(-1, 0, 0));
     document.getElementById('dpad-right').addEventListener('click', () => moveCursor(1, 0, 0));
     document.getElementById('dpad-select').addEventListener('click', selectCurrent);
-    document.getElementById('dpad-layer-up').addEventListener('click', () => moveCursor(0, 0, 1));
-    document.getElementById('dpad-layer-down').addEventListener('click', () => moveCursor(0, 0, -1));
 
-    // Keyboard support for D-pad when terminal open
+    layerSlider.addEventListener('input', () => {
+      cursorZ = parseInt(layerSlider.value, 10);
+      updateGridInfo();
+      rebuildMini();
+    });
+
+    // Click on mini canvas → pick nearest unit on current layer / any visible
+    const miniRay = new THREE.Raycaster();
+    const miniMouse = new THREE.Vector2();
+
+    function pickMini(clientX, clientY) {
+      const rect = miniCanvas.getBoundingClientRect();
+      miniMouse.x = ((clientX - rect.left) / rect.width) * 2 - 1;
+      miniMouse.y = -((clientY - rect.top) / rect.height) * 2 + 1;
+      miniRay.setFromCamera(miniMouse, miniCam);
+      const o = miniRay.ray.origin, d = miniRay.ray.direction;
+      let best = null, bestD = Infinity;
+      // Prefer current layer, then any
+      const candidates = units.filter(u => u.iz === cursorZ);
+      const pool = candidates.length ? candidates : units;
+      for (const u of pool) {
+        const ox = u.x - o.x, oy = u.y - o.y, oz = u.z - o.z;
+        const t = ox * d.x + oy * d.y + oz * d.z;
+        if (t < 0) continue;
+        const cx = o.x + d.x * t, cy = o.y + d.y * t, cz = o.z + d.z * t;
+        const d2 = (u.x - cx) ** 2 + (u.y - cy) ** 2 + (u.z - cz) ** 2;
+        if (d2 < bestD) { bestD = d2; best = u; }
+      }
+      if (!best || bestD > cell * cell * 4) return null;
+      return best;
+    }
+
+    let miniDown = false, miniDragged = false, mdx = 0, mdy = 0;
+    miniCanvas.addEventListener('pointerdown', e => {
+      miniDown = true; miniDragged = false; mdx = e.clientX; mdy = e.clientY;
+    });
+    miniCanvas.addEventListener('pointermove', e => {
+      if (!miniDown) return;
+      if (Math.abs(e.clientX - mdx) > 6 || Math.abs(e.clientY - mdy) > 6) miniDragged = true;
+    });
+    miniCanvas.addEventListener('pointerup', e => {
+      if (!miniDown) return;
+      miniDown = false;
+      if (miniDragged) return;
+      const u = pickMini(e.clientX, e.clientY);
+      if (!u) return;
+      cursorX = u.ix; cursorY = u.iy; cursorZ = u.iz;
+      updateGridInfo();
+      selectCurrent();
+    });
+
+    // Keyboard when terminal open
     window.addEventListener('keydown', e => {
       if (!document.getElementById('terminal').classList.contains('open')) return;
       if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
@@ -824,6 +854,7 @@
       else if (e.key === 'PageDown') { e.preventDefault(); moveCursor(0, 0, -1); }
     });
 
+    // Main view click select (still works)
     const raycaster = new THREE.Raycaster();
     const mouse = new THREE.Vector2();
 
@@ -834,12 +865,11 @@
       const o = raycaster.ray.origin, d = raycaster.ray.direction;
       let best = null, bestD = Infinity;
       for (const u of units) {
-        if (hiddenLayers.has(u.shell)) continue;
         const ox = u.x - o.x, oy = u.y - o.y, oz = u.z - o.z;
-        const t = ox*d.x + oy*d.y + oz*d.z;
+        const t = ox * d.x + oy * d.y + oz * d.z;
         if (t < 0) continue;
         const cx = o.x + d.x * t, cy = o.y + d.y * t, cz = o.z + d.z * t;
-        const d2 = (u.x-cx)**2 + (u.y-cy)**2 + (u.z-cz)**2;
+        const d2 = (u.x - cx) ** 2 + (u.y - cy) ** 2 + (u.z - cz) ** 2;
         if (d2 < bestD) { bestD = d2; best = u; }
       }
       if (!best || bestD > clickBrush * clickBrush * 16) return null;
@@ -852,17 +882,15 @@
       const r2 = clickBrush * clickBrush;
       const found = [];
       for (const u of units) {
-        if (hiddenLayers.has(u.shell)) continue;
         const dx = u.x - best.x, dy = u.y - best.y, dz = u.z - best.z;
-        if (dx*dx + dy*dy + dz*dz <= r2) found.push(u.id);
+        if (dx * dx + dy * dy + dz * dz <= r2) found.push(u.id);
       }
-      return found.sort((a,b) => a-b);
+      return found.sort((a, b) => a - b);
     }
 
     let down = false, dx0 = 0, dy0 = 0, dragged = false;
     renderer.domElement.addEventListener('pointerdown', e => {
       if (e.button !== 0) return;
-      if (stickOn && stickEl.contains(e.target)) return;
       down = true; dragged = false; dx0 = e.clientX; dy0 = e.clientY;
     });
     window.addEventListener('pointermove', e => {
@@ -878,127 +906,32 @@
         const r = term.getBoundingClientRect();
         if (e.clientY >= r.top) return;
       }
-      if (pinOn) {
-        const u = nearestUnit(e.clientX, e.clientY);
-        if (!u) {
-          pinInfo.classList.add('show');
-          pinInfo.innerHTML = 'no fraction near tap · try closer to the square';
-          return;
-        }
-        pinnedId = u.id;
-        syncVisual();
-        pinInfo.classList.add('show');
-        pinInfo.innerHTML = `pinned · fraction <strong>#${u.id}</strong> · shell ${u.shell} · unit length ${cell.toFixed(6)}`;
-        log(`pin · closest fraction #${u.id} (shell ${u.shell})`, 'ok');
-        return;
-      }
       const found = idsNearClick(e.clientX, e.clientY);
       if (!found.length) return;
       const box = document.getElementById('sel');
       const existing = parseIds(box.value);
       found.forEach(id => existing.add(id));
-      const sorted = [...existing].sort((a,b) => a-b);
+      const sorted = [...existing].sort((a, b) => a - b);
       box.value = sorted.join(', ');
       selected = new Set(sorted.filter(id => unitByDisplayId(id)));
       syncVisual();
-      updateGridNav();
+      updateGridInfo();
       log(`select +${found.length} · total ${selected.size}`);
-    });
-
-    function estimateUnitPixels() {
-      const a = new THREE.Vector3(0, 0, 0);
-      const b = new THREE.Vector3(cell, 0, 0);
-      a.project(camera); b.project(camera);
-      const ax = (a.x * 0.5 + 0.5) * window.innerWidth;
-      const ay = (-a.y * 0.5 + 0.5) * window.innerHeight;
-      const bx = (b.x * 0.5 + 0.5) * window.innerWidth;
-      const by = (-b.y * 0.5 + 0.5) * window.innerHeight;
-      return Math.max(4, Math.min(40, Math.hypot(bx - ax, by - ay) || 12));
-    }
-
-    function rebuildStickTicks() {
-      stickTicks.innerHTML = '';
-      const unitPx = estimateUnitPixels();
-      const width = Math.max(120, unitPx * 12 + 16);
-      stickEl.style.width = width + 'px';
-      const n = Math.floor((width - 8) / unitPx) + 1;
-      for (let i = 0; i < n; i++) {
-        const t = document.createElement('div');
-        t.className = 'tick' + (i % 5 === 0 ? ' major' : '');
-        t.style.marginRight = (unitPx - 3) + 'px';
-        stickTicks.appendChild(t);
-      }
-      stickEl.querySelector('.stick-label').textContent =
-        `1 unit length = ${cell.toFixed(6)} · red ticks = fraction spacing`;
-    }
-
-    function placeStick() {
-      stickEl.style.left = stickX + 'px';
-      stickEl.style.top = stickY + 'px';
-    }
-
-    stickEl.addEventListener('pointerdown', e => {
-      e.preventDefault(); e.stopPropagation();
-      stickDragging = true;
-      stickEl.classList.add('dragging');
-      stickOffX = e.clientX - stickX;
-      stickOffY = e.clientY - stickY;
-      stickEl.setPointerCapture(e.pointerId);
-      controls.enabled = false;
-    });
-    stickEl.addEventListener('pointermove', e => {
-      if (!stickDragging) return;
-      stickX = e.clientX - stickOffX;
-      stickY = e.clientY - stickOffY;
-      placeStick();
-    });
-    stickEl.addEventListener('pointerup', e => {
-      if (!stickDragging) return;
-      stickDragging = false;
-      stickEl.classList.remove('dragging');
-      controls.enabled = true;
-      try { stickEl.releasePointerCapture(e.pointerId); } catch (_) {}
     });
 
     const terminal = document.getElementById('terminal');
     const termToggle = document.getElementById('term-toggle');
-    function openTerminal() { terminal.classList.add('open'); termToggle.textContent = 'CLOSE'; }
+    function openTerminal() {
+      terminal.classList.add('open');
+      termToggle.textContent = 'CLOSE';
+      setTimeout(resizeMini, 50);
+      setTimeout(resizeMini, 300);
+    }
     function closeTerminal() { terminal.classList.remove('open'); termToggle.textContent = 'MATH'; }
     termToggle.addEventListener('click', () => {
       if (terminal.classList.contains('open')) closeTerminal(); else openTerminal();
     });
     document.getElementById('term-close').addEventListener('click', closeTerminal);
-
-    document.getElementById('pin-btn').addEventListener('click', () => {
-      pinOn = !pinOn;
-      const btn = document.getElementById('pin-btn');
-      btn.classList.toggle('on', pinOn);
-      btn.textContent = pinOn ? 'Pin ON' : 'Pin ruler';
-      if (pinOn) {
-        pinInfo.classList.add('show');
-        pinInfo.textContent = 'tap the square · closest fraction glows red';
-        log('pin ruler on');
-      } else {
-        pinnedId = null;
-        pinInfo.classList.remove('show');
-        syncVisual();
-        log('pin ruler off');
-      }
-    });
-
-    document.getElementById('stick-btn').addEventListener('click', () => {
-      stickOn = !stickOn;
-      const btn = document.getElementById('stick-btn');
-      btn.classList.toggle('on', stickOn);
-      btn.textContent = stickOn ? 'Stick ON' : 'Stick ruler';
-      if (stickOn) {
-        rebuildStickTicks(); placeStick(); stickEl.classList.add('show');
-        log('stick ruler on · red ticks = 1 unit length');
-      } else {
-        stickEl.classList.remove('show');
-        log('stick ruler off');
-      }
-    });
 
     document.getElementById('grid-btn').addEventListener('click', () => {
       const btn = document.getElementById('grid-btn');
@@ -1008,7 +941,7 @@
         setGridVisible(true);
         btn.classList.add('on');
         btn.textContent = 'Grid RED';
-        log('unit grid ON · bright red · each square = 1 unit length');
+        log('unit grid ON · bright red');
       } else if (gridColorMode === 'red') {
         gridColorMode = 'green';
         setGridVisible(true);
@@ -1021,16 +954,6 @@
         btn.textContent = 'Unit grid';
         log('unit grid off');
       }
-    });
-
-    document.getElementById('layer-btn').addEventListener('click', () => {
-      layerHudOn = !layerHudOn;
-      const btn = document.getElementById('layer-btn');
-      btn.classList.toggle('on', layerHudOn);
-      btn.textContent = layerHudOn ? 'Layers ON' : 'Layers';
-      layerHud.classList.toggle('show', layerHudOn);
-      if (layerHudOn) updateLayerHud();
-      log(layerHudOn ? 'layer HUD on · tap a row to hide/show that shell' : 'layer HUD off');
     });
 
     document.getElementById('run').addEventListener('click', runMath);
@@ -1047,7 +970,10 @@
       requestAnimationFrame(animate);
       controls.update();
       renderer.render(scene, camera);
-      if (stickOn) rebuildStickTicks();
+      if (terminal.classList.contains('open')) {
+        miniControls.update();
+        miniRenderer.render(miniScene, miniCam);
+      }
     }
     animate();
 
@@ -1055,8 +981,12 @@
       camera.aspect = window.innerWidth / window.innerHeight;
       camera.updateProjectionMatrix();
       renderer.setSize(window.innerWidth, window.innerHeight);
-      if (stickOn) rebuildStickTicks();
+      resizeMini();
     });
+
+    // Observe mini wrap size when terminal opens
+    const ro = new ResizeObserver(() => resizeMini());
+    ro.observe(miniWrap);
 
     createSolidSquare();
   </script>
