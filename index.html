@@ -33,10 +33,12 @@
     button.ai-on { flex: 1; background: #14532d; border: 1px solid #39ff14; color: #39ff14; padding: 11px; border-radius: 8px; font-size: 0.78rem; cursor: pointer; font-family: 'Segoe UI', system-ui, sans-serif; }
     #log { margin-top: 12px; padding: 8px 10px; background: #0c0c12; border: 1px solid #222; border-radius: 8px; font-size: 0.72rem; color: #94a3b8; min-height: 36px; white-space: pre-wrap; }
     #log.err { color: #f87171; } #log.ok { color: #4ade80; }
-    #grid-nav, #api-panel { margin-top: 12px; padding: 12px; background: #0c0c12; border: 1px solid #1f3a2a; border-radius: 12px; }
+    #grid-nav, #api-panel, #color-panel { margin-top: 12px; padding: 12px; background: #0c0c12; border: 1px solid #1f3a2a; border-radius: 12px; }
     #api-panel { border-color: #1e3a5f; }
-    #grid-nav h3, #api-panel h3 { font-size: 0.78rem; color: #39ff14; margin-bottom: 6px; font-family: 'Segoe UI', system-ui, sans-serif; }
+    #color-panel { border-color: #5b21b6; }
+    #grid-nav h3, #api-panel h3, #color-panel h3 { font-size: 0.78rem; color: #39ff14; margin-bottom: 6px; font-family: 'Segoe UI', system-ui, sans-serif; }
     #api-panel h3 { color: #38bdf8; }
+    #color-panel h3 { color: #c4b5fd; }
     #grid-info { font-size: 0.68rem; color: #a7f3d0; margin-bottom: 8px; line-height: 1.4; }
     #grid-info strong { color: #39ff14; }
     #api-status { font-size: 0.68rem; color: #94a3b8; margin-bottom: 8px; }
@@ -55,24 +57,40 @@
     .layer-row label { margin: 0; flex-shrink: 0; font-size: 0.65rem; min-width: 52px; }
     #layer-slider { flex: 1; accent-color: #39ff14; }
     #layer-val { min-width: 28px; text-align: center; color: #39ff14; font-size: 0.8rem; }
+    .rgb-row { display: flex; gap: 6px; align-items: center; margin-top: 6px; }
+    .rgb-row label { margin: 0; min-width: 18px; font-size: 0.65rem; }
+    .rgb-row input { flex: 1; padding: 8px; }
+    #color-swatch { width: 36px; height: 36px; border-radius: 8px; border: 1px solid #444; background: #c49a6c; flex-shrink: 0; }
   </style>
 </head>
 <body>
   <div id="canvas-container"></div>
   <div id="stats"><span id="api-dot"></span>cells: —</div>
-  <div id="hint-view">MATH · same math for you and AI: azimuth + elevation + distance (grow from origin along angle)</div>
+  <div id="hint-view">MATH · select cell on mini-grid → set RGB color · azimuth + elevation + distance</div>
   <button id="term-toggle">MATH</button>
   <div id="terminal">
     <div id="term-header"><span>Math terminal</span><button id="term-close">✕</button></div>
     <div id="term-body">
       <h2>Sculpt</h2>
       <p class="help">Math is only <strong>azimuth</strong> + <strong>elevation</strong> + <strong>distance</strong> (same for manual and AI).<br>
-      Distance <strong>grows / shrinks</strong> selected cells along the chosen angle from the origin (outer cells move farther, perpendicular stays the same).</p>
+      Distance <strong>grows / shrinks</strong> selected cells along the chosen angle from the origin.</p>
       <label>azimuth (0–360)</label><input type="text" id="az" value="45" />
       <label>elevation (−90–90)</label><input type="text" id="el" value="20" />
       <label>distance</label><input type="text" id="dist" value="2" />
       <div class="row"><button class="go" id="run">Run math</button><button class="dim" id="clear">Clear select</button></div>
       <div class="row"><button class="dim" id="reset">Reset square</button></div>
+
+      <div id="color-panel">
+        <h3>Clay color (RGB)</h3>
+        <p class="help" style="margin-bottom:8px">Select cell(s) on the mini-grid below, then set RGB (0–1) and Apply. Colors the clay inside those grid cells.</p>
+        <div class="rgb-row">
+          <label>R</label><input type="text" id="col-r" value="0.76" />
+          <label>G</label><input type="text" id="col-g" value="0.60" />
+          <label>B</label><input type="text" id="col-b" value="0.44" />
+          <div id="color-swatch"></div>
+        </div>
+        <div class="row" style="margin-top:8px"><button type="button" class="go" id="apply-color">Apply color to selected</button></div>
+      </div>
 
       <div id="api-panel">
         <h3>API · AI (same math)</h3>
@@ -135,6 +153,7 @@
     const layerLabel = document.getElementById('layer-label');
     const apiStatus = document.getElementById('api-status');
     const livePreview = document.getElementById('live-preview');
+    const colorSwatch = document.getElementById('color-swatch');
     let apiConnected = false;
 
     function setApiConnected(on) {
@@ -150,6 +169,36 @@
     document.getElementById('api-connect').addEventListener('click', () => setApiConnected(true));
     document.getElementById('api-disconnect').addEventListener('click', () => setApiConnected(false));
     document.getElementById('api-snap').addEventListener('click', () => { livePreview.src = captureSnapshot(); log('live view refreshed', 'ok'); });
+
+    function updateSwatch() {
+      const r = Math.max(0, Math.min(1, Number(document.getElementById('col-r').value) || 0));
+      const g = Math.max(0, Math.min(1, Number(document.getElementById('col-g').value) || 0));
+      const b = Math.max(0, Math.min(1, Number(document.getElementById('col-b').value) || 0));
+      colorSwatch.style.background = `rgb(${Math.round(r*255)},${Math.round(g*255)},${Math.round(b*255)})`;
+    }
+    ['col-r','col-g','col-b'].forEach(id => {
+      document.getElementById(id).addEventListener('input', updateSwatch);
+      document.getElementById(id).addEventListener('change', updateSwatch);
+    });
+    updateSwatch();
+
+    function applyColor() {
+      try {
+        if (selected.size === 0) throw new Error('no cells selected · pick on mini-grid first');
+        const r = parseNumber(document.getElementById('col-r'), 'R', 0, 1);
+        const g = parseNumber(document.getElementById('col-g'), 'G', 0, 1);
+        const b = parseNumber(document.getElementById('col-b'), 'B', 0, 1);
+        let n = 0;
+        for (const u of units) {
+          if (!selected.has(u.id)) continue;
+          u.r = r; u.g = g; u.b = b; n++;
+        }
+        syncVisual();
+        log(`ok · colored ${n} cell(s) RGB(${r.toFixed(2)},${g.toFixed(2)},${b.toFixed(2)})`, 'ok');
+        if (apiConnected) refreshLiveView();
+      } catch (e) { log(e.message, 'err'); }
+    }
+    document.getElementById('apply-color').addEventListener('click', applyColor);
 
     const scene = new THREE.Scene(); scene.background = new THREE.Color(0x07070a);
     const camera = new THREE.PerspectiveCamera(50, window.innerWidth / window.innerHeight, 0.05, 100);
@@ -184,7 +233,8 @@
       for (let i = 0; i <= SIDE; i++) { const y = -half + i * cell; positions.push(-half,y,-half,half,y,-half,-half,y,half,half,y,half,-half,y,-half,-half,y,half,half,y,-half,half,y,half); }
       for (let i = 0; i <= SIDE; i++) { const z = -half + i * cell; positions.push(-half,-half,z,half,-half,z,-half,half,z,half,half,z,-half,-half,z,-half,half,z,half,-half,z,half,half,z); }
       const geo = new THREE.BufferGeometry(); geo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-      clayGridGroup = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.35, depthWrite: false }));
+      // half the previous visual weight (was 0.35)
+      clayGridGroup = new THREE.LineSegments(geo, new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.18, depthWrite: false }));
       scene.add(clayGridGroup);
     }
 
@@ -325,7 +375,8 @@
       for (let i = 0; i <= SIDE; i++) { const y = -half + i * cell; positions.push(-half,y,-half,half,y,-half,-half,y,half,half,y,half,-half,y,-half,-half,y,half,half,y,-half,half,y,half); }
       for (let i = 0; i <= SIDE; i++) { const z = -half + i * cell; positions.push(-half,-half,z,half,-half,z,-half,half,z,half,half,z,-half,-half,z,-half,half,z,half,-half,z,half,half,z); }
       const gGeo = new THREE.BufferGeometry(); gGeo.setAttribute('position', new THREE.Float32BufferAttribute(positions, 3));
-      miniGrid = new THREE.LineSegments(gGeo, new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.4, depthWrite: false }));
+      // thinner mini grid too (was 0.4)
+      miniGrid = new THREE.LineSegments(gGeo, new THREE.LineBasicMaterial({ color: 0x39ff14, transparent: true, opacity: 0.20, depthWrite: false }));
       miniScene.add(miniGrid);
       const u = units.find(x => x.ix === cursorX && x.iy === cursorY && x.iz === cursorZ);
       if (u) {
@@ -337,7 +388,6 @@
 
     // THE math: azimuth + elevation + distance (same for UI and AI)
     // Distance grows/shrinks the parallel component from the ORIGIN along the chosen direction.
-    // Perpendicular components stay unchanged. Outer cells move farther; positive dist expands, negative contracts.
     function dirFromAngles(azDeg, elDeg) {
       const az = azDeg * Math.PI / 180, el = elDeg * Math.PI / 180;
       return { x: Math.cos(el) * Math.sin(az), y: Math.sin(el), z: Math.cos(el) * Math.cos(az) };
@@ -352,16 +402,12 @@
       if (idsOptional && idsOptional.length) selected = new Set(idsOptional.map(Number).filter(n => n >= 1 && n <= TOTAL));
       if (selected.size === 0) throw new Error('no cells selected');
       const dir = dirFromAngles(az, el);
-      // factor > 1 expands away from origin along dir; factor < 1 contracts toward origin
-      // dist is in "cell" units so a value of ~1–5 feels natural
       const factor = 1 + dist * cell;
       let moved = 0;
       for (const u of units) {
         if (!selected.has(u.id)) continue;
-        // scalar projection onto the unit direction
         const s = u.x * dir.x + u.y * dir.y + u.z * dir.z;
         const newS = s * factor;
-        // keep perpendicular, replace parallel component
         u.x = u.x - s * dir.x + newS * dir.x;
         u.y = u.y - s * dir.y + newS * dir.y;
         u.z = u.z - s * dir.z + newS * dir.z;
@@ -392,23 +438,15 @@
       return out;
     }
 
-    // Convert calibration JSON → same math path as Run math
     function normalizeCmd(raw) {
       if (!raw || typeof raw !== 'object') return raw;
-      // Full calibration doc: { version, name, commands: [...] }
       if (Array.isArray(raw.commands)) {
-        return {
-          op: 'batch',
-          name: raw.name || '',
-          steps: raw.commands.map(normalizeStep)
-        };
+        return { op: 'batch', name: raw.name || '', steps: raw.commands.map(normalizeStep) };
       }
-      // Already batch-like
       if (Array.isArray(raw.steps) || Array.isArray(raw.ops)) {
         const list = raw.steps || raw.ops;
         return { op: 'batch', steps: list.map(normalizeStep) };
       }
-      // Single step with cells/layer/azimuth style
       if (raw.cells || raw.azimuth != null || raw.elevation != null || raw.distance != null) {
         return { op: 'sculpt', ...normalizeStep(raw) };
       }
@@ -417,11 +455,9 @@
     function normalizeStep(s) {
       if (!s || typeof s !== 'object') return s;
       const out = { ...s };
-      // angles + distance aliases → az / el / dist (the program math)
       if (out.az == null && out.azimuth != null) out.az = out.azimuth;
       if (out.el == null && out.elevation != null) out.el = out.elevation;
       if (out.dist == null && out.distance != null) out.dist = out.distance;
-      // cells [[x,y]] + layer → coords [[x,y,layer]]
       if (!out.coords && Array.isArray(out.cells)) {
         const layer = out.layer != null ? +out.layer : 0;
         out.coords = out.cells.map(c => {
@@ -444,7 +480,7 @@
       }
       if (op === 'state') {
         return { ok: true, side: SIDE, total: TOTAL, selected: [...selected],
-          cells: units.map(u => [u.id, u.ix, u.iy, u.iz, +u.x.toFixed(5), +u.y.toFixed(5), +u.z.toFixed(5)]) };
+          cells: units.map(u => [u.id, u.ix, u.iy, u.iz, +u.x.toFixed(5), +u.y.toFixed(5), +u.z.toFixed(5), +u.r.toFixed(3), +u.g.toFixed(3), +u.b.toFixed(3)]) };
       }
       if (op === 'clear') { clearSelect(); return { ok: true, selected: 0 }; }
       if (op === 'reset') { createSolidSquare(); refreshLiveView(); return { ok: true, reset: true }; }
@@ -452,6 +488,18 @@
         let ids = cmd.ids || []; if (cmd.coords) ids = idsFromCoords(cmd.coords);
         ids.forEach(id => selected.add(Number(id))); syncVisual(); updateGridInfo();
         return { ok: true, selected: selected.size };
+      }
+      if (op === 'color' || op === 'paint') {
+        let ids = cmd.ids || null;
+        if (cmd.coords) ids = idsFromCoords(cmd.coords);
+        if (ids && ids.length) selected = new Set(ids.map(Number));
+        if (selected.size === 0) throw new Error('no cells for color');
+        const r = Number(cmd.r ?? cmd.red ?? 0.76), g = Number(cmd.g ?? cmd.green ?? 0.60), b = Number(cmd.b ?? cmd.blue ?? 0.44);
+        if (Number.isNaN(r) || Number.isNaN(g) || Number.isNaN(b)) throw new Error('r,g,b must be numbers 0–1');
+        let n = 0;
+        for (const u of units) { if (!selected.has(u.id)) continue; u.r = Math.max(0,Math.min(1,r)); u.g = Math.max(0,Math.min(1,g)); u.b = Math.max(0,Math.min(1,b)); n++; }
+        syncVisual();
+        return { ok: true, colored: n, r, g, b };
       }
 
       if (op === 'batch' || op === 'multi' || op === 'runmany') {
@@ -470,7 +518,7 @@
         }
         rebuildVisual(); rebuildMini(); updateGridInfo();
         const image = captureSnapshot(480); livePreview.src = image;
-        log(`ok · ${steps.length} steps · grew ${totalMoved} (azimuth + elevation + distance)`, 'ok');
+        log(`ok · ${steps.length} steps · grew ${totalMoved}`, 'ok');
         return { ok: true, name: cmd.name || '', steps: results.length, totalMoved, results, image };
       }
 
@@ -530,6 +578,14 @@
       const id = currentFractionId(), axisName = sliceAxis.toUpperCase();
       gridInfo.innerHTML = `Axis <strong>${axisName}</strong> · Layer <strong>${layerIndex()}</strong> · Cursor <strong>${cursorX},${cursorY},${cursorZ}</strong> · Selected: <strong>${selected.size}</strong>${id ? ` · #${id}` : ''}`;
       layerSlider.value = layerIndex(); layerVal.textContent = String(layerIndex()); layerLabel.textContent = 'Layer ' + axisName;
+      // load current cell color into RGB fields when cursor moves
+      const u = units.find(x => x.ix === cursorX && x.iy === cursorY && x.iz === cursorZ);
+      if (u) {
+        document.getElementById('col-r').value = u.r.toFixed(3);
+        document.getElementById('col-g').value = u.g.toFixed(3);
+        document.getElementById('col-b').value = u.b.toFixed(3);
+        updateSwatch();
+      }
     }
     function setAxis(axis) {
       sliceAxis = axis;
