@@ -73,11 +73,12 @@
     <div id="term-body">
       <h2>Sculpt</h2>
       <p class="help">Math is only <strong>azimuth</strong> + <strong>elevation</strong> + <strong>distance</strong> (same for manual and AI).<br>
-      Distance <strong>grows / shrinks</strong> selected cells along the chosen angle from the origin.<br>
-      <strong>Select cells first</strong> (mini-grid or click the box), then Run math.</p>
+      Distance <strong>extends</strong> selected cells in a straight line along the chosen angle.<br>
+      <strong>Select cells first</strong> (mini-grid or click the box), then Run math.<br>
+      Distance is in cell units (1 = one grid cell length ≈ 0.11).</p>
       <label>azimuth (0–360)</label><input type="text" id="az" value="45" />
       <label>elevation (−90–90)</label><input type="text" id="el" value="20" />
-      <label>distance</label><input type="text" id="dist" value="4" />
+      <label>distance</label><input type="text" id="dist" value="2" />
       <div class="row"><button class="go" id="run">Run math</button><button class="dim" id="clear">Clear select</button></div>
       <div class="row"><button class="dim" id="reset">Reset square</button></div>
 
@@ -104,12 +105,13 @@
         <img id="live-preview" alt="live" />
         <div class="row" style="margin-top:6px"><button type="button" class="dim" id="api-snap">Refresh live view</button></div>
         <label style="margin-top:12px">Paste calibration / command JSON</label>
-        <textarea id="api-cmd" placeholder='{"commands":[{"layer":0,"cells":[[9,9]],"azimuth":0,"elevation":0,"distance":20}]}'></textarea>
+        <textarea id="api-cmd" placeholder='{"commands":[{"layer":0,"cells":[[9,9]],"azimuth":0,"elevation":0,"distance":2}]}'></textarea>
         <div class="row"><button type="button" class="go" id="api-run">Run command</button></div>
         <p class="help" style="margin-top:8px;margin-bottom:0">
           1) <strong>Connect API</strong><br>
           2) Paste your JSON (commands with layer, cells, azimuth, elevation, distance)<br>
-          3) <strong>Run command</strong> — uses the same angle + distance math as the fields above.
+          3) <strong>Run command</strong> — same angle + distance math as above.<br>
+          Tip: use different cells per direction so they extend outward, not cancel.
         </p>
       </div>
 
@@ -226,12 +228,6 @@
     let cell = claySize / SIDE, idGrid = null;
     let cursorX = 0, cursorY = 0, cursorZ = 0, sliceAxis = 'z';
     const SEL_R = 1.0, SEL_G = 0.12, SEL_B = 0.1;
-
-    // Strength of distance growth: each unit of distance multiplies the parallel component by this amount
-    // factor = 1 + dist * GROW_STRENGTH
-    // dist=4 → factor=2.0 (double distance from origin along angle)
-    // dist=8 → factor=3.0
-    const GROW_STRENGTH = 0.25;
 
     function makeClayThinGrid() {
       if (clayGridGroup) { scene.remove(clayGridGroup); clayGridGroup.traverse(o => { if (o.geometry) o.geometry.dispose(); if (o.material) o.material.dispose(); }); clayGridGroup = null; }
@@ -401,23 +397,21 @@
       if (n < min || n > max) throw new Error(`${name} must be ${min}–${max}`);
       return n;
     }
+
+    // THE math: extend selected cells in a straight line along the chosen angle.
+    // amount = distance * cellSize  (distance is in grid-cell units)
+    // positive distance = extend along angle; negative = retract opposite direction
     function applySculpt(az, el, dist, idsOptional) {
       if (idsOptional && idsOptional.length) selected = new Set(idsOptional.map(Number).filter(n => n >= 1 && n <= TOTAL));
       if (selected.size === 0) throw new Error('no cells selected · pick cells on mini-grid or click the box first');
       const dir = dirFromAngles(az, el);
-      // Stronger growth: factor = 1 + dist * GROW_STRENGTH
-      // dist=4 → factor=2.0  |  dist=8 → factor=3.0  |  dist=-4 → factor=0 (collapse to origin plane)
-      const factor = 1 + dist * GROW_STRENGTH;
-      // Also push a fixed amount along the direction so near-center cells still move
-      const push = dist * cell * 0.5;
+      const amount = dist * cell;
       let moved = 0;
       for (const u of units) {
         if (!selected.has(u.id)) continue;
-        const s = u.x * dir.x + u.y * dir.y + u.z * dir.z;
-        const newS = s * factor + push;
-        u.x = u.x - s * dir.x + newS * dir.x;
-        u.y = u.y - s * dir.y + newS * dir.y;
-        u.z = u.z - s * dir.z + newS * dir.z;
+        u.x += dir.x * amount;
+        u.y += dir.y * amount;
+        u.z += dir.z * amount;
         moved++;
       }
       syncVisual();
@@ -431,8 +425,7 @@
         const el = parseNumber(document.getElementById('el'), 'elevation', -90, 90);
         const dist = parseNumber(document.getElementById('dist'), 'distance', -1000, 1000);
         const moved = applySculpt(az, el, dist);
-        const factor = 1 + dist * GROW_STRENGTH;
-        log(`ok · grew ${moved} · az=${az} el=${el} dist=${dist} · factor=${factor.toFixed(2)}`, 'ok');
+        log(`ok · extended ${moved} · az=${az} el=${el} dist=${dist} · amount=${(dist * cell).toFixed(3)}`, 'ok');
         if (apiConnected) refreshLiveView();
       } catch (e) { log(e.message, 'err'); }
     }
@@ -527,7 +520,7 @@
         }
         syncVisual(); updateGridInfo();
         const image = captureSnapshot(480); livePreview.src = image;
-        log(`ok · ${steps.length} steps · grew ${totalMoved}`, 'ok');
+        log(`ok · ${steps.length} steps · extended ${totalMoved}`, 'ok');
         return { ok: true, name: cmd.name || '', steps: results.length, totalMoved, results, image };
       }
 
@@ -538,7 +531,7 @@
         if (Number.isNaN(az) || Number.isNaN(el) || Number.isNaN(dist)) throw new Error('azimuth, elevation, distance must be numbers');
         const moved = applySculpt(az, el, dist, ids);
         const image = captureSnapshot(480); livePreview.src = image;
-        log(`ok · grew ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
+        log(`ok · extended ${moved} · az=${az} el=${el} dist=${dist}`, 'ok');
         return { ok: true, moved, azimuth: az, elevation: el, distance: dist, image };
       }
       throw new Error('unknown command');
